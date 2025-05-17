@@ -1,0 +1,4 @@
+machine_kind: rpi
+machine_arch: arm64
+
+tpi_host_group: tpi_beta_hosts

@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: MIT-0
+---
+# vars file for tp2-bootstrap-node
+tailscale_auth_key: "{{ lookup('community.general.onepassword', 'tailscale-k8s-cluster-auth-key', vault='fzymgc-house', field='password') }}"

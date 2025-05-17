@@ -1,0 +1,131 @@
+# SPDX-License-Identifier: MIT-0
+---
+# tasks file for tp2-bootstrap-node
+- name: Write secrets to work-dir
+  ansible.builtin.template:
+    src: talos-secrets.yml.j2
+    dest: "{{ playbook_dir }}/work-dir/talos-secrets.yml"
+    mode: "0640"
+  delegate_to: localhost
+  run_once: true
+  become: false
+
+# yamllint disable rule:line-length
+- name: Generate talosconfig
+  ansible.builtin.shell:
+    cmd: |
+      talosctl gen config fzymgc-house https://{{ k8s_cluster_endpoint_name }}:6443 \
+        --additional-sans {{ k8s_cluster_sans }} \
+        --with-secrets "{{ playbook_dir }}/work-dir/talos-secrets.yml" \
+        --output-types talosconfig \
+        --force \
+        -o "{{ playbook_dir }}/work-dir/talosconfig"
+    creates: "{{ playbook_dir }}/work-dir/talosconfig"
+  run_once: true
+  delegate_to: localhost
+  become: false
+
+- name: Create kubeconfig
+  ansible.builtin.shell:
+    cmd: |
+      talosctl kubeconfig --talosconfig "{{ playbook_dir }}/work-dir/talosconfig" -e "{{ inventory_hostname }}" -n "{{ inventory_hostname }}" "{{ playbook_dir }}/work-dir/kubeconfig"
+    creates: "{{ playbook_dir }}/work-dir/kubeconfig"
+  delegate_to: localhost
+  become: false
+  run_once: true
+  when: inventory_hostname in groups['tp_cluster_controlplane']
+
+
+# yamllint disable rule:line-length
+- name: Set endpoints in talosconfig
+  ansible.builtin.shell:
+    cmd: |
+      talosctl config --talosconfig "{{ playbook_dir }}/work-dir/talosconfig" endpoint {{ groups['tp_cluster_controlplane'] | map('extract', hostvars, 'primary_ip') | join(' ') }}
+  changed_when: false
+  run_once: true
+  delegate_to: localhost
+  become: false
+
+
+- name: Ensure config directory exists
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}"
+    state: directory
+    mode: "0750"
+  delegate_to: localhost
+  become: false
+
+- name: Create controlplane node patch
+  ansible.builtin.template:
+    src: controlplane-node-patch.yml.j2
+    dest: "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/node.yml"
+    mode: "0644"
+  delegate_to: localhost
+  when: inventory_hostname in groups['tp_cluster_controlplane']
+  become: false
+
+- name: Create worker node patch
+  ansible.builtin.template:
+    src: worker-node-patch.yml.j2
+    dest: "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/node.yml"
+    mode: "0644"
+  delegate_to: localhost
+  when: inventory_hostname in groups['tp_cluster_workers']
+  become: false
+
+- name: Create cluster patches
+  ansible.builtin.template:
+    src: "{{ item }}.yml.j2"
+    dest: "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/{{ item }}.yml"
+    mode: "0644"
+  delegate_to: localhost
+  become: false
+  when: inventory_hostname in groups['tp_cluster_controlplane']
+  with_items:
+    - controlplane-network-patch
+
+- name: Create shared patches
+  ansible.builtin.template:
+    src: "{{ item }}.yml.j2"
+    dest: "{{ playbook_dir }}/work-dir/{{ item }}.yml"
+    mode: "0644"
+  delegate_to: localhost
+  become: false
+  with_items:
+    - rancher-volume-config-patch
+    - trusted-roots-patch
+
+# yamllint disable rule:line-length
+- name: Generate controlplane config
+  ansible.builtin.shell:
+    cmd: |
+      talosctl gen config fzymgc-house https://{{ k8s_cluster_endpoint_name }}:6443 \
+        --additional-sans {{ k8s_cluster_sans }} \
+        --with-secrets "{{ playbook_dir }}/work-dir/talos-secrets.yml" \
+        --output-types controlplane \
+        --config-patch-control-plane @{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/node.yml \
+        --config-patch-control-plane @{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/controlplane-network-patch.yml \
+        --config-patch @{{ playbook_dir }}/work-dir/rancher-volume-config-patch.yml \
+        --config-patch @{{ playbook_dir }}/work-dir/trusted-roots-patch.yml \
+        --force \
+        -o "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/controlplane.yaml"
+    creates: "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/controlplane.yaml"
+  delegate_to: localhost
+  when: inventory_hostname in groups['tp_cluster_controlplane']
+  become: false
+
+- name: Generate worker config
+  ansible.builtin.shell:
+    cmd: |
+      talosctl gen config fzymgc-house https://{{ k8s_cluster_endpoint_name }}:6443 \
+        --with-secrets "{{ playbook_dir }}/work-dir/talos-secrets.yml" \
+        --config-patch-worker @{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/node.yml \
+        --config-patch @{{ playbook_dir }}/work-dir/rancher-volume-config-patch.yml \
+        --config-patch @{{ playbook_dir }}/work-dir/trusted-roots-patch.yml \
+        --output-types worker \
+        --force \
+        -o "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/worker.yaml"
+    creates: "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/worker.yaml"
+  delegate_to: localhost
+  when: inventory_hostname in groups['tp_cluster_workers']
+  become: false

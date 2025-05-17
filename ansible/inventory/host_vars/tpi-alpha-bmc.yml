@@ -1,0 +1,4 @@
+machine_kind: rk1
+machine_arch: arm64
+
+tpi_host_group: tpi_alpha_hosts

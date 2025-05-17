@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: MIT-0
+---
+# tasks file for tp2-flash-node
+
+- name: Check if image file is on Host # noqa: command-instead-of-shell
+  ansible.builtin.shell:
+    cmd: |
+      ssh {{ tpi_bmc_host }} ls /mnt/sdcard/images/talos-{{ talos_version }}-{{ machine_kind }}.raw
+  delegate_to: localhost
+  run_once: true
+  register: image_file_check
+  changed_when: false
+  become: false
+
+# yamllint disable rule:line-length
+- name: Power off node
+  ansible.builtin.shell:
+    cmd: |
+      tpi --host {{ tpi_bmc_host }} --user root --password '{{ tpi_bmc_password }}' power -n {{ tp_node_id }} off
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
+- name: Flash node
+  ansible.builtin.shell:
+    cmd: |
+      tpi --host {{ tpi_bmc_host }} --user root --password '{{ tpi_bmc_password }}' flash -n {{ tp_node_id }} -l -i /mnt/sdcard/images/talos-{{ talos_version }}.raw
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
+- name: Power on node
+  ansible.builtin.shell:
+    cmd: |
+      tpi --host {{ tpi_bmc_host }} --user root --password '{{ tpi_bmc_password }}' power -n {{ tp_node_id }} on
+  delegate_to: localhost
+  become: false
+  changed_when: false

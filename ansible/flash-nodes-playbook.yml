@@ -1,0 +1,37 @@
+- name: Prepare to flash alpha nodes
+  hosts: tpi-alpha-bmc
+  gather_facts: false
+  become: false
+  roles:
+    - tp2-flash-prep
+  tags:
+    - alpha
+
+- name: Prepare to flash beta nodes
+  hosts: tpi-beta-bmc
+  gather_facts: false
+  become: false
+  roles:
+    - tp2-flash-prep
+  tags:
+    - beta
+
+- name: Flash alpha nodes
+  hosts: tpi_alpha_hosts
+  gather_facts: false
+  become: false
+  serial: 1
+  roles:
+    - tp2-flash-node
+  tags:
+    - alpha
+
+- name: Flash beta nodes
+  hosts: tpi_beta_hosts
+  gather_facts: false
+  become: false
+  serial: 1
+  roles:
+    - tp2-flash-node
+  tags:
+    - beta

@@ -1,0 +1,6 @@
+- name: Bootstrap nodes
+  hosts: tp_cluster_nodes
+  gather_facts: false
+  become: false
+  roles:
+    - tp2-bootstrap-node

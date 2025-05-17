@@ -1,0 +1,5 @@
+work-dir/
+.ansible_facts_cache/
+kubeconfig
+.ssh/
+/work-dirs

@@ -1,0 +1,11 @@
+---
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: rancher-data
+provisioning:
+  diskSelector:
+    match: disk.transport == 'nvme' && !system_disk
+  minSize: 100GB
+  grow: true
+filesystem:
+  type: xfs

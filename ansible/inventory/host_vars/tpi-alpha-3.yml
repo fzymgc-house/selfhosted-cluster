@@ -1,3 +1,3 @@
-primary_ip: 192.168.20.143
-primary_ipv6: fddb:f665:73f7:1:aaaa::143
-tp_node_id: 3
+host_address: 192.168.20.143
+host_address_ipv6: fddb:f665:73f7:1:aaaa::143
+

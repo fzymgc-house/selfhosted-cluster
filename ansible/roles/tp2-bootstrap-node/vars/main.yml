@@ -2,3 +2,20 @@
 ---
 # vars file for tp2-bootstrap-node
 tailscale_auth_key: "{{ lookup('community.general.onepassword', 'tailscale-k8s-cluster-auth-key', vault='fzymgc-house', field='password') }}"
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - chrony
+  - curl
+  - dnsutils
+  - fish
+  - gnupg
+  - gnupg-agent
+  - ldnsutils
+  - lsb-release
+  - python3
+  - python3-hvac
+  - python3-pip
+  - python3-venv
+  - software-properties-common
+  - unattended-upgrades

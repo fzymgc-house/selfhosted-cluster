@@ -1,0 +1,19 @@
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    {{ansible_default_ipv4.interface}}:
+      addresses:
+      - {{host_address}}/22
+      - {{host_address_ipv6}}/64
+      routes:
+      - to: default
+        via: 192.168.20.1
+        on-link: true
+      # ipv6-privacy: false
+      dhcp4: false
+      dhcp6: false
+      accept-ra: true
+      nameservers:
+        search: [fzymgc.house]
+        addresses: [192.168.20.1]

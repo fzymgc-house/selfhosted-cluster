@@ -1,0 +1,116 @@
+- name: Install packages for restic
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - restic
+    - rclone
+  tags:
+    - packages
+
+- name: Check that correct restic is installed
+  ansible.builtin.shell: restic version | awk '{print $2}'
+  register: check_installed_restic_version
+  changed_when: false
+  ignore_errors: true
+
+- name: Set installed restic version
+  ansible.builtin.set_fact:
+    installed_restic_version: "{{ check_installed_restic_version.stdout | default('0.0.0', true) }}"
+
+- name: Debug installed restic version
+  ansible.builtin.debug:
+    var: installed_restic_version
+
+- name: Download Restic from github release
+  ansible.builtin.get_url:
+    url: "https://github.com/restic/restic/releases/download/v{{ restic_version }}/restic_{{ restic_version }}_linux_arm64.bz2"
+    dest: "/tmp/restic_{{ restic_version }}_linux_arm64.bz2"
+    mode: '0644'
+  register: download_restic
+  when: (installed_restic_version | default('0.0.0')) is version(restic_version, '<')
+
+- name: Uncompress Restic
+  ansible.builtin.command: bunzip2 /tmp/restic_{{ restic_version }}_linux_arm64.bz2
+  when: download_restic.changed
+  changed_when: false
+
+- name: Install restic
+  ansible.builtin.copy:
+    src: "/tmp/restic_{{ restic_version }}_linux_arm64"
+    dest: "/usr/local/bin/restic"
+    remote_src: true
+    owner: root
+    group: root
+    mode: '0755'
+  when: download_restic.changed
+
+- name: Cleanup downloaded files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "/tmp/restic_{{ restic_version }}_linux_arm64"
+    - "/tmp/restic_{{ restic_version }}_linux_arm64.bz2"
+  when: download_restic.changed
+
+- name: Update restic
+  ansible.builtin.command: restic self-update
+  register: restic_update
+  changed_when: '"successfully updated restic to version" in restic_update.stdout'
+
+- name: Create restic directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+  with_items:
+    - /etc/restic
+    - /etc/restic/backup-scripts
+
+- name: Create restic env
+  ansible.builtin.copy:
+    content: |
+      export AWS_ACCESS_KEY_ID="{{ lookup('ENV', 'RESTIC_BACKUP_AWS_KEY_ID') }}"
+      export AWS_SECRET_ACCESS_KEY="{{ lookup('ENV', 'RESTIC_BACKUP_AWS_SECRET_KEY') }}"
+      export RESTIC_REPOSITORY="s3:s3.us-west-000.backblazeb2.com/fzymgc-restic-backups/{{ inventory_hostname }}"
+      export RESTIC_PASSWORD_FILE="/etc/restic/repository-password"
+    dest: /etc/restic/env
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Create restic password file
+  ansible.builtin.copy:
+    content: "{{ lookup('ENV', 'RESTIC_REPOSITORY_PASSWORD') }}"
+    dest: /etc/restic/repository-password
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Check if restic repository exists
+  ansible.builtin.shell:
+    executable: /bin/bash
+    cmd: |
+      source /etc/restic/env
+      restic snapshots
+  args:
+    chdir: /etc/restic
+  register: restic_check_repo
+  failed_when: false
+  changed_when: false
+
+- name: Initialize restic repository
+  ansible.builtin.shell:
+    executable: /bin/bash
+    cmd: |
+      source /etc/restic/env
+      restic init
+  args:
+    chdir: /etc/restic
+  when: '"Is there a repository at the following location" in restic_check_repo.stderr'
+  run_once: true
+  throttle: 1
+  changed_when: false

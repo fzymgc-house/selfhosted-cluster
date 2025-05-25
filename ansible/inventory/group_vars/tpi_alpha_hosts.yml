@@ -1,9 +1,3 @@
-tpi_nodes:
-  - tpi-alpha-1
-  - tpi-alpha-2
-  - tpi-alpha-3
-  - tpi-alpha-4
-
 tpi_bmc_host: tpi-alpha-bmc
 
 tpi_bmc_password: "{{ lookup('ansible.builtin.env', 'TPI_ALPHA_BMC_ROOT_PW') }}"

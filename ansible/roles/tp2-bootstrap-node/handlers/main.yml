@@ -1,3 +1,56 @@
-#SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: MIT-0
 ---
 # handlers file for tp2-bootstrap-node
+
+# restart systemd-resolved
+- name: Restart systemd-resolved
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: restarted
+
+- name: Restart chrony
+  ansible.builtin.systemd:
+    name: chrony
+    state: restarted
+
+# reload systemd
+- name: Reload systemd
+  ansible.builtin.systemd:
+    name: systemd
+    state: reloaded
+
+- name: Restart sshd
+  ansible.builtin.systemd:
+    name: ssh
+    state: restarted
+
+- name: Reboot
+  ansible.builtin.reboot:
+
+- name: Update ca certificates
+  ansible.builtin.command: update-ca-certificates
+  changed_when: false
+
+- name: Restart postfix
+  ansible.builtin.systemd:
+    name: postfix
+    state: restarted
+
+- name: Postmap mailgun_passwd
+  ansible.builtin.command: postmap /etc/postfix/sasl/mailgun_passwd
+  notify: Restart postfix
+  changed_when: false
+
+- name: Restart systemd-journald
+  ansible.builtin.systemd:
+    name: systemd-journald
+    state: restarted
+
+- name: Vacuum systemd-journald
+  ansible.builtin.command: journalctl --vacuum-size=50M
+  changed_when: false
+
+# apply netplan
+- name: Apply netplan
+  ansible.builtin.command: netplan apply
+  changed_when: false

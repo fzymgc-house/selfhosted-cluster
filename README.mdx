@@ -1,0 +1,24 @@
+# Selfhosted Cluster Setup
+
+## Overview
+
+Describes the setup of the fzymgc home cluster.
+
+## Hardware
+
+* 1 x TuringPi 2 hosts
+* 4 x RK1s
+* 4 x Jetson Orin NX
+
+## OS
+
+* Armbian 25.08 trunk build
+  ```bash
+  /compile.sh build BOARD=turing-rk1 BRANCH=current BUILD_DESKTOP=no BUILD_MINIMAL=no RELEASE=noble NETWORKING_STACK=systemd-networkd EXPERT=yes
+  ```
+* Jetson Linux
+
+## K8S
+
+* k3s
+

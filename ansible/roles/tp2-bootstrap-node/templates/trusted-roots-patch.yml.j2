@@ -1,6 +1,0 @@
-apiVersion: v1alpha1
-kind: TrustedRootsConfig
-name: custom-roots
-certificates: |-
-  {{ lookup('community.general.onepassword', 'fzymgc-root-ca', vault='fzymgc-house', field='cert') | indent(2) }}
-  {{ lookup('community.general.onepassword', 'fzymgc-ica1-ca', vault='fzymgc-house', field='cert') | indent(2) }}

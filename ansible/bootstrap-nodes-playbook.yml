@@ -1,6 +1,5 @@
-- name: Bootstrap nodes
-  hosts: tp_cluster_nodes
-  gather_facts: false
-  become: false
+- name: Bootstrap alpha nodes
+  hosts: tpi_alpha_hosts
+  become: true
   roles:
     - tp2-bootstrap-node

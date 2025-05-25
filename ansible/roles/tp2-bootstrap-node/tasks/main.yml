@@ -1,131 +1,152 @@
 # SPDX-License-Identifier: MIT-0
 ---
 # tasks file for tp2-bootstrap-node
-- name: Write secrets to work-dir
+
+- name: Update apt cache and upgrade packages
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: full
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Set timezone
+  community.general.timezone:
+    hwclock: UTC
+    name: "{{ timezone }}"
+
+- name: Install packages
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+
+- name: Configure systemd resolved
   ansible.builtin.template:
-    src: talos-secrets.yml.j2
-    dest: "{{ playbook_dir }}/work-dir/talos-secrets.yml"
-    mode: "0640"
-  delegate_to: localhost
-  run_once: true
-  become: false
+    src: systemd-resolved.conf.j2
+    dest: /etc/systemd/resolved.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart systemd-resolved
 
-# yamllint disable rule:line-length
-- name: Generate talosconfig
+- name: Configure chrony
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart chrony
+  tags: chrony
+
+- name: Configure apt unattended upgrades
+  ansible.builtin.template:
+    src: apt-unattended-upgrades.j2
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Update /etc/hosts from template
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: '0644'
+  tags: hosts
+
+- name: Install sshd_config
+  ansible.builtin.template:
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart sshd
+
+- name: Configure multipath for longhorn support
+  ansible.builtin.copy:
+    src: multipath.conf
+    dest: /etc/multipath.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ensure required modules are loaded
   ansible.builtin.shell:
     cmd: |
-      talosctl gen config fzymgc-house https://{{ k8s_cluster_endpoint_name }}:6443 \
-        --additional-sans {{ k8s_cluster_sans }} \
-        --with-secrets "{{ playbook_dir }}/work-dir/talos-secrets.yml" \
-        --output-types talosconfig \
-        --force \
-        -o "{{ playbook_dir }}/work-dir/talosconfig"
-    creates: "{{ playbook_dir }}/work-dir/talosconfig"
-  run_once: true
-  delegate_to: localhost
-  become: false
-
-- name: Create kubeconfig
-  ansible.builtin.shell:
-    cmd: |
-      talosctl kubeconfig --talosconfig "{{ playbook_dir }}/work-dir/talosconfig" -e "{{ inventory_hostname }}" -n "{{ inventory_hostname }}" "{{ playbook_dir }}/work-dir/kubeconfig"
-    creates: "{{ playbook_dir }}/work-dir/kubeconfig"
-  delegate_to: localhost
-  become: false
-  run_once: true
-  when: inventory_hostname in groups['tp_cluster_controlplane']
-
-
-# yamllint disable rule:line-length
-- name: Set endpoints in talosconfig
-  ansible.builtin.shell:
-    cmd: |
-      talosctl config --talosconfig "{{ playbook_dir }}/work-dir/talosconfig" endpoint {{ groups['tp_cluster_controlplane'] | map('extract', hostvars, 'primary_ip') | join(' ') }}
+      modprobe br_netfilter
   changed_when: false
-  run_once: true
-  delegate_to: localhost
-  become: false
 
+- name: Ensure required modules load at bootstrap
+  ansible.builtin.copy:
+    content: |
+      br_netfilter
+    dest: /etc/modules-load.d/br_netfilter.conf
+    mode: "0644"
+    owner: root
+    group: root
 
-- name: Ensure config directory exists
+- name: Configure bridge sysctl settings
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    sysctl_set: true
+    state: present
+  with_items:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.bridge.bridge-nf-call-arptables
+
+- name: Install root certificates
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /usr/local/share/ca-certificates/
+    owner: root
+    group: root
+    mode: '0644'
+  with_fileglob:
+    - "{{ role_path }}/files/*.crt"
+  notify: Update ca certificates
+  tags: root-certs
+
+- name: Configure journald
+  ansible.builtin.copy:
+    src: journald.conf
+    dest: /etc/systemd/journald.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Restart systemd-journald
+    - Vacuum systemd-journald
+  tags: journald
+
+- name: Install mail handling
+  ansible.builtin.import_tasks:
+    file: mail.yml
+  tags:
+    - mail
+
+- name: Install restic
+  ansible.builtin.import_tasks:
+    file: restic.yml
+  tags:
+    - restic
+
+- name: Remove first boot netplan config
   ansible.builtin.file:
-    path: "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}"
-    state: directory
-    mode: "0750"
-  delegate_to: localhost
-  become: false
+    path: /etc/netplan/10-dhcp-all-interfaces.yaml
+    state: absent
+  tags: network
 
-- name: Create controlplane node patch
+- name: Configure netplan
   ansible.builtin.template:
-    src: controlplane-node-patch.yml.j2
-    dest: "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/node.yml"
-    mode: "0644"
-  delegate_to: localhost
-  when: inventory_hostname in groups['tp_cluster_controlplane']
-  become: false
-
-- name: Create worker node patch
-  ansible.builtin.template:
-    src: worker-node-patch.yml.j2
-    dest: "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/node.yml"
-    mode: "0644"
-  delegate_to: localhost
-  when: inventory_hostname in groups['tp_cluster_workers']
-  become: false
-
-- name: Create cluster patches
-  ansible.builtin.template:
-    src: "{{ item }}.yml.j2"
-    dest: "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/{{ item }}.yml"
-    mode: "0644"
-  delegate_to: localhost
-  become: false
-  when: inventory_hostname in groups['tp_cluster_controlplane']
-  with_items:
-    - controlplane-network-patch
-
-- name: Create shared patches
-  ansible.builtin.template:
-    src: "{{ item }}.yml.j2"
-    dest: "{{ playbook_dir }}/work-dir/{{ item }}.yml"
-    mode: "0644"
-  delegate_to: localhost
-  become: false
-  with_items:
-    - rancher-volume-config-patch
-    - trusted-roots-patch
-
-# yamllint disable rule:line-length
-- name: Generate controlplane config
-  ansible.builtin.shell:
-    cmd: |
-      talosctl gen config fzymgc-house https://{{ k8s_cluster_endpoint_name }}:6443 \
-        --additional-sans {{ k8s_cluster_sans }} \
-        --with-secrets "{{ playbook_dir }}/work-dir/talos-secrets.yml" \
-        --output-types controlplane \
-        --config-patch-control-plane @{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/node.yml \
-        --config-patch-control-plane @{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/controlplane-network-patch.yml \
-        --config-patch @{{ playbook_dir }}/work-dir/rancher-volume-config-patch.yml \
-        --config-patch @{{ playbook_dir }}/work-dir/trusted-roots-patch.yml \
-        --force \
-        -o "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/controlplane.yaml"
-    creates: "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/controlplane.yaml"
-  delegate_to: localhost
-  when: inventory_hostname in groups['tp_cluster_controlplane']
-  become: false
-
-- name: Generate worker config
-  ansible.builtin.shell:
-    cmd: |
-      talosctl gen config fzymgc-house https://{{ k8s_cluster_endpoint_name }}:6443 \
-        --with-secrets "{{ playbook_dir }}/work-dir/talos-secrets.yml" \
-        --config-patch-worker @{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/node.yml \
-        --config-patch @{{ playbook_dir }}/work-dir/rancher-volume-config-patch.yml \
-        --config-patch @{{ playbook_dir }}/work-dir/trusted-roots-patch.yml \
-        --output-types worker \
-        --force \
-        -o "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/worker.yaml"
-    creates: "{{ playbook_dir }}/work-dir/{{ inventory_hostname }}/worker.yaml"
-  delegate_to: localhost
-  when: inventory_hostname in groups['tp_cluster_workers']
-  become: false
+    src: 01-netcfg.yaml.j2
+    dest: /etc/netplan/01-netcfg.yaml
+    owner: root
+    group: root
+    mode: '0600'
+  notify: Apply netplan
+  tags: network

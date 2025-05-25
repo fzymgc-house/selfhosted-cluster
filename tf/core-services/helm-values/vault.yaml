@@ -1,0 +1,59 @@
+global:
+  tlsDisable: false
+
+injector:
+  enabled: false
+
+server:
+  extraEnvironmentVars:
+    VAULT_CACERT: /vault/userconfig/vault-ha-tls/vault.ca
+    VAULT_TLSCERT: /vault/userconfig/vault-ha-tls/vault.crt
+    VAULT_TLSKEY: /vault/userconfig/vault-ha-tls/vault.key
+  volumes:
+    - name: userconfig-vault-ha-tls
+      secret:
+        defaultMode: 420
+        secretName: vault-ha-tls
+  volumeMounts:
+    - mountPath: /vault/userconfig/vault-ha-tls
+      name: userconfig-vault-ha-tls
+      readOnly: true
+  ha:
+    enabled: true
+    raft:
+      enabled: true
+      setNodeId: true
+      config: |
+        ui = true
+
+        listener "tcp" {
+          address = "[::]:8200"
+          cluster_address = "[::]:8201"
+          telemetry {
+            unauthenticated_metrics_access = "true"
+            disable_hostname = "true"
+          }
+        }
+
+        storage "raft" {
+          path = "/vault/data"
+        }
+
+        service_registration "kubernetes" {}
+    config: |
+
+  # ingress:
+  #   enabled: true
+  #   annotations:
+  #     cert-manager.io/cluster-issuer: letsencrypt
+  #   hosts:
+  #     - host: vault.fzymgc.house
+  #       paths:
+  #         - path: /
+  #           pathType: Prefix
+  auditStorage:
+    enabled: true
+
+
+ui:
+  enabled: true

@@ -4,3 +4,4 @@ tpi_bmc_password: "{{ lookup('ansible.builtin.env', 'TPI_BETA_BMC_ROOT_PW') }}"
 machine_kind: rpi
 machine_arch: arm64
 
+host_group_name: tpi_beta_hosts

@@ -1,0 +1,13 @@
+[Unit]
+Description=Mount Rancher data from btrfs subvolume
+Before=local-fs.target
+Requires=systemd-modules-load.service
+
+[Mount]
+What=UUID={{ uuid }}
+Where=/var/lib/rancher
+Type=btrfs
+Options=subvol=data/rancher,defaults,noatime,compress=zstd
+
+[Install]
+WantedBy=multi-user.target

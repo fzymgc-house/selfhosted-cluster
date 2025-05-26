@@ -1,0 +1,59 @@
+# code: language=ansible
+
+- name: Get UUID of btrfs volume
+  ansible.builtin.shell: |
+    blkid -s UUID -o value /dev/nvme0n1p1
+  register: btrfs_uuid
+  changed_when: false
+
+- name: Create mount point directory
+  ansible.builtin.file:
+    path: /var/lib/rancher
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Create systemd mount unit for rancher data
+  ansible.builtin.template:
+    src: var-lib-rancher.mount.j2
+    dest: /etc/systemd/system/var-lib-rancher.mount
+    mode: '0644'
+    owner: root
+    group: root
+  vars:
+    uuid: "{{ btrfs_uuid.stdout }}"
+  notify: Reload systemd
+
+- name: Enable and start rancher-data mount
+  ansible.builtin.systemd:
+    name: var-lib-rancher.mount
+    state: started
+    enabled: true
+    daemon_reload: true
+
+- name: Create kubelet mount point directory
+  ansible.builtin.file:
+    path: /var/lib/kubelet
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Create systemd mount unit for kubelet data
+  ansible.builtin.template:
+    src: var-lib-kubelet.mount.j2
+    dest: /etc/systemd/system/var-lib-kubelet.mount
+    mode: '0644'
+    owner: root
+    group: root
+  vars:
+    uuid: "{{ btrfs_uuid.stdout }}"
+  notify: Reload systemd
+
+- name: Enable and start kubelet-data mount
+  ansible.builtin.systemd:
+    name: var-lib-kubelet.mount
+    state: started
+    enabled: true
+    daemon_reload: true

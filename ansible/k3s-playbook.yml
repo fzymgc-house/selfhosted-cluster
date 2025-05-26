@@ -1,0 +1,8 @@
+- name: Manage k3s control plane nodes
+  hosts: tp_cluster_controlplane
+  become: true
+  roles:
+    - role: k3sup
+      tags:
+        - k3s
+        - k8s

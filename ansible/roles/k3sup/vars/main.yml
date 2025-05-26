@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: MIT-0
+---
+# vars file for k3sup
+
+k3sup_packages:
+  - jq
+  - yq
+  - open-iscsi

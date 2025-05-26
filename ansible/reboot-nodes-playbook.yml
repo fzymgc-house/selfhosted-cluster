@@ -1,0 +1,7 @@
+- name: Reboot alpha nodes
+  hosts: tpi_alpha_hosts
+  become: true
+  tasks:
+    - name: Reboot nodes
+      ansible.builtin.reboot:
+        msg: "Rebooting node {{ inventory_hostname }}"

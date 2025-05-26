@@ -22,3 +22,87 @@
   become: false
   run_once: true
   delegate_to: localhost
+
+- name: Create longhorn crypto config
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: longhorn-system
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: longhorn-crypto-config
+        namespace: longhorn-system
+      stringData:
+        CRYPTO_KEY_VALUE: "{{ lookup('community.general.onepassword', 'fzymgc-house-longhorn-crypto-key', vault='fzymgc-house', field='password') }}"
+        CRYPTO_KEY_PROVIDER: secret
+        CRYPTO_KEY_CIPHER: aes-xts-plain64
+        CRYPTO_KEY_HASH: sha256
+        CRYPTO_KEY_SIZE: "256"
+        CRYPTO_PBKDF: argon2i
+  become: false
+  run_once: true
+  delegate_to: localhost
+
+- name: Create encrypted storage class
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: longhorn-system
+    definition:
+      kind: StorageClass
+      apiVersion: storage.k8s.io/v1
+      metadata:
+        name: longhorn-encrypted
+      provisioner: driver.longhorn.io
+      allowVolumeExpansion: true
+      reclaimPolicy: Delete
+      volumeBindingMode: Immediate
+      parameters:
+        numberOfReplicas: "2"
+        encrypted: "true"
+        dataLocality: "best-effort"
+        # global secret that contains the encryption key that will be used for all volumes
+        csi.storage.k8s.io/provisioner-secret-name: "longhorn-crypto"
+        csi.storage.k8s.io/provisioner-secret-namespace: "longhorn-system"
+        csi.storage.k8s.io/node-publish-secret-name: "longhorn-crypto"
+        csi.storage.k8s.io/node-publish-secret-namespace: "longhorn-system"
+        csi.storage.k8s.io/node-stage-secret-name: "longhorn-crypto"
+        csi.storage.k8s.io/node-stage-secret-namespace: "longhorn-system"
+        csi.storage.k8s.io/node-expand-secret-name: "longhorn-crypto"
+        csi.storage.k8s.io/node-expand-secret-namespace: "longhorn-system"
+  become: false
+  run_once: true
+  delegate_to: localhost
+
+- name: Create encrypted storage class
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: longhorn-system
+    definition:
+      kind: StorageClass
+      apiVersion: storage.k8s.io/v1
+      metadata:
+        name: longhorn-1replica-encrypted
+      provisioner: driver.longhorn.io
+      allowVolumeExpansion: true
+      reclaimPolicy: Delete
+      volumeBindingMode: Immediate
+      parameters:
+        numberOfReplicas: "1"
+        encrypted: "true"
+        dataLocality: "best-effort"
+        # global secret that contains the encryption key that will be used for all volumes
+        csi.storage.k8s.io/provisioner-secret-name: "longhorn-crypto"
+        csi.storage.k8s.io/provisioner-secret-namespace: "longhorn-system"
+        csi.storage.k8s.io/node-publish-secret-name: "longhorn-crypto"
+        csi.storage.k8s.io/node-publish-secret-namespace: "longhorn-system"
+        csi.storage.k8s.io/node-stage-secret-name: "longhorn-crypto"
+        csi.storage.k8s.io/node-stage-secret-namespace: "longhorn-system"
+        csi.storage.k8s.io/node-expand-secret-name: "longhorn-crypto"
+        csi.storage.k8s.io/node-expand-secret-namespace: "longhorn-system"
+  become: false
+  run_once: true
+  delegate_to: localhost

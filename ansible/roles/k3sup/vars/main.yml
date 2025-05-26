@@ -6,3 +6,4 @@ k3sup_packages:
   - jq
   - yq
   - open-iscsi
+  - cryptsetup

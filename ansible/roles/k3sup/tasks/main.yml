@@ -168,3 +168,8 @@
   ansible.builtin.import_tasks: longhorn.yml
   tags:
     - k8s-longhorn
+
+- name: Install Traefik
+  ansible.builtin.import_tasks: traefik.yml
+  tags:
+    - k8s-traefik

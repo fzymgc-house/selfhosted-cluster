@@ -163,3 +163,8 @@
   changed_when: false
   tags:
     - k8s-csi-snapshot-controller
+
+- name: Install Longhorn
+  ansible.builtin.import_tasks: longhorn.yml
+  tags:
+    - k8s-longhorn

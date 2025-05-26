@@ -66,6 +66,11 @@
           enabled: true
           cidr: "10.42.0.0/16"  # Pods CIDR
           allowRemoteNodeIdentities: true
+      hostPort:
+        enabled: true
+      nodePort:
+        enabled: true
+
   become: false
   run_once: true
   delegate_to: localhost

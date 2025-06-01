@@ -1,0 +1,100 @@
+# code: language=ansible
+
+- name: Create vault namespace
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: vault
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: vault
+  become: false
+  run_once: true
+  delegate_to: localhost
+
+- name: Create vault api cert
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: vault
+    definition:
+      apiVersion: cert-manager.io/v1
+      kind: Certificate
+      metadata:
+        name: vault-api-tls
+        namespace: vault
+      spec:
+        secretName: vault-api-tls
+        issuerRef:
+          name: fzymgc-house-issuer
+          kind: ClusterIssuer
+        commonName: "system:node:*.vault.svc.cluster.local"
+        dnsNames:
+          - "vault.fzymgc.house"
+          - "vault.k8s.fzymgc.house"
+          - "*.vault-internal"
+          - "*.vault-internal.vault.svc.cluster.local"
+          - "*.vault"
+        ipAddresses:
+          - "127.0.0.1"
+        usages:
+          - server auth
+          - client auth
+          - digital signature
+          - key encipherment
+          - data encipherment
+  become: false
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - k8s-vault-api-cert
+
+
+- name: Install Vault
+  kubernetes.core.helm:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    name: vault
+    chart_ref: vault
+    chart_repo_url: https://helm.releases.hashicorp.com
+    chart_version: 0.30.0
+    namespace: vault
+    create_namespace: true
+    values_files:
+      - "{{ role_path }}/files/vault/helm-values.yml"
+  become: false
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - k8s-vault
+
+- name: Create vault traefik ingressroute
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: vault
+    definition:
+      apiVersion: traefik.io/v1alpha1
+      kind: IngressRouteTCP
+      metadata:
+        name: vault
+        namespace: vault
+      spec:
+        entryPoints:
+          - websecure
+          - web
+        routes:
+          - match: HostSNI(`vault.fzymgc.house`)
+            services:
+              - name: vault-active
+                port: 8200
+                protocol: TCP
+        tls:
+          passthrough: true
+  become: false
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - k8s-vault-ingress

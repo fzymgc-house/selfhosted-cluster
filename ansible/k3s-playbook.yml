@@ -1,5 +1,5 @@
-- name: Manage k3s control plane nodes
-  hosts: tp_cluster_controlplane
+- name: Manage k3s
+  hosts: tp_cluster_nodes
   become: true
   roles:
     - role: k3sup

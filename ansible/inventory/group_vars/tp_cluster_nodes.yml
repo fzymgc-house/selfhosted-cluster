@@ -11,3 +11,4 @@ k8s_user_name: fzymgc
 cloudflare_api_token: "{{ lookup('community.general.onepassword', 'cloudflare-api-token', vault='fzymgc-house', field='password') }}"
 
 calico_version: v3.30.0
+vault_root_token: "{{ lookup('community.general.onepassword', 'vault.fzymgc.house(root token)', vault='fzymgc-house', field='password') }}"

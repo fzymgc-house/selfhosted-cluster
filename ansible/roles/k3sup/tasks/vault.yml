@@ -34,6 +34,15 @@
         dnsNames:
           - "vault.fzymgc.house"
           - "vault.k8s.fzymgc.house"
+          - "vault-0.fzymgc.house"
+          - "vault-1.fzymgc.house"
+          - "vault-2.fzymgc.house"
+          - "vault-0.k8s.fzymgc.house"
+          - "vault-1.k8s.fzymgc.house"
+          - "vault-2.k8s.fzymgc.house"
+          - "vault-0"
+          - "vault-1"
+          - "vault-2"
           - "*.vault-internal"
           - "*.vault-internal.vault.svc.cluster.local"
           - "*.vault"
@@ -70,6 +79,38 @@
   tags:
     - k8s-vault
 
+- name: Create vault instance loadbalancer services
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: "vault-{{ item }}"
+        namespace: vault
+      spec:
+        type: ClusterIP
+        publishNotReadyAddresses: true
+        ports:
+          - name: https
+            port: 8200
+            targetPort: 8200
+            protocol: TCP
+        selector:
+          app.kubernetes.io/instance: vault
+          app.kubernetes.io/name: vault
+          apps.kubernetes.io/pod-index: "{{ item | quote }}"
+  become: false
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - k8s-vault-loadbalancer
+  loop:
+    - 0
+    - 1
+    - 2
+
 - name: Create vault traefik ingressroute
   kubernetes.core.k8s:
     kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
@@ -91,6 +132,21 @@
               - name: vault-active
                 port: 8200
                 protocol: TCP
+          - match: HostSNI(`vault-0.fzymgc.house`)
+            services:
+              - name: vault-0
+                port: 8200
+                protocol: TCP
+          - match: HostSNI(`vault-1.fzymgc.house`)
+            services:
+              - name: vault-1
+                port: 8200
+                protocol: TCP
+          - match: HostSNI(`vault-2.fzymgc.house`)
+            services:
+              - name: vault-2
+                port: 8200
+                protocol: TCP
         tls:
           passthrough: true
   become: false
@@ -98,3 +154,79 @@
   delegate_to: localhost
   tags:
     - k8s-vault-ingress
+
+- name: Create vault kubernetes cluster role
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: vault
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: k8s-full-secrets-abilities-with-labels
+      rules:
+        - apiGroups: [""]
+          resources: ["namespaces"]
+          verbs: ["get"]
+        - apiGroups: [""]
+          resources: ["serviceaccounts", "serviceaccounts/token"]
+          verbs: ["create", "update", "delete"]
+        - apiGroups: ["rbac.authorization.k8s.io"]
+          resources: ["rolebindings", "clusterrolebindings"]
+          verbs: ["create", "update", "delete"]
+        - apiGroups: ["rbac.authorization.k8s.io"]
+          resources: ["roles", "clusterroles"]
+          verbs: ["bind", "escalate", "create", "update", "delete"]
+  become: false
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - k8s-vault-kubernetes-cluster-role
+
+- name: Create role binding for vault to cluster role
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: vault
+    definition:
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: vault-token-creator-binding
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: k8s-minimal-secrets-abilities
+      subjects:
+        - kind: ServiceAccount
+          name: vault
+          namespace: vault
+  become: false
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - k8s-vault-token-creator-binding
+
+- name: Enable vault secret engine
+  ansible.builtin.shell:
+    cmd: |
+      set -eo pipefail
+      if ! vault secrets list | grep -q "kubernetes/"; then
+        vault secrets enable kubernetes
+        vault write -f kubernetes/config # empty/default config is fine
+        echo "Vault secret engine enabled"
+      else
+        echo "Vault secret engine already enabled"
+      fi
+    executable: /bin/bash
+  environment:
+    VAULT_ADDR: "https://vault.fzymgc.house"
+    VAULT_TOKEN: "{{ vault_root_token }}"
+  become: false
+  run_once: true
+  register: vault_secret_engine_result
+  changed_when: vault_secret_engine_result.stdout.find("Vault secret engine enabled") != -1
+  delegate_to: localhost
+  tags:
+    - k8s-vault-secret-engine

@@ -28,16 +28,17 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push artifact
         run: |
+          echo "VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
           flux push artifact $OCI_REPO:$(git rev-parse --short HEAD) \
             --path ./fluxcd \
             --source $(git config --get remote.origin.url) \
             --revision $(git branch --show-current)@sha1:$(git rev-parse HEAD)
       - name: Tag manifests to main
         run: |
-          flux tag artifact $OCI_REPO:$(git rev-parse --short HEAD) --tag main
+          flux tag artifact $OCI_REPO:${{ env.VERSION }} --tag main
       - name: Discord notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: 'New flux artifact update from: {{ EVENT_PAYLOAD.repository.full_name }} version: $(git rev-parse --short HEAD)'
+          args: 'New flux artifact update from: {{ EVENT_PAYLOAD.repository.full_name }} version: ${{ env.VERSION }}'

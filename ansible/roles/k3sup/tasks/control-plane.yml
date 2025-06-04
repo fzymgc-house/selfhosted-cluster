@@ -135,6 +135,19 @@
   tags:
     - k8s-flux-operator
 
+- name: Edit local kube config to set the server to the api lb
+  ansible.builtin.lineinfile:
+    state: present
+    path: /Users/sean/.kube/configs/{{ k8s_context }}-admin.yml
+    regexp: '^(\s*)server: https://.*$'
+    line: '\1server: https://{{ k8s_cluster_endpoint_name }}:6443'
+    backrefs: true
+  run_once: true
+  delegate_to: localhost
+  become: false
+  tags:
+    - k8s-server-api-lb
+
 # - name: Install Gateway API CRDs
 #   ansible.builtin.shell:
 #     cmd: |
@@ -173,18 +186,6 @@
 #   become: false
 #   register: k3s_server_certificate
 
-# - name: Edit local kube config to set the server to the api lb
-#   ansible.builtin.lineinfile:
-#     state: present
-#     path: /Users/sean/.kube/configs/{{ k8s_context }}-admin.yml
-#     regexp: '^(\s*)server: https://.*$'
-#     line: '\1server: https://{{ k8s_cluster_endpoint_name }}:6443'
-#     backrefs: true
-#   run_once: true
-#   delegate_to: localhost
-#   become: false
-#   tags:
-#     - k8s-server-api-lb
 
 
 # - name: Install Traefik

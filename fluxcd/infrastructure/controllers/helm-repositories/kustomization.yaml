@@ -5,3 +5,4 @@ namespace: flux-system
 resources:
   - ./metallb.yaml
   - ./cert-manager.yaml
+  - ./traefik.yaml

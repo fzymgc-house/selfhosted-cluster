@@ -4,7 +4,7 @@ resource "helm_release" "longhorn" {
   namespace = "longhorn-system"
   create_namespace = true
   repository = "https://charts.longhorn.io"
-  version = "1.8.1"
+  version = "1.9.0"
   values = [
     file("${path.module}/helm-values/longhorn.yaml")
   ]

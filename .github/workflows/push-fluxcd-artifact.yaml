@@ -35,3 +35,9 @@ jobs:
       - name: Tag manifests to main
         run: |
           flux tag artifact $OCI_REPO:$(git rev-parse --short HEAD) --tag main
+      - name: Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: 'New flux artifact update from: {{ EVENT_PAYLOAD.repository.full_name }} version: $(git rev-parse --short HEAD)'

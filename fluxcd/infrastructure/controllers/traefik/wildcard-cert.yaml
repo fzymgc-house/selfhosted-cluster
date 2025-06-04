@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-fzymgc-house-tls
+spec:
+  secretName: wildcard-fzymgc-house-tls
+  usages:
+    - server auth
+  issuerRef:
+    name: cloudflare-acme-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.fzymgc.house"
+    - "*.k8s.fzymgc.house"

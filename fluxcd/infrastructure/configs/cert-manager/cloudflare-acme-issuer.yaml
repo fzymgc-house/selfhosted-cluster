@@ -1,0 +1,19 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: cloudflare-acme-issuer
+spec:
+  acme:
+    email: "acme@admin.fzymgc.house"
+    server: "https://acme-v02.api.letsencrypt.org/directory"
+    privateKeySecretRef:
+      name: cloudflare-acme-issuer-account-key
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api_token
+          selector:
+            dnsNames:
+              - "*.fzymgc.house"

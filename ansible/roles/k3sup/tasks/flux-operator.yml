@@ -54,6 +54,10 @@
           ref: "main"
           path: ./clusters/main
           pullSecret: flux-system-oci-pull-secret
+        decryption:
+          provider: sops
+          secretRef:
+            name: flux-system-sops-age
   become: false
   run_once: true
   delegate_to: localhost
@@ -79,3 +83,22 @@
   delegate_to: localhost
   tags:
     - k8s-flux-operator-githubapp-secret
+
+- name: Create flux decryption secret
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: flux-system
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: flux-system-sops-age
+      type: Opaque
+      stringData:
+        age.agekey: "{{ lookup('community.general.onepassword', 'age-key-fzymgc-house-flux-sops', vault='fzymgc-house', field='password') }}"
+  become: false
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - k8s-flux-operator-sops-age-key

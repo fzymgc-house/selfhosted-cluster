@@ -1,0 +1,5 @@
+creation_rules:
+  - path_regex: .*.ya?ml
+    encrypted_regex: ^(data|stringData)$
+    # age-key-fzymgc-house-flux-sops
+    age: age1ceu30hc9e92ytskzfv2hzw7d2wpvw9h4zdxznjst4540n8na537q8tj6lw

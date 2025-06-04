@@ -1,0 +1,33 @@
+---
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  name: default
+spec:
+  calicoNetwork:
+    nodeAddressAutodetectionV4:
+      interface: "end0"
+    nodeAddressAutodetectionV6:
+      interface: "end0"
+    ipPools:
+      - name: default-ipv4-ippool
+        blockSize: 24
+        cidr: "10.42.0.0/16"
+        encapsulation: "VXLANCrossSubnet"
+        natOutgoing: "Enabled"
+        nodeSelector: "all()"
+---
+apiVersion: operator.tigera.io/v1
+kind: APIServer
+metadata:
+  name: default
+---
+apiVersion: operator.tigera.io/v1
+kind: Goldmane
+metadata:
+  name: default
+---
+apiVersion: operator.tigera.io/v1
+kind: Whisker
+metadata:
+  name: default

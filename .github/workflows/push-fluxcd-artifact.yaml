@@ -29,10 +29,13 @@ jobs:
       - name: Push artifact
         run: |
           echo "VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          flux push artifact $OCI_REPO:$(git rev-parse --short HEAD) \
+          digest_url=$(flux push artifact $OCI_REPO:$(git rev-parse --short HEAD) \
             --path ./fluxcd \
             --source $(git config --get remote.origin.url) \
-            --revision $(git branch --show-current)@sha1:$(git rev-parse HEAD)
+            --revision $(git branch --show-current)@sha1:$(git rev-parse HEAD) \
+            --output json | \
+            jq -r '. | .repository + "@" + .digest')
+          echo "DIGEST_URL=$digest_url" >> $GITHUB_ENV
       - name: Tag manifests to main
         run: |
           flux tag artifact $OCI_REPO:${{ env.VERSION }} --tag main
@@ -41,4 +44,6 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: 'New flux artifact update from: {{ EVENT_PAYLOAD.repository.full_name }} version: **${{ env.VERSION }}**'
+          args: |
+            New flux artifact update from: {{ EVENT_PAYLOAD.repository.full_name }} commit: **${{ env.VERSION }}**
+            Digest URL: ${{ env.DIGEST_URL }}

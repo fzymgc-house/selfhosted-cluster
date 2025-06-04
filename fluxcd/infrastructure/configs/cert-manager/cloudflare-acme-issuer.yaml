@@ -14,6 +14,6 @@ spec:
             apiTokenSecretRef:
               name: cloudflare-api-token
               key: api_token
-          selector:
-            dnsNames:
-              - "*.fzymgc.house"
+        selector:
+          dnsNames:
+            - "*.fzymgc.house"

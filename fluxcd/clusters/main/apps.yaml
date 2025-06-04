@@ -9,9 +9,9 @@ spec:
   dependsOn:
     - name: infra-configs
   sourceRef:
-    kind: GitRepository
+    kind: OCIRepository
     name: flux-system
-  path: ./fluxcd/apps/main
+  path: ./apps/main
   prune: true
   wait: true
   timeout: 5m0s

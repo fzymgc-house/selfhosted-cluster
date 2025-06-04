@@ -9,9 +9,9 @@ spec:
   retryInterval: 1m
   timeout: 5m
   sourceRef:
-    kind: GitRepository
+    kind: OCIRepository
     name: flux-system
-  path: ./fluxcd/infrastructure/controllers
+  path: ./infrastructure/controllers
   prune: true
   wait: true
 ---
@@ -27,15 +27,7 @@ spec:
   retryInterval: 1m
   timeout: 5m
   sourceRef:
-    kind: GitRepository
+    kind: OCIRepository
     name: flux-system
-  path: ./fluxcd/infrastructure/configs
+  path: ./infrastructure/configs
   prune: true
-  patches:
-    - patch: |
-        - op: replace
-          path: /spec/acme/server
-          value: https://acme-v02.api.letsencrypt.org/directory
-      target:
-        kind: ClusterIssuer
-        name: letsencrypt

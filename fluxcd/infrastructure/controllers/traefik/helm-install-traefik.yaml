@@ -14,10 +14,10 @@ spec:
         name: traefik
         namespace: flux-system
   releaseName: traefik
-  skipCRDs: true
   install:
     remediation:
       retries: 3
+    skipCRDs: true
   upgrade:
     remediation:
       retries: 3

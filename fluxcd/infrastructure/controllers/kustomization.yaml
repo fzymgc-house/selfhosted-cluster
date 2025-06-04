@@ -5,3 +5,4 @@ resources:
   - ./gateway-api-setup
   - ./helm-repositories
   - ./metallb
+  - ./cert-manager

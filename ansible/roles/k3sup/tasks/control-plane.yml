@@ -176,6 +176,11 @@
   tags:
     - k8s-csi-snapshot-controller
 
+- name: Install Flux Operator
+  ansible.builtin.import_tasks: flux-operator.yml
+  tags:
+    - k8s-flux-operator
+
 - name: Install Longhorn
   ansible.builtin.import_tasks: longhorn.yml
   tags:
@@ -190,3 +195,4 @@
   ansible.builtin.import_tasks: vault.yml
   tags:
     - k8s-vault
+

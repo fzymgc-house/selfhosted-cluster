@@ -1,3 +1,5 @@
 {
-    "ansible.python.interpreterPath": "/Users/sean/.pyenv/versions/3.13.2/bin/python"
+    "ansible.python.interpreterPath": "/Users/sean/.pyenv/versions/3.13.2/bin/python",
+    "better-yaml.indentSeq": true,
+    "yaml.format.printWidth": 120
 }

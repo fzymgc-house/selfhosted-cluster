@@ -1,0 +1,78 @@
+# code: language=ansible
+
+- name: Install Flux Operator with Helm
+  kubernetes.core.helm:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: flux-system
+    name: flux-operator
+    chart_ref: oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator
+    create_namespace: true
+    wait: false
+  become: false
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - k8s-flux-operator-install
+
+- name: Create flux instance
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: flux-system
+    definition:
+      apiVersion: fluxcd.controlplane.io/v1
+      kind: FluxInstance
+      metadata:
+        name: flux
+        annotations:
+          fluxcd.controlplane.io/reconcileEvery: "30m"
+          fluxcd.controlplane.io/reconcileTimeout: "5m"
+      spec:
+        distribution:
+          version: "2.6.x"
+          registry: ghcr.io/fluxcd
+          artifact: oci://ghcr.io/controlplaneio-fluxcd/flux-operator-manifests
+        components:
+          - source-controller
+          - kustomize-controller
+          - helm-controller
+          - notification-controller
+          - image-automation-controller
+          - image-reflector-controller
+        cluster:
+          type: kubernetes
+          multitenant: false
+          networkPolicy: true
+          domain: "{{ k8s_cluster_domain }}"
+        storage:
+          class: longhorn
+          size: 10Gi
+  become: false
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - k8s-flux-operator-instance
+
+# yamllint disable rule:line-length
+- name: Create flux githubapp secret
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: flux-system
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: flux-system
+      type: Opaque
+      data:
+        githubAppID: "{{ '1361382' | b64encode }}"
+        githubAppInstallationID: "{{ '69558372' | b64encode }}"
+        githubAppPrivateKey: "{{ lookup('community.general.onepassword', 'fzymgc-house-fluxcd-githubapp-private-key', vault='fzymgc-house', field='private-key') }}"
+        githubAppWebhookSecret: "{{ '1234567890' | b64encode }}"
+  become: false
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - k8s-flux-operator-githubapp-secret

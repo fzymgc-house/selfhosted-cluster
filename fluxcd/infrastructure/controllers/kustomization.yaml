@@ -6,3 +6,4 @@ resources:
   - ./helm-repositories
   - ./metallb
   - ./cert-manager
+  - ./traefik

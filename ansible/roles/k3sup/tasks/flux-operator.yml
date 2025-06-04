@@ -58,6 +58,17 @@
           provider: sops
           secretRef:
             name: flux-system-sops-age
+        kustomize:
+          patches:
+            - target:
+                kind: Deployment
+                name: helm-controller
+              patch: |-
+                - op: remove
+                  path: /spec/template/spec/containers/0/args/2
+                - op: add
+                  path: /spec/template/spec/containers/0/args/-
+                  value: --log-level=debug
   become: false
   run_once: true
   delegate_to: localhost

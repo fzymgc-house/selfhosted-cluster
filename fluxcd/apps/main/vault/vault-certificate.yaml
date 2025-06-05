@@ -1,0 +1,34 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vault-api-tls
+  namespace: vault
+spec:
+  secretName: vault-api-tls
+  issuerRef:
+    name: fzymgc-house-issuer
+    kind: ClusterIssuer
+  commonName: "system:node:*.vault.svc.cluster.local"
+  dnsNames:
+    - "vault.fzymgc.house"
+    - "vault.k8s.fzymgc.house"
+    - "vault-0.fzymgc.house"
+    - "vault-1.fzymgc.house"
+    - "vault-2.fzymgc.house"
+    - "vault-0.k8s.fzymgc.house"
+    - "vault-1.k8s.fzymgc.house"
+    - "vault-2.k8s.fzymgc.house"
+    - "vault-0"
+    - "vault-1"
+    - "vault-2"
+    - "*.vault-internal"
+    - "*.vault-internal.vault.svc.cluster.local"
+    - "*.vault"
+  ipAddresses:
+    - "127.0.0.1"
+  usages:
+    - server auth
+    - client auth
+    - digital signature
+    - key encipherment
+    - data encipherment

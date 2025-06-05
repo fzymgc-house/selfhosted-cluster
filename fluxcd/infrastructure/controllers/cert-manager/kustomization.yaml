@@ -4,3 +4,7 @@ namespace: cert-manager
 resources:
   - ./namespace.yaml
   - ./helm-install.yaml
+  - ./cloudflare-api-token.yaml
+  - ./cloudflare-acme-issuer.yaml
+  - ./fzymgc-house-ica1-key.yaml
+  - ./fzymgc-house-issuer.yaml

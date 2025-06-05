@@ -12,3 +12,5 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: traefik
+        namespace: flux-system
+      releaseName: traefik-crds

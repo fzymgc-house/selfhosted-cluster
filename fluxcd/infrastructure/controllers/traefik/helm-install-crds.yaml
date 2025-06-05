@@ -13,4 +13,13 @@ spec:
         kind: HelmRepository
         name: traefik
         namespace: flux-system
-      releaseName: traefik-crds
+  releaseName: traefik-crds
+  install:
+    remediation:
+      retries: 3
+    skipCRDs: true
+  upgrade:
+    remediation:
+      retries: 3
+  driftDetection:
+    mode: warn

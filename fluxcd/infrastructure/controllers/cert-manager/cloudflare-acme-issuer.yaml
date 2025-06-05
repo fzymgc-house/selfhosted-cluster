@@ -17,3 +17,4 @@ spec:
         selector:
           dnsNames:
             - "*.fzymgc.house"
+            - "*.k8s.fzymgc.house"

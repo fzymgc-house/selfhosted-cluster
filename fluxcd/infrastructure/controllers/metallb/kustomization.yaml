@@ -5,3 +5,5 @@ namespace: metallb
 resources:
   - ./namespace.yaml
   - ./helm-install.yaml
+  - ./address-pools.yaml
+  - ./l2-announce.yaml

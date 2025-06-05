@@ -3,5 +3,6 @@ kind: Kustomization
 namespace: traefik
 resources:
   - ./namespace.yaml
+  - ./wildcard-cert.yaml
   - ./helm-install-crds.yaml
   - ./helm-install-traefik.yaml

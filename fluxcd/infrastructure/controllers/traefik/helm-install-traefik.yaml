@@ -23,6 +23,13 @@ spec:
       retries: 3
   driftDetection:
     mode: warn
+  dependsOn:
+    - name: traefik-crds
+      namespace: traefik
+    - name: cert-manager
+      namespace: cert-manager
+    - name: metallb
+      namespace: metallb-system
   values:
     deployment:
       replicas: 2

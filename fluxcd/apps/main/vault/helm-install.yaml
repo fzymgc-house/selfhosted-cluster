@@ -22,6 +22,13 @@ spec:
       retries: 3
   driftDetection:
     mode: warn
+  dependsOn:
+    - name: cert-manager
+      namespace: cert-manager
+    - name: longhorn
+      namespace: longhorn-system
+    - name: traefik
+      namespace: traefik
   values:
     global:
       tlsDisable: false

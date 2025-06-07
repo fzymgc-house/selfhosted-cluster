@@ -25,8 +25,6 @@ spec:
   dependsOn:
     - name: cert-manager
       namespace: cert-manager
-    - name: longhorn
-      namespace: longhorn-system
     - name: traefik
       namespace: traefik
   values:

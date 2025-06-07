@@ -29,7 +29,7 @@ spec:
     - name: cert-manager
       namespace: cert-manager
     - name: metallb
-      namespace: metallb-system
+      namespace: metallb
   values:
     deployment:
       replicas: 2

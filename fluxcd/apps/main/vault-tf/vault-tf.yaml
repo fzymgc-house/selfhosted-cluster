@@ -13,14 +13,15 @@ spec:
     name: flux-system-tf
     namespace: flux-system
   runnerPodTemplate:
-    volumes:
-      - name: vault-cert
-        configMap:
-          name: fzymgc-ica1-ca
-    volumeMounts:
-      - name: vault-cert
-        mountPath: /certs
-        readOnly: true
-    env:
-      - name: VAULT_CACERT
-        value: /certs/fullchain.crt
+    spec:
+      volumes:
+        - name: vault-cert
+          configMap:
+            name: fzymgc-ica1-ca
+      volumeMounts:
+        - name: vault-cert
+          mountPath: /certs
+          readOnly: true
+      env:
+        - name: VAULT_CACERT
+          value: /certs/fullchain.crt

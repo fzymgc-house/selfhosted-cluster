@@ -1,0 +1,6 @@
+# add a patch to tofu-controller to allow cross-namespace refs
+- op: remove
+  path: /spec/template/spec/containers/0/args/0
+- op: add
+  path: /spec/template/spec/containers/0/args/-
+  value: --allow-cross-namespace-refs=true

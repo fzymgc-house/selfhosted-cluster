@@ -7,7 +7,7 @@ metadata:
   annotations:
     replicator.v1.mittwald.de/replicate-to: "vault,external-secrets"
 type: kubernetes.io/tls
-data:
+stringData:
   ca.crt: |
     -----BEGIN CERTIFICATE-----
     MIIB/TCCAV6gAwIBAgIQcyZRKfTkjT13kJxk5XcboDAKBggqhkjOPQQDBDAZMRcw
@@ -31,7 +31,7 @@ metadata:
   annotations:
     replicator.v1.mittwald.de/replicate-to: "vault,external-secrets"
 type: kubernetes.io/tls
-data:
+stringData:
   ca.crt: |
     -----BEGIN CERTIFICATE-----
     MIICJjCCAYigAwIBAgIQfZqeMBdUuEjUlz0YK1uFsTAKBggqhkjOPQQDBDAZMRcw

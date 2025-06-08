@@ -1,6 +1,0 @@
-longhornUI:
-  replicas: 1
-
-persistence:
-  defaultDataLocality: "best-effort"
-  defaultClassReplicaCount: 2

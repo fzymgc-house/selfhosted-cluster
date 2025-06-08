@@ -1,3 +1,3 @@
 provider "vault" {
-  address = "https://vault-internal.vault.svc.cluster.local:8200"
+  address = "https://vault-internal:8200"
 }

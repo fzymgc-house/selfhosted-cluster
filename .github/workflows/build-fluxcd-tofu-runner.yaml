@@ -34,3 +34,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/fzymgc-house/fluxcd-tofu-runner:latest
+          context: containers/fluxcd-tofu-runner

@@ -26,3 +26,8 @@ spec:
       env:
         - name: VAULT_CACERT
           value: /certs/fullchain.crt
+        - name: VAULT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: vault-token
+              key: VAULT_TOKEN

@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'containers/fluxcd-tofu-runner/**'
   workflow_dispatch:
 
 

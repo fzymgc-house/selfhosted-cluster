@@ -8,7 +8,7 @@ resource "vault_auth_backend" "kubernetes" {
 }
 
 import {
-  id = "auth/kubernetes"
+  id = "auth/kubernetes/config"
   to = vault_kubernetes_auth_backend_config.kubernetes
 }
 

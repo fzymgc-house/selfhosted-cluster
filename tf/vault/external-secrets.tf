@@ -1,5 +1,5 @@
 import {
-  id = "external-secrets"
+  id = "auth/kubernetes/role/external-secrets"
   to = vault_kubernetes_auth_backend_role.external-secrets
 }
 

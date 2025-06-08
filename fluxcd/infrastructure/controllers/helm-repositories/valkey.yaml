@@ -4,5 +4,6 @@ metadata:
   name: valkey
   namespace: flux-system
 spec:
+  type: oci
   interval: 8h
   url: oci://registry-1.docker.io/bitnamicharts

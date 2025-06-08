@@ -31,3 +31,5 @@ spec:
             secretKeyRef:
               name: vault-token
               key: VAULT_TOKEN
+        - name: VAULT_ADDR
+          value: https://vault-internal.vault:8200

@@ -11,21 +11,3 @@ resource "vault_kubernetes_auth_backend_role" "external-secrets" {
   audience = "https://kubernetes.default.svc.cluster.local"
   token_policies = ["default", "external-secrets-operator"]
 }
-
-import {
-  to = vault_policy.external-secrets-operator
-  id = "external-secrets-operator"
-}
-
-resource "vault_policy" "external-secrets-operator" {
-  name   = "external-secrets-operator"
-  policy = <<EOT
-path "secret/data" {
-  capabilities = ["read","list"]
-}
-
-path "secret/data/*" {
-  capabilities = ["read","list"]
-}
-EOT
-}

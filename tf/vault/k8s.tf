@@ -5,6 +5,7 @@ import {
 
 resource "vault_auth_backend" "kubernetes" {
   type = "kubernetes"
+  disable_remount = false
 }
 
 import {

@@ -1,5 +1,10 @@
+import {
+  id = "external-secrets"
+  to = vault_kubernetes_auth_backend_role.external-secrets
+}
+
 resource "vault_kubernetes_auth_backend_role" "external-secrets" {
-  backend = data.vault_kubernetes_auth_backend_config.kubernetes.backend
+  backend = vault_auth_backend.kubernetes.path
   role_name = "external-secrets"
   bound_service_account_namespaces = ["external-secrets"]
   bound_service_account_names = ["external-secrets"]

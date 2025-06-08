@@ -3,7 +3,7 @@ kind: StorageClass
 metadata:
   name: postgres-storage
 spec:
-  provisioner: driver.longhorn.io
+  storageProvisioner: driver.longhorn.io
   allowVolumeExpansion: true
   volumeBindingMode: WaitForFirstConsumer
   reclaimPolicy: Retain

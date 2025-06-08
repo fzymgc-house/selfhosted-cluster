@@ -4,3 +4,4 @@ namespace: external-secrets
 resources:
   - ./namespace.yaml
   - ./helm-install.yaml
+  - ./vault-cluster-secret-store.yaml

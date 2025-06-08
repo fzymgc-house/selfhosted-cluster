@@ -1,13 +1,12 @@
 ---
 apiVersion: v1
-kind: Secret
+kind: ConfigMap
 metadata:
   name: fzymgc-root-ca
   namespace: default
   annotations:
     replicator.v1.mittwald.de/replicate-to: "vault,external-secrets"
-type: kubernetes.io/tls
-stringData:
+data:
   ca.crt: |
     -----BEGIN CERTIFICATE-----
     MIIB/TCCAV6gAwIBAgIQcyZRKfTkjT13kJxk5XcboDAKBggqhkjOPQQDBDAZMRcw
@@ -24,14 +23,13 @@ stringData:
     -----END CERTIFICATE-----
 ---
 apiVersion: v1
-kind: Secret
+kind: ConfigMap
 metadata:
   name: fzymgc-ica1-ca
   namespace: default
   annotations:
     replicator.v1.mittwald.de/replicate-to: "vault,external-secrets"
-type: kubernetes.io/tls
-stringData:
+data:
   ca.crt: |
     -----BEGIN CERTIFICATE-----
     MIICJjCCAYigAwIBAgIQfZqeMBdUuEjUlz0YK1uFsTAKBggqhkjOPQQDBDAZMRcw

@@ -7,7 +7,7 @@ resource "vault_kubernetes_auth_backend_role" "external-secrets" {
   backend = vault_auth_backend.kubernetes.path
   role_name = "external-secrets"
   bound_service_account_namespaces = ["external-secrets"]
-  bound_service_account_names = ["external-secrets"]
+  bound_service_account_names = ["external-secrets-operator"]
   audience = "vault"
   token_policies = ["default", "external-secrets-operator"]
 }

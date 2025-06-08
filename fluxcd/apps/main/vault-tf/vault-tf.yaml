@@ -7,7 +7,7 @@ spec:
   interval: 1m
   retryInterval: 1m
   path: ./vault
-  approvePlan: ""
+  approvePlan: auto
   sourceRef:
     kind: OCIRepository
     name: flux-system-tf

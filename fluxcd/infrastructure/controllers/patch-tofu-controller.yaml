@@ -4,3 +4,6 @@
 - op: add
   path: /spec/template/spec/containers/0/args/-
   value: --allow-cross-namespace-refs=true
+- op: replace
+  path: /spec/replicas
+  value: 2

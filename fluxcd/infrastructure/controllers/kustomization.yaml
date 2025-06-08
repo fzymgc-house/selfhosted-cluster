@@ -18,4 +18,4 @@ patchesJson6902:
       kind: Deployment
       name: tofu-controller
       namespace: flux-system
-    patch: ./patch-tofu-controller.yaml
+    path: ./patch-tofu-controller.yaml

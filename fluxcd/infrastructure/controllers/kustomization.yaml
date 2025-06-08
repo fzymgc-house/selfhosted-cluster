@@ -2,7 +2,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - https://raw.githubusercontent.com/flux-iac/tofu-controller/refs/heads/main/docs/release.yaml
+  - ./flux-tofu-controller
   - ./gateway-api-setup
   - ./helm-repositories
   - ./metallb
@@ -10,12 +10,3 @@ resources:
   - ./traefik
   - https://raw.githubusercontent.com/mittwald/kubernetes-replicator/master/deploy/rbac.yaml
   - https://raw.githubusercontent.com/mittwald/kubernetes-replicator/master/deploy/deployment.yaml
-
-patchesJson6902:
-  - target:
-      group: apps
-      version: v1
-      kind: Deployment
-      name: tofu-controller
-      namespace: flux-system
-    path: ./patch-tofu-controller.yaml

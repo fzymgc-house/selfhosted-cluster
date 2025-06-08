@@ -11,7 +11,7 @@ metadata:
   name: vault-tf-runner
 roleRef:
   kind: ClusterRole
-  name: tf-runner
+  name: tf-runner-role
   apiGroup: rbac.authorization.k8s.io
 subjects:
   - kind: ServiceAccount

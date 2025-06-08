@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-main-server-tls
+  namespace: postgres
+  labels:
+    cnpg.io/reload: "true"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-main-streaming-replica-client-tls
+  namespace: postgres
+  labels:
+    cnpg.io/reload: "true"
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: postgres-main-server
+  namespace: postgres
+spec:
+  secretName: postgres-main-server-tls
+  usages:
+    - server auth
+  issuerRef:
+    name: vault-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - "pg-main.tpi-beta.fzymgc.house"
+    - "main-r"
+    - "main-ro"
+    - "main-rw"
+    - "main-r.postgres.svc.cluster.local"
+    - "main-ro.postgres.svc.cluster.local"
+    - "main-rw.postgres.svc.cluster.local"
+    - "main-r.postgres.svc"
+    - "main-ro.postgres.svc"
+    - "main-rw.postgres.svc"
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: postgres-main-streaming-replica-client
+  namespace: postgres
+spec:
+  secretName: postgres-main-streaming-replica-client-tls
+  usages:
+    - client auth
+  issuerRef:
+    name: vault-issuer
+    kind: ClusterIssuer
+  commonName: "streaming_replica"

@@ -10,10 +10,11 @@ permissions:
   packages: write
 
 env:
-  OCI_REPO: "oci://ghcr.io/${{github.repository_owner}}/manifests/${{github.event.repository.name}}"
+  FLUXCD_OCI_REPO: "oci://ghcr.io/${{github.repository_owner}}/manifests/${{github.event.repository.name}}"
+  TF_OCI_REPO: "oci://ghcr.io/${{github.repository_owner}}/manifests/${{github.event.repository.name}}-tf"
 
 jobs:
-  push-artifact:
+  push-fluxcd-artifact:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -29,7 +30,7 @@ jobs:
       - name: Push artifact
         run: |
           echo "VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          digest_url=$(flux push artifact $OCI_REPO:$(git rev-parse --short HEAD) \
+          digest_url=$(flux push artifact $FLUXCD_OCI_REPO:$(git rev-parse --short HEAD) \
             --path ./fluxcd \
             --source $(git config --get remote.origin.url) \
             --revision $(git branch --show-current)@sha1:$(git rev-parse HEAD) \
@@ -38,7 +39,7 @@ jobs:
           echo "DIGEST_URL=$digest_url" >> $GITHUB_ENV
       - name: Tag manifests to main
         run: |
-          flux tag artifact $OCI_REPO:${{ env.VERSION }} --tag main
+          flux tag artifact $FLUXCD_OCI_REPO:${{ env.VERSION }} --tag main
       - name: Discord notification
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
@@ -46,4 +47,38 @@ jobs:
         with:
           args: |
             New flux artifact update from: {{ EVENT_PAYLOAD.repository.full_name }} commit: **${{ env.VERSION }}**
+            Digest URL: ${{ env.DIGEST_URL }}
+  push-tf-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Setup Flux CLI
+        uses: fluxcd/flux2/action@main
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push artifact
+        run: |
+          echo "VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          digest_url=$(flux push artifact $TF_OCI_REPO:$(git rev-parse --short HEAD) \
+            --path ./tf \
+            --source $(git config --get remote.origin.url) \
+            --revision $(git branch --show-current)@sha1:$(git rev-parse HEAD) \
+            --output json | \
+            jq -r '. | .repository + "@" + .digest')
+          echo "DIGEST_URL=$digest_url" >> $GITHUB_ENV
+      - name: Tag manifests to main
+        run: |
+          flux tag artifact $TF_OCI_REPO:${{ env.VERSION }} --tag main
+      - name: Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            New tf artifact update from: {{ EVENT_PAYLOAD.repository.full_name }} commit: **${{ env.VERSION }}**
             Digest URL: ${{ env.DIGEST_URL }}

@@ -6,3 +6,4 @@ resources:
   - ./external-secrets-operator
   - ./vault-tf
   - ./valkey
+  - ./cnpg

@@ -9,3 +9,4 @@ resources:
   - ./hashicorp.yaml
   - ./external-secrets.yaml
   - ./valkey.yaml
+  - ./cnpg.yaml

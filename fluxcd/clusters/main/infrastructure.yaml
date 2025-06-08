@@ -48,5 +48,7 @@ metadata:
 spec:
   interval: 1m
   url: oci://ghcr.io/fzymgc-house/manifests/selfhosted-cluster-tf
+  ref:
+    tag: main
   secretRef:
     name: flux-system-oci-pull-secret

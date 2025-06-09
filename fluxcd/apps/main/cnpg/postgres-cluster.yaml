@@ -26,11 +26,11 @@ spec:
       secret:
         name: main-main-admin-credentials
 
-  # plugins:
-  #   - name: barman-cloud.cloudnative-pg.io
-  #     isWALArchiver: true
-  #     parameters:
-  #       barmanObjectName: barman-object-store-main
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: barman-object-store-main
 
   storage:
     size: 10Gi

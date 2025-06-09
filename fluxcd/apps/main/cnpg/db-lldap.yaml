@@ -16,6 +16,9 @@ spec:
     template:
       type: kubernetes.io/basic-auth
       data:
+        metadata:
+          labels:
+            cnpg.io/reload: "true"
         username: "{{ .username }}"
         password: "{{ .password }}"
   data:

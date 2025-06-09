@@ -6,9 +6,8 @@ metadata:
 spec:
   secretName: postgres-main-server-tls
   secretTemplate:
-    metadata:
-      labels:
-        cnpg.io/reload: "true"
+    labels:
+      cnpg.io/reload: "true"
   usages:
     - server auth
   issuerRef:
@@ -34,9 +33,8 @@ metadata:
 spec:
   secretName: postgres-main-streaming-replica-client-tls
   secretTemplate:
-    metadata:
-      labels:
-        cnpg.io/reload: "true"
+    labels:
+      cnpg.io/reload: "true"
   usages:
     - client auth
   issuerRef:

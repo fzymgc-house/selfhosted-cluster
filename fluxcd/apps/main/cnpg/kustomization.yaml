@@ -5,5 +5,5 @@ resources:
   - ./namespace.yaml
   - ./helm-install.yaml
   - ./certificates.yaml
-  - ./storageclass-postgres.yaml
+  # - ./storageclass-postgres.yaml
   - https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.5.0/manifest.yaml

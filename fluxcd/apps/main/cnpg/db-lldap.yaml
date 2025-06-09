@@ -1,0 +1,40 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: main-lldap-credentials
+  namespace: postgres
+spec:
+  refreshPolicy: Periodic
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: main-lldap-credentials
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      type: kubernetes.io/basic-auth
+      data:
+        username: "{{ .username }}"
+        password: "{{ .password }}"
+    data:
+      - secretKey: username
+        remoteRef:
+          key: fzymgc-house/cluster/postgres/users/main-lldap
+          property: username
+      - secretKey: password
+        remoteRef:
+          key: fzymgc-house/cluster/postgres/users/main-lldap
+          property: password
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: lldap
+  namespace: postgres
+spec:
+  cluster: main
+  ensure: present
+  name: lldap
+  owner: lldap

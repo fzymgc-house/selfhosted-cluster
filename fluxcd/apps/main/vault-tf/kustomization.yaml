@@ -5,3 +5,4 @@ resources:
   - ./vault-token.yaml
   - ./tf-runner-sa.yaml
   - ./vault-tf.yaml
+  - ./vault-certmanager-issuer.yaml

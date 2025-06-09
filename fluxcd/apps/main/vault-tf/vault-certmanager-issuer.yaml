@@ -39,8 +39,8 @@ spec:
     path: fzymgc-house/v1/ica1/v1/sign/cert-manager
     server: https://vault-internal.vault:8200
     caBundleSecretRef:
-      name: vault-api-tls
-      key: ca.crt
+      name: fzymgc-ica1-ca
+      key: fullchain.crt
     auth:
       kubernetes:
         role: cert-manager

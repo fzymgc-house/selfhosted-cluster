@@ -40,13 +40,13 @@ spec:
   configuration:
     destinationPath: "s3://fzymgc-tpi-beta-backups/postgres/barman/main"
     endpointURL: "https://s3.us-west-000.backblazeb2.com"
-  s3Credentials:
-    accessKeyId:
-      name: main-backup-storage-credentials
-      key: ACCESS_KEY_ID
-    secretAccessKey:
-      name: main-backup-storage-credentials
-      key: ACCESS_SECRET_KEY
+    s3Credentials:
+      accessKeyId:
+        name: main-backup-storage-credentials
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: main-backup-storage-credentials
+        key: ACCESS_SECRET_KEY
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup

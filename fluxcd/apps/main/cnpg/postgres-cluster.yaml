@@ -26,6 +26,12 @@ spec:
       secret:
         name: main-main-admin-credentials
 
+  backup:
+    target: prefer-standby
+    volumeSnapshot:
+      className: longhorn-snap
+    retentionPolicy: 30d
+
   plugins:
     - name: barman-cloud.cloudnative-pg.io
       isWALArchiver: true

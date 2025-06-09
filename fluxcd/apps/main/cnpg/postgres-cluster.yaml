@@ -14,7 +14,7 @@ spec:
     clientCASecret: postgres-main-server-tls
     replicationTLSSecret: postgres-main-streaming-replica-client-tls
 
-  enableSuperUserAccess: true
+  enableSuperuserAccess: true
 
   superuserSecret:
     name: main-superuser-credentials

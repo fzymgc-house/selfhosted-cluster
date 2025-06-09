@@ -34,7 +34,8 @@ metadata:
   name: authelia
   namespace: postgres
 spec:
-  cluster: main
+  cluster:
+    name: main
   ensure: present
   name: authelia
   owner: authelia

@@ -34,7 +34,8 @@ metadata:
   name: lldap
   namespace: postgres
 spec:
-  cluster: main
+  cluster:
+    name: main
   ensure: present
   name: lldap
   owner: lldap

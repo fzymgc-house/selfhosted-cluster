@@ -18,15 +18,15 @@ spec:
       data:
         username: "{{ .username }}"
         password: "{{ .password }}"
-    data:
-      - secretKey: username
-        remoteRef:
-          key: fzymgc-house/cluster/postgres/users/main-superuser
-          property: username
-      - secretKey: password
-        remoteRef:
-          key: fzymgc-house/cluster/postgres/users/main-superuser
-          property: password
+  data:
+    - secretKey: username
+      remoteRef:
+        key: fzymgc-house/cluster/postgres/users/main-superuser
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: fzymgc-house/cluster/postgres/users/main-superuser
+        property: password
 ---
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
@@ -48,12 +48,12 @@ spec:
       data:
         username: "{{ .username }}"
         password: "{{ .password }}"
-    data:
-      - secretKey: username
-        remoteRef:
-          key: fzymgc-house/cluster/postgres/users/main-main-admin
-          property: username
-      - secretKey: password
-        remoteRef:
-          key: fzymgc-house/cluster/postgres/users/main-main-admin
-          property: password
+  data:
+    - secretKey: username
+      remoteRef:
+        key: fzymgc-house/cluster/postgres/users/main-main-admin
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: fzymgc-house/cluster/postgres/users/main-main-admin
+        property: password

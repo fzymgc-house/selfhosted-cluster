@@ -1,0 +1,60 @@
+apiVersion: postgres.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: main
+  namespace: postgres
+spec:
+  instances: 2
+  imageName: ghcr.io/cloudnative-pg/postgres:17.4
+  primaryUpdateStrategy: unsupervised
+
+  certificates:
+    serverTLSSecret: postgres-main-server-tls
+    serverCASecret: postgres-main-server-tls
+    clientCASecret: postgres-main-server-tls
+    replicationTLSSecret: postgres-main-streaming-replica-client-tls
+
+  enableSuperUserAccess: true
+
+  superuserSecret:
+    name: main-superuser-credentials
+
+  bootstrap:
+    initdb:
+      database: main
+      owner: main-admin
+      secret:
+        name: main-main-admin-credentials
+
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: barman-object-store-main
+
+  storage:
+    size: 10Gi
+    storageClass: postgres-storage
+
+  resources:
+    requests:
+      cpu: 256m
+      memory: 384Mi
+    limits:
+      cpu: 1500m
+      memory: 1Gi
+
+  managed:
+    roles:
+      - name: authelia
+        ensure: present
+        passwordSecret:
+          name: main-authelia-credentials
+        superuser: false
+        login: true
+      - name: lldap
+        ensure: present
+        passwordSecret:
+          name: main-lldap-credentials
+        superuser: false
+        login: true

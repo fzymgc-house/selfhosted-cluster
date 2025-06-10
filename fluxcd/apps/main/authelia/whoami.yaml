@@ -47,8 +47,8 @@ spec:
     name: vault-issuer
     kind: ClusterIssuer
   dnsNames:
-    - whoami.tpi-beta.fzymgc.house
-    - auth.whoami.tpi-beta.fzymgc.house
+    - whoami.k8s.fzymgc.house
+    - auth.whoami.k8s.fzymgc.house
     - whoami.authelia.svc.cluster.local
     - whoami.authelia.svc
     - whoami
@@ -63,7 +63,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`whoami.tpi-beta.fzymgc.house`)
+    - match: Host(`whoami.k8s.fzymgc.house`)
       kind: Rule
       middlewares:
         - name: modern-auth
@@ -71,7 +71,7 @@ spec:
       services:
         - name: whoami
           port: 80
-    - match: Host(`auth.whoami.tpi-beta.fzymgc.house`)
+    - match: Host(`auth.whoami.k8s.fzymgc.house`)
       kind: Rule
       middlewares:
         - name: modern-auth

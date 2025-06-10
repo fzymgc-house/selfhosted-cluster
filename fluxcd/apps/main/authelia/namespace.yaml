@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: authelia
+  labels:
+    fluxcd.io/locked: "true"
+    fluxcd.io/locked-by: "flux"

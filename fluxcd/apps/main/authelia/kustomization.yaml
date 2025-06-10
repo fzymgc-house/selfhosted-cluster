@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: authelia
 
 resources:
+  - namespace.yaml
   - secrets.yaml
   - certificate.yaml
   - traefik-middleware.yaml

@@ -38,8 +38,8 @@ metadata:
   namespace: postgres
 spec:
   configuration:
-    destinationPath: "s3://fzymgc-tpi-beta-backups/postgres/barman/main"
-    endpointURL: "https://s3.us-west-000.backblazeb2.com"
+    destinationPath: "s3://cluster-backups/postgres/barman/main"
+    endpointURL: "https://gateway.storjshare.io"
     s3Credentials:
       accessKeyId:
         name: main-backup-storage-credentials

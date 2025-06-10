@@ -8,4 +8,4 @@ resources:
   - ./valkey
   - ./cnpg
   - ./lldap
-  # - ./authelia
+  - ./authelia

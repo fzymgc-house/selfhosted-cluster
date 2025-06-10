@@ -4,10 +4,10 @@ kind: Kustomization
 namespace: lldap
 
 resources:
+  - namespace.yaml
   - config.yaml
   - secret-config.yaml
   - certificate.yaml
   - deployment.yaml
   - pdb.yaml
   - service.yaml
-

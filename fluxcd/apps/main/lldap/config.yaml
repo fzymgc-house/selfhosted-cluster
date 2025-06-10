@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lldap-config
+  labels:
+    kubernetes.io/part-of: lldap
+data:
+  GID: "1001"
+  UID: "1001"
+  TZ: "US/Eastern"

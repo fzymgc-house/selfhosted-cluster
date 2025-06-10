@@ -1,0 +1,17 @@
+# This is a certificate for the lldap service.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: lldap-tls
+spec:
+  secretName: lldap-tls
+  issuerRef:
+    name: vault-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - lldap.fzymgc.house
+    - lldap.lldap.svc.cluster.local
+    - lldap.lldap.svc
+    - lldap
+  usages:
+    - server auth

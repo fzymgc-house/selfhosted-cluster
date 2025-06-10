@@ -1,0 +1,28 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: modern-auth
+spec:
+  forwardAuth:
+    address: http://authelia.authelia.svc/api/authz/forward-auth?authelia_url=https%3A%2F%2Fauth.fzymgc.house%2F
+    trustForwardHeader: true
+    authResponseHeaders:
+      - Remote-User
+      - Remote-Groups
+      - Remote-Email
+      - Remote-Name
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: basic-auth
+spec:
+  forwardAuth:
+    address: http://authelia.authelia.svc/api/verify?auth=basic&authelia_url=https%3A%2F%2Fauth.fzymgc.house%2F
+    trustForwardHeader: true
+    authResponseHeaders:
+      - Remote-User
+      - Remote-Groups
+      - Remote-Email
+      - Remote-Name

@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lldap
+  labels:
+    kubernetes.io/part-of: lldap
+    app.kubernetes.io/name: lldap
+spec:
+  replicas: 2
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: lldap
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: lldap
+        app.kubernetes.io/instance: lldap
+    spec:
+      containers:
+        - name: lldap
+          image: nitnelave/lldap:v0.6.1
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 512Mi
+          envFrom:
+            - configMapRef:
+                name: lldap-config
+            - secretRef:
+                name: lldap-secret-config
+          ports:
+            - containerPort: 3890
+              name: ldap
+            - containerPort: 6360
+              name: ldaps
+            - containerPort: 17170
+              name: http

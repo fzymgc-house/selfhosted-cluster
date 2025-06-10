@@ -1,0 +1,21 @@
+# This is a service for the lldap service.
+apiVersion: v1
+kind: Service
+metadata:
+  name: lldap
+  labels:
+    kubernetes.io/part-of: lldap
+spec:
+  type: ClusterIP
+  ports:
+    - port: 389
+      targetPort: 3890
+      name: ldap
+    - port: 636
+      targetPort: 6360
+      name: ldaps
+    - port: 17170
+      targetPort: 17170
+      name: http
+  selector:
+    app.kubernetes.io/name: lldap

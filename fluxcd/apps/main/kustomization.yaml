@@ -7,3 +7,4 @@ resources:
   - ./vault-tf
   - ./valkey
   - ./cnpg
+  - ./authelia

@@ -38,8 +38,8 @@ metadata:
   namespace: postgres
 spec:
   configuration:
-    destinationPath: "s3://cluster-backups/postgres/barman/main"
-    endpointURL: "https://gateway.storjshare.io"
+    destinationPath: "s3://fzymgc-cluster-storage/postgres/barman/main"
+    endpointURL: "https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com"
     s3Credentials:
       accessKeyId:
         name: main-backup-storage-credentials

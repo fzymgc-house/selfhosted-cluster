@@ -103,7 +103,7 @@ metadata:
   name: fzymgc-ica1-ca
   namespace: default
   annotations:
-    replicator.v1.mittwald.de/replicate-to: "vault,external-secrets,cert-manager"
+    replicator.v1.mittwald.de/replicate-to: "vault,external-secrets,cert-manager,authelia"
 stringData:
   ca.crt: |
     -----BEGIN CERTIFICATE-----

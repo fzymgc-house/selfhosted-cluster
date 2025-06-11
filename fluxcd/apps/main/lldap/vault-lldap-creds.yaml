@@ -1,0 +1,26 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: lldap-creds
+  namespace: vault
+  labels:
+    kubernetes.io/part-of: lldap
+spec:
+  refreshPolicy: Periodic
+  refreshInterval: 1m
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: lldap-creds
+    creationPolicy: Owner
+    template:
+      type: Opaque
+      data:
+        username: admin
+        password: "{{ .lldap_ldap_user_pass }}"
+  data:
+    - secretKey: lldap_ldap_user_pass
+      remoteRef:
+        key: fzymgc-house/cluster/lldap
+        property: admin-user-password

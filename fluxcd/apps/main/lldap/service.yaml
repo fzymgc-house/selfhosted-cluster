@@ -3,6 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: lldap
+  namespace: lldap
   labels:
     kubernetes.io/part-of: lldap
 spec:

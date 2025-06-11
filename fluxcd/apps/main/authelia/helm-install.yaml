@@ -37,6 +37,18 @@ spec:
       access_control:
         default_policy: two_factor
         rules:
+          - domain: "lldap.fzymgc.house"
+            policy: bypass
+            networks:
+              - 192.168.20.0/22
+              - 192.168.40.0/22
+          - domain: "longhorn.fzymgc.house"
+            policy: one_factor
+            networks:
+              - 192.168.20.0/22
+              - 192.168.40.0/22
+            subject:
+              - [ "group:k8s-cluster-admin" ]
           - domain: auth.fzymgc.house
             policy: bypass
           - domain: "whoami.k8s.fzymgc.house"

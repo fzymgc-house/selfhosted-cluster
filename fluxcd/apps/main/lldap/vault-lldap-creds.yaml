@@ -17,10 +17,10 @@ spec:
     template:
       type: Opaque
       data:
-        username: admin
-        password: "{{ .lldap_ldap_user_pass }}"
+        ldap_admin_username: admin
+        ldap_admin_password: "{{ .password }}"
   data:
-    - secretKey: lldap_ldap_user_pass
+    - secretKey: password
       remoteRef:
         key: fzymgc-house/cluster/lldap
         property: admin-user-password

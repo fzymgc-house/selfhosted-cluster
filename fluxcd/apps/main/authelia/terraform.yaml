@@ -15,8 +15,6 @@ spec:
   varsFrom:
     - kind: Secret
       name: lldap-creds
-      varsKeys:
-        - password:lldap_admin_password
   runnerPodTemplate:
     spec:
       image: ghcr.io/fzymgc-house/fluxcd-tofu-runner:latest

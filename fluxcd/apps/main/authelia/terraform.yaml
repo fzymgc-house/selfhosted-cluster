@@ -33,3 +33,8 @@ spec:
               key: VAULT_TOKEN
         - name: VAULT_ADDR
           value: https://vault-internal.vault:8200
+        - name: TF_VAR_ldap_admin_password
+          valueFrom:
+            secretKeyRef:
+              name: lldap-creds
+              key: password

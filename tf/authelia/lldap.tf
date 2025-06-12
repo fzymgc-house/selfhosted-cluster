@@ -9,7 +9,7 @@ import {
 // Create LDAP authentication backend for Authelia
 resource "vault_ldap_auth_backend" "lldap" {
   path = "ldap"
-  url = "ldaps://lldap.lldap"
+  url = "ldaps://lldap.lldap.svc.cluster.local"
   binddn = "cn=${var.ldap_admin_username},dc=fzymgc,dc=house"
   bindpass = var.ldap_admin_password
   userdn = "ou=users,dc=fzymgc,dc=house"

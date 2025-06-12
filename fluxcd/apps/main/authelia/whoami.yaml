@@ -4,6 +4,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: whoami
+  namespace: authelia
   labels:
     app.kubernetes.io/name: whoami
 spec:
@@ -29,6 +30,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: whoami
+  namespace: authelia
 spec:
   selector:
     app.kubernetes.io/name: whoami
@@ -41,6 +43,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: whoami
+  namespace: authelia
 spec:
   secretName: whoami-tls
   issuerRef:
@@ -59,6 +62,7 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: whoami
+  namespace: authelia
 spec:
   entryPoints:
     - websecure

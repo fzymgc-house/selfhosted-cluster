@@ -12,7 +12,7 @@ resource "vault_ldap_auth_backend" "lldap" {
   url = "ldap://lldap.lldap.svc.cluster.local"
   binddn = "cn=${var.ldap_admin_username},dc=fzymgc,dc=house"
   bindpass = var.ldap_admin_password
-  userdn = "ou=users,dc=fzymgc,dc=house"
+  userdn = "ou=people,dc=fzymgc,dc=house"
   userattr = "uid"
   username_as_alias = true
   groupdn = "ou=groups,dc=fzymgc,dc=house"

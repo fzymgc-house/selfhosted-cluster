@@ -19,3 +19,14 @@ resource "vault_ldap_auth_backend" "lldap" {
   groupattr = "cn"
   groupfilter = "(|(memberUid={{.UserDN}})(member={{.UserDN}}))"
 }
+
+import {
+  id = "auth/ldap/groups/vault-users"
+  to = vault_ldap_auth_backend_group.vault-users
+}
+
+resource "vault_ldap_auth_backend_group" "vault-users" {
+  groupname = "vault-users"
+  policies = ["default"]
+  backend = vault_ldap_auth_backend.lldap.path
+}

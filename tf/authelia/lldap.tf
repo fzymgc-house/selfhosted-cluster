@@ -1,3 +1,12 @@
+// lldap.tf - LDAP authentication backend for Authelia
+
+// Import the resource if it exists
+import {
+  id = "ldap"
+  to = vault_ldap_auth_backend.lldap
+}
+
+// Create LDAP authentication backend for Authelia
 resource "vault_ldap_auth_backend" "lldap" {
   path = "ldap"
   url = "ldaps://lldap.lldap"

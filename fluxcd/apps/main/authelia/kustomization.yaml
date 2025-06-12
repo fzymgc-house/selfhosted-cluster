@@ -5,6 +5,7 @@ namespace: authelia
 
 resources:
   - namespace.yaml
+  - tf-runner-sa.yaml
   - secrets.yaml
   - certificate.yaml
   - traefik-middleware.yaml

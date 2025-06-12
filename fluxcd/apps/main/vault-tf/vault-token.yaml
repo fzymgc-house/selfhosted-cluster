@@ -5,7 +5,7 @@ metadata:
     namespace: vault
 type: Opaque
 stringData:
-    VAULT_TOKEN: ENC[AES256_GCM,data:3zBmmELf6TZ2NkMDf2l/9OtDWBXWldz7IhyCSeg7w2axwAic0wFwd89haeNmGPZX5OGyqBGdsnBbbE1ZtCxoCoXwn5dJYPf/s6+fsH/PMQFaJVqkpOcgNQmlKpCBJmc=,iv:Jle+hFSnFa28ppfZ+YM1AB5bMBcUJ/ftOLs7mSAd33g=,tag:cV6RypDA/eSobtQzIku1fg==,type:str]
+    VAULT_TOKEN: ENC[AES256_GCM,data:ohNbmuZUXAJFk5EfZi0gbDR4M5m05spqU0LcRzbIHpi6l242qX3OUjBJpWcwRVuQGQoKT9SHXZQphU/+Ff1I3lrl57I4sq6nq+9o+N+Zgf0wV/Dpi/s/b2nVRSPMDz0=,iv:TDVRurio857p7Gk4xVp70errGAmeRAsnVdjibmqo9pA=,tag:4fZmEix3Zh4zjWDvBc5i7g==,type:str]
 sops:
     age:
         - recipient: age1ceu30hc9e92ytskzfv2hzw7d2wpvw9h4zdxznjst4540n8na537q8tj6lw
@@ -17,7 +17,7 @@ sops:
             b1hPdUw0ZGtZaTBmQkY4dGVKNjZxY0UKQstsZZanASWd1au+1GKe/FrVeEZcQbHk
             RxotZO/yzSk1uNYDOCYoy1b/AFO8EbYZEK/npn7fFPTbDmj7zcuywQ==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2025-06-08T19:38:48Z"
-    mac: ENC[AES256_GCM,data:/xj9QshMIpP5RW9mUE55k4+qEp9TzAlI15P8PamLlYu2gSZYeUErEuD9byzvUfYzTVRVGe3B9LSEzkPDzWeEPTYCB7N8Mi421JbbEJQsXbolHh5jHjrch9/cSTkWYJAUT8OdvQqDCFce+T7lKeHjAkENKTOBec9ZRRSl2XP37Sc=,iv:8JsEoWSweTRxeMF75EjBTjs/yKexmsAj6CQAGZW0pD0=,tag:i5UIRCXmHpiv50L1sO7B7w==,type:str]
+    lastmodified: "2025-06-12T01:44:19Z"
+    mac: ENC[AES256_GCM,data:TCDDTQRXDlXLtU+sPIq6V4PFl5Ewo1ls1M3pHcOO6AmEm3liDfBbySUU0tEDEMxZc5S2DpTjeqznX/rpUdvRg05nLRs514lFoz0SGjgzYBnTLv0epwGak31WFmiDnFHXTHWYoYzsK7suKPnR4499nBvi4/ba0K/uq5S5A8dHda8=,iv:4V9KAtaVA1fJv5MIhjCWlo2+j2iiulivApCZrYjzjOM=,tag:FPhopySeQjCzJOAHmsmB+w==,type:str]
     encrypted_regex: ^(data|stringData)$
     version: 3.10.2

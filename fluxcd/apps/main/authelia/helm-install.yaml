@@ -154,7 +154,6 @@ spec:
                 - authorization_code
               response_types:
                 - code
-              userinfo_signing_algorithm: none
 
     secret:
       existingSecret: authelia-secrets

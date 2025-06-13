@@ -159,7 +159,7 @@ spec:
     secret:
       existingSecret: authelia-secrets
       additionalSecrets:
-        - name: authelia-secrets
+        authelia-secrets: {}
     certificates:
       values:
         - name: fzymgc-root.pem

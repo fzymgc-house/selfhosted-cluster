@@ -131,7 +131,7 @@ spec:
               algorithm: RS256
               use: sig
               key:
-                path: /secrets/authelia/identity_providers.oidc.issuer_private_key
+                path: /secrets/authelia-secrets/identity_providers.oidc.issuer_private_key
               certificate_chain:
                 path: /certificates/fzymgc-vault-intermediate.pem
           hmac_secret:
@@ -158,6 +158,8 @@ spec:
 
     secret:
       existingSecret: authelia-secrets
+      additionalSecrets:
+        - name: authelia-secrets
     certificates:
       values:
         - name: fzymgc-root.pem

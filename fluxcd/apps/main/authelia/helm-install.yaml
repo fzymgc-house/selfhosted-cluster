@@ -136,8 +136,14 @@ spec:
                 path: /secrets/authelia-oidc-tls/tls.crt
           hmac_secret:
             secret_name: authelia-secrets
-          issuer_private_key:
-            secret_name: authelia-secrets
+          issuer_private_keys:
+            - key_id: fzymgc
+              algorithm: RS256
+              use: sig
+              key:
+                path: /secrets/authelia-oidc-tls/tls.key
+              certificate_chain:
+                path: /secrets/authelia-oidc-tls/tls.crt
           # clients:
           #   - id: whoami
           #     description: "Whoami Application"

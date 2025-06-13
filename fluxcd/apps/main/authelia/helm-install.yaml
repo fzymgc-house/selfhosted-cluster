@@ -144,22 +144,22 @@ spec:
                 path: /secrets/authelia-oidc-tls/tls.key
               certificate_chain:
                 path: /secrets/authelia-oidc-tls/tls.crt
-          # clients:
-          #   - id: whoami
-          #     description: "Whoami Application"
-          #     secret: "insecure_secret"
-          #     redirect_uris:
-          #       - "https://whoami.k8s.fzymgc.house/oauth2/callback"
-          #     scopes:
-          #       - openid
-          #       - groups
-          #       - email
-          #       - profile
-          #     grant_types:
-          #       - refresh_token
-          #       - authorization_code
-          #     response_types:
-          #       - code
+          clients:
+            - id: whoami
+              description: "Whoami Application"
+              secret: "insecure_secret"
+              redirect_uris:
+                - "https://whoami.k8s.fzymgc.house/oauth2/callback"
+              scopes:
+                - openid
+                - groups
+                - email
+                - profile
+              grant_types:
+                - refresh_token
+                - authorization_code
+              response_types:
+                - code
 
     secret:
       existingSecret: authelia-secrets

@@ -131,34 +131,35 @@ spec:
               algorithm: RS256
               use: sig
               key:
-                path: /secrets/authelia-secrets/identity_providers.oidc.issuer_private_key
+                path: /secrets/authelia-oidc-tls/tls.key
               certificate_chain:
-                path: /certificates/fzymgc-vault-intermediate.pem
+                path: /secrets/authelia-oidc-tls/tls.crt
           hmac_secret:
             secret_name: authelia-secrets
           issuer_private_key:
             secret_name: authelia-secrets
-          clients:
-            - id: whoami
-              description: "Whoami Application"
-              secret: "insecure_secret"
-              redirect_uris:
-                - "https://whoami.k8s.fzymgc.house/oauth2/callback"
-              scopes:
-                - openid
-                - groups
-                - email
-                - profile
-              grant_types:
-                - refresh_token
-                - authorization_code
-              response_types:
-                - code
+          # clients:
+          #   - id: whoami
+          #     description: "Whoami Application"
+          #     secret: "insecure_secret"
+          #     redirect_uris:
+          #       - "https://whoami.k8s.fzymgc.house/oauth2/callback"
+          #     scopes:
+          #       - openid
+          #       - groups
+          #       - email
+          #       - profile
+          #     grant_types:
+          #       - refresh_token
+          #       - authorization_code
+          #     response_types:
+          #       - code
 
     secret:
       existingSecret: authelia-secrets
       additionalSecrets:
         authelia-secrets: {}
+        authelia-oidc-tls: {}
     certificates:
       values:
         - name: fzymgc-root.pem

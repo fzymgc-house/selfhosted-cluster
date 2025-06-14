@@ -33,6 +33,8 @@ spec:
       enabled: false
       traefikCRD:
         enabled: false
+    services:
+      clusterIP: ""
     configMap:
       access_control:
         default_policy: two_factor

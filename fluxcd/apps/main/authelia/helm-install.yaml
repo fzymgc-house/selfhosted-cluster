@@ -159,6 +159,9 @@ spec:
                 - authorization_code
               response_types:
                 - code
+              redirect_uris:
+                - "https://vault.fzymgc.house/ui/vault/auth/jwt/oidc/callback"
+                - "https://vault.fzymgc.house/jwt/oidc/callback"
 
     secret:
       existingSecret: authelia-secrets

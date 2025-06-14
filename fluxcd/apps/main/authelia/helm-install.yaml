@@ -24,7 +24,7 @@ spec:
     rbac:
       enabled: true
     pod:
-      kind: Deployment
+      kind: StatefulSet
       replicas: 3
       selectors:
         nodeSelector:

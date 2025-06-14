@@ -145,7 +145,7 @@ spec:
               certificate_chain:
                 path: /secrets/authelia-oidc-tls/tls.crt
           clients:
-            - id: whoami
+            - client_id: whoami
               description: "Whoami Application"
               secret: "insecure_secret"
               redirect_uris:

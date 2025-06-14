@@ -145,11 +145,10 @@ spec:
               certificate_chain:
                 path: /secrets/authelia-oidc-tls/tls.crt
           clients:
-            - client_id: whoami
-              description: "Whoami Application"
-              secret: "insecure_secret"
-              redirect_uris:
-                - "https://whoami.k8s.fzymgc.house/oauth2/callback"
+            # Vault
+            - client_id: 3GN4JFyF~N3bRddT2krDfy.eAfygs8eFNdaCMJmxmnl0gHC42iIdIvaO5i_qZznnB~Z0ZIw9
+              client_secret: "$pbkdf2-sha512$310000$5fY4hY2kf30D4YhYF/mf1w$zWad2WyWDUEH9f/DXy70ZRYb2M/RHYTHpC0o3AemCSkI4wPdDDV/lrUtVqpjxmNi5cHBiNPqzPBkFpmLl5qhDg"
+              description: "Vault"
               scopes:
                 - openid
                 - groups

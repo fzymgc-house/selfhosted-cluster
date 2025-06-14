@@ -160,8 +160,9 @@ spec:
               response_types:
                 - code
               redirect_uris:
-                - "https://vault.fzymgc.house/ui/vault/auth/jwt/oidc/callback"
-                - "https://vault.fzymgc.house/jwt/oidc/callback"
+                - https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback
+                - https://vault.fzymgc.house/oidc/oidc/callback
+                - https://vault.fzymgc.house/oidc/callback
 
     secret:
       existingSecret: authelia-secrets

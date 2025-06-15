@@ -11,3 +11,4 @@ resources:
   - ./valkey.yaml
   - ./cnpg.yaml
   - ./authelia.yaml
+  - ./openobserve.yaml

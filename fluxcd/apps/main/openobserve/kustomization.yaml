@@ -5,8 +5,7 @@ namespace: openobserve
 
 resources:
   - namespace.yaml
-  - openobserve-password-external-secret.yaml
-  - service.yaml
-  - statefulset.yaml
+  - secrets.yaml
   - certificate.yaml
   - ingressroute.yaml
+  - helm-install.yaml

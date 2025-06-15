@@ -10,4 +10,4 @@ resources:
   - ./lldap
   - ./authentik
   - ./system-dashboards
-  - ./openobserve
+  # - ./openobserve

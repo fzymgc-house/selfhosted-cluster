@@ -154,8 +154,12 @@ spec:
                 path: /secrets/authelia-oidc-tls/tls.crt
           clients:
             # Vault
-            - client_id: 3GN4JFyF~N3bRddT2krDfy.eAfygs8eFNdaCMJmxmnl0gHC42iIdIvaO5i_qZznnB~Z0ZIw9
-              client_secret: "$pbkdf2-sha512$310000$5fY4hY2kf30D4YhYF/mf1w$zWad2WyWDUEH9f/DXy70ZRYb2M/RHYTHpC0o3AemCSkI4wPdDDV/lrUtVqpjxmNi5cHBiNPqzPBkFpmLl5qhDg"
+            - client_id:
+                secret_name: authelia-secrets
+                key: oidc.client.vault.id
+              client_secret:
+                secret_name: authelia-secrets
+                key: oidc.client.vault.secret
               description: "Vault"
               authorization_policy: two_factor
               require_pkce: true

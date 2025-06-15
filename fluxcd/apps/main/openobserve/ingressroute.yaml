@@ -1,0 +1,17 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: openobserve
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`o2.fzymgc.house`) || Host(`logs.fzymgc.house`)
+      kind: Rule
+      services:
+        - name: openobserve
+          port: 5080
+      middlewares:
+        - name: authelia@kubernetescrd
+  tls:
+    secretName: o2.fzymgc.house-tls

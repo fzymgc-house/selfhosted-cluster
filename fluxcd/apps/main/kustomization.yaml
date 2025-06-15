@@ -10,3 +10,4 @@ resources:
   - ./lldap
   - ./authelia
   - ./system-dashboards
+  - ./openobserve

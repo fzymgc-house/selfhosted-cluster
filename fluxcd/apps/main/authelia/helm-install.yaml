@@ -151,6 +151,9 @@ spec:
             - client_id: 3GN4JFyF~N3bRddT2krDfy.eAfygs8eFNdaCMJmxmnl0gHC42iIdIvaO5i_qZznnB~Z0ZIw9
               client_secret: "$pbkdf2-sha512$310000$5fY4hY2kf30D4YhYF/mf1w$zWad2WyWDUEH9f/DXy70ZRYb2M/RHYTHpC0o3AemCSkI4wPdDDV/lrUtVqpjxmNi5cHBiNPqzPBkFpmLl5qhDg"
               description: "Vault"
+              authorization_policy: two_factor
+              require_pkce: true
+              pkce_challenge_method: S256
               scopes:
                 - openid
                 - groups
@@ -165,6 +168,9 @@ spec:
                 - https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback
                 - https://vault.fzymgc.house/oidc/oidc/callback
                 - https://vault.fzymgc.house/oidc/callback
+              access_token_signed_response_alg: none
+              userinfo_signed_response_alg: none
+              token_endpoint_auth_method: client_secret_basic
 
     secret:
       existingSecret: authelia-secrets

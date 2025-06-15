@@ -1,0 +1,30 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: modern-auth
+  namespace: authentik
+spec:
+  forwardAuth:
+    address: http://authentik.authentik.svc/api/authz/forward-auth?authentik_url=https%3A%2F%2Fauth.fzymgc.house%2F
+    trustForwardHeader: true
+    authResponseHeaders:
+      - Remote-User
+      - Remote-Groups
+      - Remote-Email
+      - Remote-Name
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: basic-auth
+  namespace: authentik
+spec:
+  forwardAuth:
+    address: http://authentik.authentik.svc/api/verify?auth=basic&authentik_url=https%3A%2F%2Fauth.fzymgc.house%2F
+    trustForwardHeader: true
+    authResponseHeaders:
+      - Remote-User
+      - Remote-Groups
+      - Remote-Email
+      - Remote-Name

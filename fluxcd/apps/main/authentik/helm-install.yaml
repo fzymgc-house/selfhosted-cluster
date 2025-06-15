@@ -1,0 +1,300 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: authentik
+  namespace: authentik
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: authentik
+      version: "0.10.*"
+      sourceRef:
+        kind: HelmRepository
+        name: authentik
+        namespace: flux-system
+  install:
+    createNamespace: false
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    rbac:
+      enabled: true
+    pod:
+      kind: StatefulSet
+      replicas: 3
+      selectors:
+        nodeSelector:
+          node-role.kubernetes.io/control-plane: "true"
+    ingress:
+      enabled: false
+      traefikCRD:
+        enabled: false
+    services:
+      clusterIP: ""
+    log:
+      level: debug
+      format: json
+    telemetry:
+      metrics:
+        enabled: true
+    configMap:
+      access_control:
+        default_policy: two_factor
+        rules:
+          - domain: "lldap.fzymgc.house"
+            policy: bypass
+            networks:
+              - 192.168.20.0/22
+              - 192.168.40.0/22
+          - domain: "longhorn.fzymgc.house"
+            policy: one_factor
+            networks:
+              - 192.168.20.0/22
+              - 192.168.40.0/22
+            subject:
+              - [ "group:k8s-cluster-admin" ]
+          - domain: auth.fzymgc.house
+            policy: bypass
+          - domain: "whoami.k8s.fzymgc.house"
+            policy: one_factor
+            networks:
+              - 192.168.20.0/22
+              - 192.168.40.0/22
+          - domain: "*.fzymgc.house"
+            policy: one_factor
+            networks:
+              - 192.168.20.0/22
+              - 192.168.40.0/22
+      authentication_backend:
+        password_reset:
+          enabled: true
+        refresh_interval: 1m
+        file:
+          enabled: false
+        ldap:
+          enabled: true
+          implementation: lldap
+          address: ldap://lldap.lldap.svc:389
+          base_dn: dc=fzymgc,dc=house
+          additional_users_dn: ou=people
+          additional_groups_dn: ou=groups
+          user: uid=authentik,ou=people,dc=fzymgc,dc=house
+          users_filter: '(&({username_attribute}={input})(objectClass=person))'
+          groups_filter: '(member={dn})'
+          attributes:
+            distinguished_name: distinguishedName
+            username: uid
+            mail: mail
+            member_of: memberOf
+            group_name: cn
+      notifier:
+        filesystem:
+          enabled: false
+        smtp:
+          enabled: true
+          address: "submissions://smtp.mailgun.org:465"
+          username: "authentik@fzymgc.house"
+          sender: "Authentik <authentik@fzymgc.house>"
+          identifier: "fzymgc.house"
+      ntp:
+        address: udp://192.168.20.1:123
+      session:
+        cookies:
+          - subdomain: auth
+            domain: fzymgc.house
+        redis:
+          enabled: true
+          deploy: false
+          host: valkey-primary.valkey.svc.cluster.local
+          port: 6379
+      storage:
+        postgres:
+          enabled: true
+          deploy: false
+          address: tcp://main-rw.postgres.svc.cluster.local:5432
+          database: authentik
+          username: authentik
+          tls:
+            enabled: true
+      theme: dark
+      identity_providers:
+        oidc:
+          enabled: true
+          cors:
+            enabled: true
+            endpoints:
+              - authorization
+              - token
+              - revocation
+              - introspection
+            allowed_origins:
+              - "https://*.fzymgc.house"
+            allowed_origins_from_client_redirect_uris: true
+          jwks:
+            - key_id: fzymgc
+              algorithm: RS256
+              use: sig
+              key:
+                path: /secrets/authentik-oidc-tls/tls.key
+              certificate_chain:
+                path: /secrets/authentik-oidc-tls/tls.crt
+          hmac_secret:
+            secret_name: authentik-secrets
+          issuer_private_keys:
+            - key_id: fzymgc
+              algorithm: RS256
+              use: sig
+              key:
+                path: /secrets/authentik-oidc-tls/tls.key
+              certificate_chain:
+                path: /secrets/authentik-oidc-tls/tls.crt
+          clients:
+            # Vault
+            - client_id:
+                secret_name: authentik-secrets
+                key: oidc.client.vault.id
+              client_secret:
+                secret_name: authentik-secrets
+                key: oidc.client.vault.secret
+              description: "Vault"
+              authorization_policy: two_factor
+              require_pkce: true
+              pkce_challenge_method: S256
+              scopes:
+                - openid
+                - groups
+                - email
+                - profile
+              grant_types:
+                - refresh_token
+                - authorization_code
+              response_types:
+                - code
+              redirect_uris:
+                - https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback
+                - https://vault.fzymgc.house/oidc/oidc/callback
+                - https://vault.fzymgc.house/oidc/callback
+              access_token_signed_response_alg: none
+              userinfo_signed_response_alg: none
+              token_endpoint_auth_method: client_secret_basic
+
+    secret:
+      existingSecret: authentik-secrets
+      additionalSecrets:
+        authentik-secrets: {}
+        authentik-oidc-tls: {}
+    certificates:
+      values:
+        - name: fzymgc-root.pem
+          value: |
+            -----BEGIN CERTIFICATE-----
+            MIIB/TCCAV6gAwIBAgIQcyZRKfTkjT13kJxk5XcboDAKBggqhkjOPQQDBDAZMRcw
+            FQYDVQQDEw5menltZ2MgUm9vdCBDQTAeFw0yMzAxMDcxNzI0MzBaFw0zMzAxMDQx
+            NzI0MzBaMBkxFzAVBgNVBAMTDmZ6eW1nYyBSb290IENBMIGbMBAGByqGSM49AgEG
+            BSuBBAAjA4GGAAQAkiwKILt2XSBrlfFfmiZv+5xDkY0YTfllfNZJUUCUQ4ESpmS5
+            5XFx2kUB0GUg+03W7cX6F5FzxLJF41h7neq9bxMBqVCjlXcRVghhvc8buH1X7UjO
+            i0+5qq7kYkbhyYSju9gNcvMm2wxcRrHY0U8pU+tqu/dvkUJaocKQuI+fJAq3NZKj
+            RTBDMA4GA1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEDMB0GA1UdDgQW
+            BBTx8oH+7CHgzvULq/7eZlQf5ntxwDAKBggqhkjOPQQDBAOBjAAwgYgCQgEP7dfF
+            tH3x0QceNXxVqheWv4Rx2NuMcO1WkvNlrCApQkh4AfEVlXPWglPLa7p5Xel+DdV3
+            grEcXz25GxiLRCwuaAJCAXmmpARq1/0P+hXaMJSVlbGmOvMzUNw62clqnJiqcDjy
+            v7iGEqychr9H5ypkQigcnvIGyGimfXn/lZRiqysBTOPK
+            -----END CERTIFICATE-----
+        - name: fzymgc-intermediate.pem
+          value: |
+            -----BEGIN CERTIFICATE-----
+            MIIDJDCCAoagAwIBAgIQNlNVBDNLuzY1qcwT6CGgEzAKBggqhkjOPQQDBDAiMSAw
+            HgYDVQQDExdmenltZ2MgSW50ZXJtZWRpYXRlIENBMTAeFw0yMzAxMDcxNzI3MTda
+            Fw0yODAxMDYxNzI3MTdaMIGOMQswCQYDVQQGEwJVUzELMAkGA1UECBMCTUQxFDAS
+            BgNVBAcTC1Bvb2xlc3ZpbGxlMRUwEwYDVQQKEwxmenltZ2MtaG91c2UxGTAXBgNV
+            BAsTEGZ6eW1nYy1ob3VzZSBwa2kxKjAoBgNVBAMTIWZ6eW1nYy1ob3VzZSBJbnRl
+            cm1lZGlhdGUgQ0ExIHYxIDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB
+            AK4oAjjwRkJksrmAfDb+s7rS+/ea73hX+ENn7Q1asLG609RS4ck+zSuXfGNeTRsO
+            OtulFkUIV7wYz+3mYWsMTS0t2vrcy/yqafyaCFsQlobDH30Z4o8q8ivF6XieGWJA
+            So64xMuHi9RXCzuKVaZwByMO9XdHbQVAfs3D6svMdHMdlVC6tOv2GT2/8n+QV7t8
+            XnIFgkVx0AXcH0RwjlYdVaqkKq48eEhLXkWsQjVknZ8I9d4gPNKPxJwjP99wADx1
+            43E0luI48AxdUy6qauQk94Z0CueiJfwiZd5jF8NywnCkPIFdK2XMvGVH/MkPMgec
+            Gwo0DuE3uPB/7vu5OOFEPFMCAwEAAaNmMGQwDgYDVR0PAQH/BAQDAgEGMBIGA1Ud
+            EwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYEFOLX/k4ELEnvOL9WyWLX0Pzd9xv6MB8G
+            A1UdIwQYMBaAFNqzmLvKowZzAojQSkHHQEHcsH7lMAoGCCqGSM49BAMEA4GLADCB
+            hwJCAdfSGpSayDzrOQ9QbCodgP0jxwgDwYx3/VRHRDrvJRtNXaLX4DjrSBfvfNze
+            KiWQGdPXMY+qO7xDFpW6Oho3tG3qAkF+ywWydPdh4+XoiA9/rws6sWBA8/EhAq9J
+            U6iiGd7r+sfoxRinp1cy1szZUZsKYeieL5B194kjvGF5GVJfy5GfQQ==
+            -----END CERTIFICATE-----
+            -----BEGIN CERTIFICATE-----
+            MIICJjCCAYigAwIBAgIQfZqeMBdUuEjUlz0YK1uFsTAKBggqhkjOPQQDBDAZMRcw
+            FQYDVQQDEw5menltZ2MgUm9vdCBDQTAeFw0yMzAxMDcxNzI2MDJaFw0yODAxMDYx
+            NzI2MDJaMCIxIDAeBgNVBAMTF2Z6eW1nYyBJbnRlcm1lZGlhdGUgQ0ExMIGbMBAG
+            ByqGSM49AgEGBSuBBAAjA4GGAAQAia2bUYLactunUXZd6e5q8qBsBGV/e2H6UXVJ
+            PJ1v0wcKtnwLHQLGYsnpiUMlN2+U1hDvCvJmBiu6jvY9t1q7AD4A8UfVRCGt2W2R
+            gHPO6HglwhH0clY2322ZugsMN0meFaDv4WCLynLI+st8lgyJYEj6PZzU5QmP0zaH
+            1awTdkbjSh+jZjBkMA4GA1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEC
+            MB0GA1UdDgQWBBTas5i7yqMGcwKI0EpBx0BB3LB+5TAfBgNVHSMEGDAWgBTx8oH+
+            7CHgzvULq/7eZlQf5ntxwDAKBggqhkjOPQQDBAOBiwAwgYcCQQCIMRcBcJOBeGJn
+            IIms5K9eyY+NMnKCrOK/+DGVoiq/0YVcOE+i2bZhBlS8mduj45lIMDqs+PBiBhwu
+            sBrP1QKwAkIBdPHJRIAwOTOV4EVswVxOe4Fs/71QDECT3t1Or0H0IL6wBzBgBCY9
+            2Ursg7e8gs4D6eMX77nveVM98COxml9iAKI=
+            -----END CERTIFICATE-----
+            -----BEGIN CERTIFICATE-----
+            MIIB/TCCAV6gAwIBAgIQcyZRKfTkjT13kJxk5XcboDAKBggqhkjOPQQDBDAZMRcw
+            FQYDVQQDEw5menltZ2MgUm9vdCBDQTAeFw0yMzAxMDcxNzI0MzBaFw0zMzAxMDQx
+            NzI0MzBaMBkxFzAVBgNVBAMTDmZ6eW1nYyBSb290IENBMIGbMBAGByqGSM49AgEG
+            BSuBBAAjA4GGAAQAkiwKILt2XSBrlfFfmiZv+5xDkY0YTfllfNZJUUCUQ4ESpmS5
+            5XFx2kUB0GUg+03W7cX6F5FzxLJF41h7neq9bxMBqVCjlXcRVghhvc8buH1X7UjO
+            i0+5qq7kYkbhyYSju9gNcvMm2wxcRrHY0U8pU+tqu/dvkUJaocKQuI+fJAq3NZKj
+            RTBDMA4GA1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEDMB0GA1UdDgQW
+            BBTx8oH+7CHgzvULq/7eZlQf5ntxwDAKBggqhkjOPQQDBAOBjAAwgYgCQgEP7dfF
+            tH3x0QceNXxVqheWv4Rx2NuMcO1WkvNlrCApQkh4AfEVlXPWglPLa7p5Xel+DdV3
+            grEcXz25GxiLRCwuaAJCAXmmpARq1/0P+hXaMJSVlbGmOvMzUNw62clqnJiqcDjy
+            v7iGEqychr9H5ypkQigcnvIGyGimfXn/lZRiqysBTOPK
+            -----END CERTIFICATE-----
+        - name: fzymgc-vault-intermediate.pem
+          value: |
+            -----BEGIN CERTIFICATE-----
+            MIICxzCCAimgAwIBAgIRAOFvVirM0eRf8jWpr1xijr8wCgYIKoZIzj0EAwQwIjEg
+            MB4GA1UEAxMXZnp5bWdjIEludGVybWVkaWF0ZSBDQTEwHhcNMjMwNTIwMTQ1MDM0
+            WhcNMjgwNTE4MTQ1MDM0WjAxMS8wLQYDVQQDEyZmenltZ2MtaG91c2UgVmF1bHQg
+            SW50ZXJtZWRpYXRlIENBMSB2MTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+            ggEBALK0opNyNrTwO7VTUrMslLw9FlkGX4fyB+LSia94zm60hqov72uHfVmy3Ue5
+            QnFPA4kVOu1wS+SFA9Mm04Or8313mNy48F2jiwEECe+563+hZVLy69eCLVX5wLxn
+            +nnBM7mBZYJRgRIMeAXrgEaEghzJb09zxGkjxZGLzqFVRHtBaH5dNZWPo+vQkjVl
+            wBdGFhjiFUM57Mg02MCakIgC3YX4vzccU3gl5ywEiHY8dvGNaLm+ky0Y8e7QzvSD
+            iP8h+JhxRhcQ6610lvnbxYpSA2VvEO+O56u5235MK4XdZ3xTQJlr3KtWb7/4CNuM
+            dvpc1oXcdoncRghWnAZwbpswmysCAwEAAaNmMGQwDgYDVR0PAQH/BAQDAgEGMBIG
+            A1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYEFHuBLw1xWpyr0K8n0cqm/S/t8sJU
+            MB8GA1UdIwQYMBaAFNqzmLvKowZzAojQSkHHQEHcsH7lMAoGCCqGSM49BAMEA4GL
+            ADCBhwJCAORaAbE32RBLOLiVq33pD0T/jEPYTOtOz/o8SDiaWyA5ZB1fFTQr+zPo
+            HbRVtWzbPEEw2LPe5BDRtb6uD1nTgytNAkEYaszrbVomDC1MiuImrqeWtmopztDs
+            UUa0XbM04+8i1ZX7niZWR75IvMzgnR4F0vNdD4RHUzkdMh75n+57f5Iiaw==
+            -----END CERTIFICATE-----
+            -----BEGIN CERTIFICATE-----
+            MIICJjCCAYigAwIBAgIQfZqeMBdUuEjUlz0YK1uFsTAKBggqhkjOPQQDBDAZMRcw
+            FQYDVQQDEw5menltZ2MgUm9vdCBDQTAeFw0yMzAxMDcxNzI2MDJaFw0yODAxMDYx
+            NzI2MDJaMCIxIDAeBgNVBAMTF2Z6eW1nYyBJbnRlcm1lZGlhdGUgQ0ExMIGbMBAG
+            ByqGSM49AgEGBSuBBAAjA4GGAAQAia2bUYLactunUXZd6e5q8qBsBGV/e2H6UXVJ
+            PJ1v0wcKtnwLHQLGYsnpiUMlN2+U1hDvCvJmBiu6jvY9t1q7AD4A8UfVRCGt2W2R
+            gHPO6HglwhH0clY2322ZugsMN0meFaDv4WCLynLI+st8lgyJYEj6PZzU5QmP0zaH
+            1awTdkbjSh+jZjBkMA4GA1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEC
+            MB0GA1UdDgQWBBTas5i7yqMGcwKI0EpBx0BB3LB+5TAfBgNVHSMEGDAWgBTx8oH+
+            7CHgzvULq/7eZlQf5ntxwDAKBggqhkjOPQQDBAOBiwAwgYcCQQCIMRcBcJOBeGJn
+            IIms5K9eyY+NMnKCrOK/+DGVoiq/0YVcOE+i2bZhBlS8mduj45lIMDqs+PBiBhwu
+            sBrP1QKwAkIBdPHJRIAwOTOV4EVswVxOe4Fs/71QDECT3t1Or0H0IL6wBzBgBCY9
+            2Ursg7e8gs4D6eMX77nveVM98COxml9iAKI=
+            -----END CERTIFICATE-----
+            -----BEGIN CERTIFICATE-----
+            MIIB/TCCAV6gAwIBAgIQcyZRKfTkjT13kJxk5XcboDAKBggqhkjOPQQDBDAZMRcw
+            FQYDVQQDEw5menltZ2MgUm9vdCBDQTAeFw0yMzAxMDcxNzI0MzBaFw0zMzAxMDQx
+            NzI0MzBaMBkxFzAVBgNVBAMTDmZ6eW1nYyBSb290IENBMIGbMBAGByqGSM49AgEG
+            BSuBBAAjA4GGAAQAkiwKILt2XSBrlfFfmiZv+5xDkY0YTfllfNZJUUCUQ4ESpmS5
+            5XFx2kUB0GUg+03W7cX6F5FzxLJF41h7neq9bxMBqVCjlXcRVghhvc8buH1X7UjO
+            i0+5qq7kYkbhyYSju9gNcvMm2wxcRrHY0U8pU+tqu/dvkUJaocKQuI+fJAq3NZKj
+            RTBDMA4GA1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEDMB0GA1UdDgQW
+            BBTx8oH+7CHgzvULq/7eZlQf5ntxwDAKBggqhkjOPQQDBAOBjAAwgYgCQgEP7dfF
+            tH3x0QceNXxVqheWv4Rx2NuMcO1WkvNlrCApQkh4AfEVlXPWglPLa7p5Xel+DdV3
+            grEcXz25GxiLRCwuaAJCAXmmpARq1/0P+hXaMJSVlbGmOvMzUNw62clqnJiqcDjy
+            v7iGEqychr9H5ypkQigcnvIGyGimfXn/lZRiqysBTOPK
+            -----END CERTIFICATE-----

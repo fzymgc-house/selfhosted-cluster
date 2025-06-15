@@ -8,6 +8,6 @@ resources:
   - ./valkey
   - ./cnpg
   - ./lldap
-  - ./authelia
+  - ./authentik
   - ./system-dashboards
   - ./openobserve

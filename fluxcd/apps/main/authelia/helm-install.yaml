@@ -35,6 +35,12 @@ spec:
         enabled: false
     services:
       clusterIP: ""
+    log:
+      level: debug
+      format: json
+    telemetry:
+      metrics:
+        enabled: true
     configMap:
       access_control:
         default_policy: two_factor

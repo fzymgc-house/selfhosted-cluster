@@ -42,7 +42,7 @@ spec:
         - name: fzymgc-ica1-ca
           secret:
             secretName: fzymgc-ica1-ca
-    wroker:
+    worker:
       envFrom:
         - secretRef:
             name: authentik-server-env

@@ -21,6 +21,27 @@ spec:
     remediation:
       retries: 3
   values:
+    authentik:
+      log_level: debug
+      postgresql:
+        host: main-rw.postgres.svc.cluster.local
+      redis:
+        host: valkey-primary.valkey.svc.cluster.local
+      server:
+        envFrom:
+          - secretRef:
+              name: authentik-server-env
+        env:
+          - name: AUTHENTIK_POSTGRESQL__SSLROOTCERT
+            value: /certs/fullchain.crt
+      volumeMounts:
+        - name: fzymgc-ica1-ca
+          mountPath: /certs
+          readOnly: true
+      volumes:
+        - name: fzymgc-ica1-ca
+          secret:
+            secretName: fzymgc-ica1-ca
     postgres:
       enabled: false
     redis:

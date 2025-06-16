@@ -9,5 +9,5 @@ resources:
   - traefik-middleware.yaml
   - whoami.yaml
   - ingress-route.yaml
-  - helm-install.yaml
+  # - helm-install.yaml
   # - terraform.yaml

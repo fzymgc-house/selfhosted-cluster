@@ -34,14 +34,14 @@ spec:
       env:
         - name: AUTHENTIK_POSTGRESQL__SSLROOTCERT
           value: /certs/fullchain.crt
-    volumeMounts:
-      - name: fzymgc-ica1-ca
-        mountPath: /certs
-        readOnly: true
-    volumes:
-      - name: fzymgc-ica1-ca
-        secret:
-          secretName: fzymgc-ica1-ca
+      volumeMounts:
+        - name: fzymgc-ica1-ca
+          mountPath: /certs
+          readOnly: true
+      volumes:
+        - name: fzymgc-ica1-ca
+          secret:
+            secretName: fzymgc-ica1-ca
     postgres:
       enabled: false
     redis:

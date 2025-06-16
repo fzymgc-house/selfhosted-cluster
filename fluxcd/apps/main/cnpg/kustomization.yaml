@@ -10,5 +10,5 @@ resources:
   - ./users.yaml
   - ./postgres-cluster.yaml
   - ./db-lldap.yaml
-  - ./db-authelia.yaml
+  - ./db-authentik.yaml
   - ./backup.yaml

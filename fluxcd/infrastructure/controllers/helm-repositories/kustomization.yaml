@@ -10,5 +10,5 @@ resources:
   - ./external-secrets.yaml
   - ./valkey.yaml
   - ./cnpg.yaml
-  - ./authelia.yaml
+  - ./authentik.yaml
   - ./openobserve.yaml

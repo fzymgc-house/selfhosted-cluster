@@ -1,7 +1,7 @@
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
-  name: main-authelia-credentials
+  name: main-authentik-credentials
   namespace: postgres
 spec:
   refreshPolicy: Periodic
@@ -10,7 +10,7 @@ spec:
     name: vault
     kind: ClusterSecretStore
   target:
-    name: main-authelia-credentials
+    name: main-authentik-credentials
     creationPolicy: Owner
     deletionPolicy: Delete
     template:
@@ -24,21 +24,21 @@ spec:
   data:
     - secretKey: username
       remoteRef:
-        key: fzymgc-house/cluster/postgres/users/main-authelia
+        key: fzymgc-house/cluster/postgres/users/main-authentik
         property: username
     - secretKey: password
       remoteRef:
-        key: fzymgc-house/cluster/postgres/users/main-authelia
+        key: fzymgc-house/cluster/postgres/users/main-authentik
         property: password
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: Database
 metadata:
-  name: authelia
+  name: authentik
   namespace: postgres
 spec:
   cluster:
     name: main
   ensure: present
-  name: authelia
-  owner: authelia
+  name: authentik
+  owner: authentik

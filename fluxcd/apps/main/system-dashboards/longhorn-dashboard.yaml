@@ -22,7 +22,7 @@ metadata:
   namespace: longhorn-system
 spec:
   forwardAuth:
-    address: http://authelia.authelia.svc/api/authz/forward-auth?authelia_url=https%3A%2F%2Fauth.fzymgc.house%2F
+    address: http://authentik-server.authentik.svc:9000/outpost.goauthentik.io/auth/traefik
     trustForwardHeader: true
     authResponseHeaders:
       - Remote-User

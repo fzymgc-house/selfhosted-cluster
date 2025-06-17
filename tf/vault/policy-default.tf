@@ -1,3 +1,8 @@
+import {
+  id = "default"
+  to = vault_policy.default
+}
+
 resource "vault_policy" "default" {
   name   = "default"
   policy = <<EOT

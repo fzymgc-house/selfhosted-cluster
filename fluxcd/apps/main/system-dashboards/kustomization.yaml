@@ -4,4 +4,3 @@ kind: Kustomization
 resources:
   - traefik-dashboard.yaml
   - longhorn-dashboard.yaml
-  - lldap-admin-dashboard.yaml

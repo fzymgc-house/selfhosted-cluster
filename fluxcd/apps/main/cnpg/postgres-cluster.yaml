@@ -58,9 +58,3 @@ spec:
           name: main-authentik-credentials
         superuser: false
         login: true
-      - name: lldap
-        ensure: present
-        passwordSecret:
-          name: main-lldap-credentials
-        superuser: false
-        login: true

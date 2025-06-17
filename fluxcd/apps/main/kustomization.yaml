@@ -7,7 +7,6 @@ resources:
   - ./vault-tf
   - ./valkey
   - ./cnpg
-  # - ./lldap
   - ./authentik
   - ./system-dashboards
   # - ./openobserve

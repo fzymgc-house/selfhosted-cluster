@@ -6,9 +6,13 @@ metadata:
   namespace: traefik
 spec:
   forwardAuth:
-    address: http://authentik-server.authentik.svc:9000/outpost.goauthentik.io/auth/fzymgc
+    address: http://authentik-server.authentik.svc/outpost.goauthentik.io/auth/traefik
     trustForwardHeader: true
     authResponseHeaders:
+      - Remote-User
+      - Remote-Groups
+      - Remote-Email
+      - Remote-Name
       - X-authentik-username
       - X-authentik-groups
       - X-authentik-entitlements

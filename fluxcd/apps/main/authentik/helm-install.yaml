@@ -36,30 +36,30 @@ spec:
             name: authentik-server-env
       env:
         - name: AUTHENTIK_POSTGRESQL__SSLROOTCERT
-          value: /certs/fullchain.crt
+          value: /certs/ca.crt
       volumeMounts:
-        - name: fzymgc-ica1-ca
+        - name: authentik-tls
           mountPath: /certs
           readOnly: true
       volumes:
-        - name: fzymgc-ica1-ca
+        - name: authentik-tls
           secret:
-            secretName: fzymgc-ica1-ca
+            secretName: authentik-tls
     worker:
       envFrom:
         - secretRef:
             name: authentik-server-env
       env:
         - name: AUTHENTIK_POSTGRESQL__SSLROOTCERT
-          value: /certs/fullchain.crt
+          value: /certs/ca.crt
       volumeMounts:
-        - name: fzymgc-ica1-ca
+        - name: authentik-tls
           mountPath: /certs
           readOnly: true
       volumes:
-        - name: fzymgc-ica1-ca
+        - name: authentik-tls
           secret:
-            secretName: fzymgc-ica1-ca
+            secretName: authentik-tls
     postgres:
       enabled: false
     redis:

@@ -9,6 +9,8 @@ spec:
   issuerRef:
     name: vault-issuer
     kind: ClusterIssuer
+  additionalOutputFormats:
+    - type: CombinedPEM
   dnsNames:
     - auth.fzymgc.house
     - authentik.authentik.svc.cluster.local

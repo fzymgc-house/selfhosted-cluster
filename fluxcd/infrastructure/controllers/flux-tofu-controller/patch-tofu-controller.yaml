@@ -15,3 +15,4 @@ spec:
       image:
         # repository: ghcr.io/fluxcd/flux-runner
         repository: ghcr.io/fzymgc-house/fluxcd-tofu-runner
+        tag: latest

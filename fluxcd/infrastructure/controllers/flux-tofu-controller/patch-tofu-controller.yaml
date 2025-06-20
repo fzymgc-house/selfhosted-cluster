@@ -6,6 +6,12 @@ metadata:
   name: tofu-controller
   namespace: flux-system
 spec:
+  chart:
+    spec:
+      chart: tofu-controller
   values:
-    controller:
-      replicas: 1
+    replicaCount: 1
+    runner:
+      image:
+        # repository: ghcr.io/fluxcd/flux-runner
+        repository: ghcr.io/fzymgc-house/fluxcd-tofu-runner

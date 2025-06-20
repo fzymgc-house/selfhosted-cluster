@@ -1,9 +1,11 @@
-# add a patch to tofu-controller to allow cross-namespace refs
-- op: remove
-  path: /spec/template/spec/containers/0/args/0
-- op: add
-  path: /spec/template/spec/containers/0/args/-
-  value: --allow-cross-namespace-refs=true
-- op: replace
-  path: /spec/replicas
-  value: 1
+# strategic merge patch to add values to the HelmRelease
+
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: tofu-controller
+  namespace: flux-system
+spec:
+  values:
+    controller:
+      replicas: 1

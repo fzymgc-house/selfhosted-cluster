@@ -6,4 +6,4 @@
   value: --allow-cross-namespace-refs=true
 - op: replace
   path: /spec/replicas
-  value: 2
+  value: 1

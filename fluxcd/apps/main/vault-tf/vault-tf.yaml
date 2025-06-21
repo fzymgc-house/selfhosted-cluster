@@ -14,7 +14,7 @@ spec:
     namespace: flux-system
   runnerPodTemplate:
     spec:
-      image: ghcr.io/fzymgc-house/fluxcd-tofu-runner:latest
+      image: ghcr.io/fzymgc-house/fluxcd-tofu-runner@sha256:cae236d805a95b8383a52899d1f3c6e9465096023b89bd9f63037b2c2b64a137
       volumes:
         - name: vault-cert
           configMap:

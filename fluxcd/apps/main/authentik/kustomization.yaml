@@ -10,4 +10,4 @@ resources:
   - whoami.yaml
   - ingress-route.yaml
   - helm-install.yaml
-  # - terraform.yaml
+  - terraform.yaml

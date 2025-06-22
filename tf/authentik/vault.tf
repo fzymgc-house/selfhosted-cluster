@@ -37,7 +37,7 @@ resource "vault_jwt_auth_backend_role" "reader" {
   backend = vault_jwt_auth_backend.oidc.path
   role_name = "reader"
   user_claim = "sub"
-  bound_audiences = [local.authentik_url]
+  bound_audiences = [local.authentik_url, var.authentik_client_id]
   token_ttl = 3600
   token_max_ttl = 86400
   token_policies = ["default","reader"]
@@ -59,15 +59,15 @@ data "vault_identity_group" "admin" {
   group_name = "admin"
 }
 
-# import {
-#   to = vault_identity_group_alias.reader
-#   id = "reader"
-# }
+import {
+  to = vault_identity_group_alias.reader
+  id = "reader"
+}
 
-# import {
-#   to = vault_identity_group_alias.admin
-#   id = "admin"
-# }
+import {
+  to = vault_identity_group_alias.admin
+  id = "admin"
+}
 
 resource "vault_identity_group_alias" "reader" {
   mount_accessor = vault_jwt_auth_backend.oidc.accessor

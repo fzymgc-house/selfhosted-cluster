@@ -134,20 +134,13 @@ path "fzymgc-house/v1/ica1/v1/issuers" {
   capabilities = ["list"]
 }
 
-path "fzymgc-house/v1/ica1/v1/issuer/+/json" {
+path "fzymgc-house/v1/ica1/v1/issuer" {
   capabilities = ["read", "list"]
 }
 
-path "fzymgc-house/v1/ica1/v1/issuer/+/pem" {
+path "fzymgc-house/v1/ica1/v1/issuer/*" {
   capabilities = ["read", "list"]
 }
 
-path "fzymgc-house/v1/ica1/v1/issuer/+/crl/json" {
-  capabilities = ["read", "list"]
-}
-
-path "fzymgc-house/v1/ica1/v1/issuer/+/crl/pem" {
-  capabilities = ["read", "list"]
-}
 EOT
 }

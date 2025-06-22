@@ -30,6 +30,7 @@ resource "vault_jwt_auth_backend" "oidc" {
   oidc_discovery_url = local.authentik_url
   oidc_discovery_ca_pem = join("\n", data.vault_pki_secret_backend_issuer.fzymgc.ca_chain)
   jwks_ca_pem = join("\n", data.vault_pki_secret_backend_issuer.fzymgc.ca_chain)
+  default_role = "reader"
 }
 
 resource "vault_jwt_auth_backend_role" "reader" {

@@ -35,5 +35,10 @@ path "sys/mounts/auth" {
 path "sys/mounts/auth/oidc" {
   capabilities = ["create", "read", "update", "delete", "sudo"]
 }
+
+path "sys/mounts/auth/oidc/*" {
+  capabilities = ["create", "read", "update", "delete", "sudo"]
+}
+
 EOT
 }

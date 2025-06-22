@@ -47,6 +47,7 @@ resource "vault_jwt_auth_backend_role" "reader" {
     "https://vault.fzymgc.house/oidc/callback",
     "https://localhost:8250/oidc/callback",
   ]
+  verbose_oidc_logging = true
 }
 
 data "vault_identity_group" "reader" {

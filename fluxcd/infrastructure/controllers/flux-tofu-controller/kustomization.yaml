@@ -3,7 +3,4 @@ kind: Kustomization
 namespace: flux-system
 
 resources:
-  - https://raw.githubusercontent.com/flux-iac/tofu-controller/refs/heads/main/docs/release.yaml
-
-patches:
-  - path: ./patch-tofu-controller.yaml
+  - ./helm-install.yaml

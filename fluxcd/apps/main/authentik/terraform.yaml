@@ -14,12 +14,6 @@ spec:
   cliConfigSecretRef:
     name: flux-tofu-terraform-cloud
     namespace: flux-system
-  cloud:
-    organization: fzymgc-house
-    workspaces:
-      tags:
-        - main-cluster
-        - authentik
   sourceRef:
     kind: OCIRepository
     name: flux-system-tf

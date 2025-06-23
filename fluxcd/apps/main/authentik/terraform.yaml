@@ -8,10 +8,19 @@ spec:
   retryInterval: 1m
   path: ./authentik
   approvePlan: auto
+  backendConfig:
+    disable: true
+  cliConfigSecretRef:
+    name: flux-tofu-terraform-cloud
+    namespace: flux-system
   sourceRef:
     kind: OCIRepository
     name: flux-system-tf
     namespace: flux-system
+  cloud:
+    organization: fzymgc-house
+    workspaces:
+      name: main-cluster
   varsFrom:
     - kind: Secret
       name: authentik-tf-secrets

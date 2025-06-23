@@ -19,3 +19,21 @@ resource "vault_identity_group" "admin" {
   type = "external"
   policies = ["admin"]
 }
+
+resource "vault_identity_group" "tofu-runner" {
+  name = "tofu-runner"
+  type = "internal"
+  policies = [
+    vault_policy.policy-admin.name,
+    vault_policy.token-create.name,
+    vault_policy.kubernetes-config-admin.name,
+    vault_policy.ldap-config-admin.name,
+    vault_policy.identity-admin.name,
+    vault_policy.oidc-config-admin.name,
+  ]
+}
+
+resource "vault_identity_group_member_entity_ids" "tofu-runner" {
+  group_id = vault_identity_group.tofu-runner.id
+  member_entity_ids = [vault_identity_entity.tofu-runner.id]
+}

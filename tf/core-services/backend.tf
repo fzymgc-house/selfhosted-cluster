@@ -2,8 +2,8 @@ terraform {
   cloud {
     organization = "fzymgc-house"
     workspaces {
-      name = "main-cluster-core-services"
       project = "k8s-cluster"
+      tags = ["main-cluster", "core-services"]
     }
   }
 }

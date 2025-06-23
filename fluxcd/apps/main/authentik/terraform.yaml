@@ -17,10 +17,6 @@ spec:
     kind: OCIRepository
     name: flux-system-tf
     namespace: flux-system
-  cloud:
-    organization: fzymgc-house
-    workspaces:
-      name: main-cluster
   varsFrom:
     - kind: Secret
       name: authentik-tf-secrets

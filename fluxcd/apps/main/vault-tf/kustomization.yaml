@@ -3,5 +3,5 @@ kind: Kustomization
 resources:
   - ./vault-token.yaml
   - ./tf-runner-sa.yaml
-  - ./vault-tf.yaml
+  - ./terraform.yaml
   - ./vault-certmanager-issuer.yaml

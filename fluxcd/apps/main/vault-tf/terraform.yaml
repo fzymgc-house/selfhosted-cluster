@@ -8,17 +8,9 @@ spec:
   retryInterval: 1m
   path: ./vault
   approvePlan: auto
-  backendConfig:
-    disable: true
   cliConfigSecretRef:
     name: flux-tofu-terraform-cloud
     namespace: flux-system
-  cloud:
-    organization: fzymgc-house
-    workspaces:
-      tags:
-        - main-cluster
-        - vault
   sourceRef:
     kind: OCIRepository
     name: flux-system-tf

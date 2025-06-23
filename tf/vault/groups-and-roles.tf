@@ -22,11 +22,6 @@ resource "vault_identity_group" "admin" {
 
 import {
   to = vault_identity_group.tofu-runner
-  id = "tofu-runner"
-}
-
-import {
-  to = vault_identity_group.tofu-runner
   id = "df234798-81e1-df81-468f-b251cc5a24dd"
 }
 

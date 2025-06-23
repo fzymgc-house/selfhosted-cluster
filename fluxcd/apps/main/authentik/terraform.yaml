@@ -9,8 +9,7 @@ spec:
   path: ./authentik
   approvePlan: auto
   backendConfig:
-    customConfiguration: |
-      # broken workspace handling - empty on purpose
+    disable: true
   cliConfigSecretRef:
     name: flux-tofu-terraform-cloud
     namespace: flux-system

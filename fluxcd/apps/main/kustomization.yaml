@@ -9,4 +9,4 @@ resources:
   - ./cnpg
   - ./authentik
   - ./system-dashboards
-  # - ./openobserve
+  - ./openobserve

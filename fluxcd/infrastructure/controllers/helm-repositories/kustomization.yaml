@@ -13,3 +13,4 @@ resources:
   - ./cnpg.yaml
   - ./authentik.yaml
   - ./openobserve.yaml
+  - ./victoriametrics.yaml

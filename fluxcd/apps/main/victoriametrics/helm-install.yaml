@@ -18,29 +18,3 @@ spec:
     # Add custom values here as needed
     defaultDashboards:
       defaultTimezone: "US/Eastern"
-    vmsingle:
-      ingress:
-        enabled: true
-        annotations:
-          "cert-manager.io/cluster-issuer": vault-issuer
-        hosts:
-          - host: metrics.fzymgc.house
-            paths:
-              - path: /
-                pathType: Prefix
-        tls:
-          enabled: true
-          secretName: metrics-tls
-    grafana:
-      ingress:
-        enabled: true
-        annotations:
-          "cert-manager.io/cluster-issuer": vault-issuer
-        hosts:
-          - host: grafana.fzymgc.house
-            paths:
-              - path: /
-                pathType: Prefix
-        tls:
-          enabled: true
-          secretName: grafana-tls

@@ -20,6 +20,11 @@ resource "vault_identity_group" "admin" {
   policies = ["admin"]
 }
 
+resource "vault_identity_group_member_entity_ids" "admin" {
+  group_id = vault_identity_group.admin.id
+  member_entity_ids = [vault_identity_entity.sean.id]
+}
+
 import {
   to = vault_identity_group.tofu-runner
   id = "df234798-81e1-df81-468f-b251cc5a24dd"

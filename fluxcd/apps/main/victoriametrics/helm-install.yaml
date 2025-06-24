@@ -22,7 +22,7 @@ spec:
       ingress:
         enabled: true
         annotations:
-          cert-manager.io/cluster-issuer: vault-issuer
+          "cert-manager.io/cluster-issuer": vault-issuer
         hosts:
           - host: metrics.fzymgc.house
             paths:
@@ -35,7 +35,7 @@ spec:
       ingress:
         enabled: true
         annotations:
-          cert-manager.io/cluster-issuer: vault-issuer
+          "cert-manager.io/cluster-issuer": vault-issuer
         hosts:
           - host: grafana.fzymgc.house
             paths:

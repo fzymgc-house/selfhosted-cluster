@@ -89,12 +89,12 @@ data "vault_identity_group" "admin" {
 
 import {
   to = vault_identity_group_alias.reader
-  id = "dcc7cc47-e8fc-bce9-f805-5749d474152d"
+  id = "95dce99c-a296-3b53-7246-7954ed701498"
 }
 
 import {
   to = vault_identity_group_alias.admin
-  id = "94353e53-2292-0a5e-bf69-c84d5fe86953"
+  id = "64fd0437-de89-7353-a3bf-b4d96ba887b1"
 }
 
 resource "vault_identity_group_alias" "reader" {

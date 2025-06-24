@@ -9,3 +9,4 @@ resources:
   - ./cnpg
   - ./authentik
   - ./system-dashboards
+  - ./victoriametrics

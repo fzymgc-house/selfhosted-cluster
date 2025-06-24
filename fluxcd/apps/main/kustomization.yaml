@@ -8,5 +8,5 @@ resources:
   - ./valkey
   - ./cnpg
   - ./authentik
-  - ./system-dashboards
   - ./victoriametrics
+  - ./system-dashboards

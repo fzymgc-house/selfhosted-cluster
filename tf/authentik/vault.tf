@@ -33,6 +33,10 @@ resource "vault_jwt_auth_backend" "oidc" {
   default_role = "reader"
 }
 
+import {
+  to = vault_jwt_auth_backend_role.reader
+  id = "auth/oidc/role/reader"
+}
 resource "vault_jwt_auth_backend_role" "reader" {
   backend = vault_jwt_auth_backend.oidc.path
   role_name = "reader"
@@ -51,6 +55,30 @@ resource "vault_jwt_auth_backend_role" "reader" {
   verbose_oidc_logging = true
 }
 
+# import {
+#   to = vault_jwt_auth_backend_role.admin
+#   id = "auth/oidc/role/admin"
+# }
+
+resource "vault_jwt_auth_backend_role" "admin" {
+  backend = vault_jwt_auth_backend.oidc.path
+  role_name = "admin"
+  user_claim = "sub"
+  bound_audiences = [local.authentik_url, var.authentik_client_id]
+  token_ttl = 3600
+  token_max_ttl = 86400
+  token_policies = ["default","admin"]
+  groups_claim = "groups"
+  oidc_scopes = ["openid", "email", "profile", "groups"]
+  allowed_redirect_uris = [
+    "https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback",
+    "https://vault.fzymgc.house/oidc/callback",
+    "http://localhost:8250/oidc/callback",
+  ]
+  verbose_oidc_logging = true
+}
+
+
 data "vault_identity_group" "reader" {
   group_name = "reader"
 }
@@ -61,22 +89,22 @@ data "vault_identity_group" "admin" {
 
 import {
   to = vault_identity_group_alias.reader
-  id = "cc76d2b6-2627-8235-a5d4-5ffaf0e4de92"
+  id = "dcc7cc47-e8fc-bce9-f805-5749d474152d"
 }
 
 import {
   to = vault_identity_group_alias.admin
-  id = "3264e87c-f7ee-469c-54ea-05d945d9e731"
+  id = "94353e53-2292-0a5e-bf69-c84d5fe86953"
 }
 
 resource "vault_identity_group_alias" "reader" {
   mount_accessor = vault_jwt_auth_backend.oidc.accessor
   canonical_id = data.vault_identity_group.reader.id
-  name = "reader"
+  name = "vault-user"
 }
 
 resource "vault_identity_group_alias" "admin" {
   mount_accessor = vault_jwt_auth_backend.oidc.accessor
   canonical_id = data.vault_identity_group.admin.id
-  name = "admin"
+  name = "vault-admin"
 }

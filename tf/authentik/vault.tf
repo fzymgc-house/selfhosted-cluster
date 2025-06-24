@@ -46,7 +46,7 @@ resource "vault_jwt_auth_backend_role" "reader" {
   allowed_redirect_uris = [
     "https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback",
     "https://vault.fzymgc.house/oidc/callback",
-    "https://localhost:8250/oidc/callback",
+    "http://localhost:8250/oidc/callback",
   ]
   verbose_oidc_logging = true
 }

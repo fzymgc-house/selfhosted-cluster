@@ -5,7 +5,7 @@ metadata:
 spec:
   secretName: o2.fzymgc.house-tls
   issuerRef:
-    name: fzymgc-issuer
+    name: vault-issuer
     kind: ClusterIssuer
   dnsNames:
     - o2.fzymgc.house

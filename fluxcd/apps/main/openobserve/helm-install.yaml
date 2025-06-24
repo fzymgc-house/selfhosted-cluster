@@ -52,6 +52,11 @@ spec:
       enabled: true
       name: openobserve-secrets
 
+    enterprise:
+      enabled: true
+      openfga:
+        enabled: false
+
     config:
       ZO_S3_SERVER_URL: "https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com"
       ZO_S3_REGION_NAME: ""

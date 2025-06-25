@@ -8,5 +8,5 @@ resources:
   - ./valkey
   - ./cnpg
   - ./authentik
-  - ./victoriametrics
+  - ./grafana-operator
   - ./system-dashboards

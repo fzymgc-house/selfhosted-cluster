@@ -14,3 +14,4 @@ resources:
   - ./authentik.yaml
   - ./openobserve.yaml
   - ./victoriametrics.yaml
+  - ./grafana-operator.yaml

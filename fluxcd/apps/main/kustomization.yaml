@@ -10,3 +10,4 @@ resources:
   - ./authentik
   - ./grafana-operator
   - ./system-dashboards
+  - ./grafana

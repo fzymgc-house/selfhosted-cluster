@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: grafana
 
 resources:
+  - namespace.yaml
   - grafana.yaml
   - grafana-admin-external-secret.yaml
   - grafana-certificate.yaml 

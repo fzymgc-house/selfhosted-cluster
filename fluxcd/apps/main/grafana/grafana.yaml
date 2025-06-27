@@ -41,7 +41,8 @@ spec:
             - name: grafana-data
               persistentVolumeClaim:
                 claimName: grafana-pvc
-      strategy: Recreate
+      strategy:
+        type: Recreate
   ingress:
     spec:
       rules:

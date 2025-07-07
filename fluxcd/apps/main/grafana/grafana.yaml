@@ -13,14 +13,16 @@ spec:
       disable_login_form: "false"
       oauth_auto_login: "true"
       signout_redirect_url: "https://auth.fzymgc.house/application/o/grafana/end-session/"
-      generic_oauth:
-        name: authentik
-        enabled: true
-        scopes: "openid email profile"
-        auth_url: "https://auth.fzymgc.house/application/o/authorize/"
-        token_url: "https://auth.fzymgc.house/application/o/token/"
-        api_url: "https://auth.fzymgc.house/application/o/userinfo/"
-        role_attribute_path: contains(groups, 'Grafana Admins') && 'Admin' || contains(groups, 'Grafana Editors') && 'Editor' || 'Viewer'
+    auth.generic_oauth:
+      name: authentik
+      enabled: true
+      client_id: ${OAUTH_CLIENT_ID}
+      client_secret: ${OAUTH_CLIENT_SECRET}
+      scopes: "openid email profile"
+      auth_url: "https://auth.fzymgc.house/application/o/authorize/"
+      token_url: "https://auth.fzymgc.house/application/o/token/"
+      api_url: "https://auth.fzymgc.house/application/o/userinfo/"
+      role_attribute_path: contains(groups, 'Grafana Admins') && 'Admin' || contains(groups, 'Grafana Editors') && 'Editor' || 'Viewer'
     database:
       type: postgres
   disableDefaultAdminSecret: true
@@ -59,12 +61,12 @@ spec:
                     secretKeyRef:
                       name: main-grafana-credentials
                       key: url
-                - name: GF_AUTH_GENERIC_OAUTH_CLIENT_ID
+                - name: OAUTH_CLIENT_ID
                   valueFrom:
                     secretKeyRef:
                       name: oidc-credentials
                       key: client_id
-                - name: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+                - name: OAUTH_CLIENT_SECRET
                   valueFrom:
                     secretKeyRef:
                       name: oidc-credentials

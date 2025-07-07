@@ -58,3 +58,9 @@ spec:
           name: main-authentik-credentials
         superuser: false
         login: true
+      - name: grafana
+        ensure: present
+        passwordSecret:
+          name: main-grafana-credentials
+        superuser: false
+        login: true

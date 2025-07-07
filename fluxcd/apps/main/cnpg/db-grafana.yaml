@@ -1,0 +1,45 @@
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: main-grafana-credentials
+  namespace: postgres
+spec:
+  refreshPolicy: Periodic
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: main-grafana-credentials
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      metadata:
+        labels:
+          cnpg.io/reload: "true"
+      type: kubernetes.io/basic-auth
+      data:
+        username: "{{ .username }}"
+        password: "{{ .password }}"
+  data:
+    - secretKey: username
+      remoteRef:
+        key: fzymgc-house/cluster/postgres/users/main-grafana
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: fzymgc-house/cluster/postgres/users/main-grafana
+        property: password
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: grafana
+  namespace: postgres
+spec:
+  cluster:
+    name: main
+  ensure: present
+  name: grafana
+  owner: grafana

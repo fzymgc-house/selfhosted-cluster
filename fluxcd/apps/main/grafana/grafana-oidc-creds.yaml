@@ -21,9 +21,9 @@ spec:
   data:
     - secretKey: client_id
       remoteRef:
-        key: fzymgc-house/cluster/grafana/oidc_client_id
-        property: client_id
+        key: fzymgc-house/cluster/grafana
+        property: oidc_client_id
     - secretKey: client_secret
       remoteRef:
-        key: fzymgc-house/cluster/grafana/oidc_client_secret
-        property: client_secret
+        key: fzymgc-house/cluster/grafana
+        property: oid_client_secret

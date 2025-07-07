@@ -15,7 +15,7 @@ spec:
       signout_redirect_url: "https://auth.fzymgc.house/application/o/grafana/end-session/"
     auth.generic_oauth:
       name: authentik
-      enabled: true
+      enabled: "true"
       client_id: ${OAUTH_CLIENT_ID}
       client_secret: ${OAUTH_CLIENT_SECRET}
       scopes: "openid email profile"

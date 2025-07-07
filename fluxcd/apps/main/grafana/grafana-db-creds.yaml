@@ -22,6 +22,7 @@ spec:
       data:
         username: "{{ .username }}"
         password: "{{ .password }}"
+        url: "postgres://{{ .username }}:{{ .password }}@main-rw.postgres.svc.cluster.local:5432/grafana"
   data:
     - secretKey: username
       remoteRef:

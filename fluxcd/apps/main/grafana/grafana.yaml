@@ -11,6 +11,8 @@ spec:
       mode: "console"
     auth:
       disable_login_form: "false"
+    database:
+      type: postgres
   disableDefaultAdminSecret: true
   persistentVolumeClaim:
     spec:
@@ -42,6 +44,11 @@ spec:
                     secretKeyRef:
                       name: grafana-admin-creds
                       key: GF_SECURITY_ADMIN_PASSWORD
+                - name: GF_DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: main-grafana-credentials
+                      key: url
               securityContext:
                 allowPrivilegeEscalation: false
                 capabilities:

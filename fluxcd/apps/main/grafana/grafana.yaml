@@ -25,6 +25,8 @@ spec:
       role_attribute_path: contains(groups, 'Grafana Admins') && 'Admin' || contains(groups, 'Grafana Editors') && 'Editor' || 'Viewer'
     database:
       type: postgres
+    server:
+      root_url: "https://grafana.fzymgc.house"
   disableDefaultAdminSecret: true
   persistentVolumeClaim:
     spec:

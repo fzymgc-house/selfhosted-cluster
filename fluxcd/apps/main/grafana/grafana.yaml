@@ -37,6 +37,16 @@ spec:
                     secretKeyRef:
                       name: grafana-admin-creds
                       key: GF_SECURITY_ADMIN_PASSWORD
+          initContainers:
+            - name: grafana-init
+              image: chainguard/bash:latest
+              imagePullPolicy: Always
+              command: ["chown -R 472:0 /var/lib/grafana"]
+              securityContext:
+                privileged: true
+              volumeMounts:
+                - name: grafana-data
+                  mountPath: /var/lib/grafana
           volumes:
             - name: grafana-data
               persistentVolumeClaim:

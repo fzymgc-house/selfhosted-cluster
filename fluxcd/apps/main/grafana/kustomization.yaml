@@ -6,6 +6,7 @@ namespace: grafana
 resources:
   - namespace.yaml
   - grafana-db-creds.yaml
+  - grafana-oidc-creds.yaml
   - grafana.yaml
   - grafana-admin-external-secret.yaml
   - grafana-certificate.yaml 

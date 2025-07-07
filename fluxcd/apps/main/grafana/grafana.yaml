@@ -24,6 +24,11 @@ spec:
     spec:
       template:
         spec:
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+            fsGroup: 1001
+            runAsNonRoot: true
           containers:
             - name: grafana
               env:
@@ -37,6 +42,11 @@ spec:
                     secretKeyRef:
                       name: grafana-admin-creds
                       key: GF_SECURITY_ADMIN_PASSWORD
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
               volumeMounts:
                 - name: grafana-data
                   mountPath: /var/lib/grafana
@@ -45,7 +55,7 @@ spec:
               image: chainguard/bash:latest
               imagePullPolicy: Always
               command: ["/bin/bash", "-vxc", 
-                "mkdir -p /var/lib/grafana/plugins && chown -R 472:0 /var/lib/grafana && chmod 770 /var/lib/grafana /var/lib/grafana/plugins"]
+                "mkdir -p /var/lib/grafana/plugins && chown -R 1001:1001 /var/lib/grafana && chmod 770 /var/lib/grafana /var/lib/grafana/plugins"]
               securityContext:
                 privileged: true
               volumeMounts:

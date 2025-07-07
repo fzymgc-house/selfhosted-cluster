@@ -19,6 +19,7 @@ spec:
       client_id: ${OAUTH_CLIENT_ID}
       client_secret: ${OAUTH_CLIENT_SECRET}
       scopes: "openid email profile"
+      tls_client_ca: /certs/grafana.fzymgc.house/ca.crt
       auth_url: "https://auth.fzymgc.house/application/o/authorize/"
       token_url: "https://auth.fzymgc.house/application/o/token/"
       api_url: "https://auth.fzymgc.house/application/o/userinfo/"
@@ -81,6 +82,8 @@ spec:
               volumeMounts:
                 - name: grafana-data
                   mountPath: /var/lib/grafana
+                - name: certs
+                  mountPath: /certs/grafana.fzymgc.house
           initContainers:
             - name: grafana-init
               image: chainguard/bash:latest
@@ -100,6 +103,12 @@ spec:
             - name: grafana-data
               persistentVolumeClaim:
                 claimName: grafana-pvc
+            - name: certs
+              secret:
+                secretName: grafana-tls
+                items:
+                  - key: ca.crt
+                    path: ca.crt
       strategy:
         type: Recreate
   ingress:

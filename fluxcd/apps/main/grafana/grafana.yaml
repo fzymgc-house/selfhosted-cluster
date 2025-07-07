@@ -58,6 +58,10 @@ spec:
                 "mkdir -p /var/lib/grafana/plugins && chown -R 1001:1001 /var/lib/grafana && chmod 770 /var/lib/grafana /var/lib/grafana/plugins"]
               securityContext:
                 privileged: true
+                runAsNonRoot: false
+                allowPrivilegeEscalation: true
+                runAsUser: 0
+                runAsGroup: 0
               volumeMounts:
                 - name: grafana-data
                   mountPath: /var/lib/grafana

@@ -44,7 +44,8 @@ spec:
             - name: grafana-init
               image: chainguard/bash:latest
               imagePullPolicy: Always
-              command: ["/bin/bash", "-vxc", "chown -R 472:0 /var/lib/grafana && chmod 770 /var/lib/grafana"]
+              command: ["/bin/bash", "-vxc", 
+                "chown -R 472:0 /var/lib/grafana && chmod 770 /var/lib/grafana && su 472 -c 'mkdir -p /var/lib/grafana/plugins' && chown -R 472:0 /var/lib/grafana/plugins'"]
               securityContext:
                 privileged: true
               volumeMounts:

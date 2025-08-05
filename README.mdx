@@ -1,24 +1,259 @@
-# Selfhosted Cluster Setup
+# Self-Hosted Kubernetes Cluster
 
-## Overview
+A comprehensive GitOps-managed Kubernetes cluster setup for home infrastructure using k3s, FluxCD, and Terraform. This repository provides Infrastructure as Code (IaC) for a complete self-hosted platform including identity management, monitoring, databases, and application deployment.
 
-Describes the setup of the fzymgc home cluster.
+## 🏗️ Architecture Overview
 
-## Hardware
+This repository implements a production-ready home cluster with the following architecture:
 
-* 1 x TuringPi 2 hosts
-* 4 x RK1s
-* 4 x Jetson Orin NX
+- **Hardware**: TuringPi 2 cluster boards with RK1 and Jetson Orin NX compute modules
+- **OS**: Armbian 25.08 (Ubuntu Noble) with systemd-networkd
+- **Kubernetes**: k3s lightweight distribution
+- **GitOps**: FluxCD v2.6.x for declarative cluster management
+- **Infrastructure**: Terraform for external service configuration
+- **Networking**: Calico CNI with MetalLB load balancing
+- **Storage**: Longhorn distributed storage
+- **Ingress**: Traefik with automatic TLS via cert-manager
+- **Security**: HashiCorp Vault for secrets management
+- **Identity**: Authentik SSO with OIDC integration
+- **Monitoring**: VictoriaMetrics + Grafana stack
 
-## OS
+## 📁 Repository Structure
 
-* Armbian 25.08 trunk build
-  ```bash
-  /compile.sh build BOARD=turing-rk1 BRANCH=current BUILD_DESKTOP=no BUILD_MINIMAL=no RELEASE=noble NETWORKING_STACK=systemd-networkd EXPERT=yes
-  ```
-* Jetson Linux
+```
+selfhosted-cluster/
+├── ansible/                    # Cluster deployment and node management
+│   ├── inventory/              # Host definitions and group variables
+│   ├── roles/                  # Ansible roles for automation
+│   │   ├── k3sup/              # k3s cluster deployment
+│   │   └── tp2-bootstrap-node/ # Node preparation and configuration
+│   ├── k3s-playbook.yml        # Main cluster deployment playbook
+│   ├── bootstrap-nodes-playbook.yml # Node preparation playbook
+│   └── reboot-nodes-playbook.yml     # Cluster maintenance playbook
+├── fluxcd/                     # GitOps manifests and configurations
+│   ├── clusters/main/          # Cluster-level FluxCD resources
+│   ├── infrastructure/         # Infrastructure controllers and configs
+│   │   ├── controllers/        # Core infrastructure components
+│   │   └── configs/            # Cluster-wide configurations
+│   └── apps/main/              # Application deployments
+├── tf/                         # Terraform modules for external services
+│   ├── vault/                  # Vault configuration and policies
+│   ├── authentik/              # Identity provider setup
+│   └── core-services/          # Additional service configurations
+└── containers/                 # Custom container images
+    └── fluxcd-tofu-runner/     # Custom Terraform runner for FluxCD
+```
 
-## K8S
+## 🖥️ Hardware Configuration
 
-* k3s
+### TuringPi Cluster Setup
+- **1x TuringPi 2** cluster board (2x TPI hosts: alpha/beta)
+- **4x RK1** compute modules (ARM64, 32GB RAM each)
+- **4x Jetson Orin NX** compute modules (ARM64, AI/ML workloads)
+
+### Network Architecture
+- **Cluster Network**: `10.42.0.0/16` (pod CIDR)
+- **Service Network**: `10.43.0.0/16` (service CIDR)
+- **Load Balancer**: `10.255.254.6` (MetalLB pool)
+- **DNS**: Internal cluster DNS at `10.43.0.10`
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+1. **Local Development Machine**:
+   - Ansible with kubernetes.core collection
+   - kubectl configured
+   - 1Password CLI (for secrets management)
+
+2. **Hardware Setup**:
+   - TuringPi 2 with compute modules installed
+   - Network connectivity to all nodes
+   - BMC access configured
+
+### Deployment Steps
+
+#### 1. Prepare Nodes
+```bash
+# Bootstrap all cluster nodes with base configuration
+ansible-playbook -i ansible/inventory/hosts.yml ansible/bootstrap-nodes-playbook.yml
+```
+
+#### 2. Deploy Kubernetes Cluster
+```bash
+# Deploy k3s cluster with all infrastructure components
+ansible-playbook -i ansible/inventory/hosts.yml ansible/k3s-playbook.yml
+```
+
+#### 3. Verify Deployment
+```bash
+# Check cluster status
+kubectl --context fzymgc-house get nodes
+kubectl --context fzymgc-house get pods -A
+```
+
+## 📦 Deployed Applications
+
+### Core Infrastructure
+- **🔄 FluxCD**: GitOps continuous delivery
+- **🌐 Traefik**: Ingress controller with automatic TLS
+- **🔒 cert-manager**: TLS certificate automation
+- **⚖️ MetalLB**: Bare-metal load balancer
+- **💾 Longhorn**: Distributed block storage
+- **🛡️ Calico**: Container networking (CNI)
+
+### Platform Services
+- **🔐 HashiCorp Vault**: Secrets and certificate management
+- **👤 Authentik**: Identity provider with SSO/OIDC
+- **🗄️ CloudNativePG**: PostgreSQL database clusters
+- **⚡ Valkey**: Redis-compatible in-memory database
+- **📊 VictoriaMetrics**: Metrics collection and storage
+- **📈 Grafana**: Observability and dashboards
+
+### Infrastructure as Code
+- **🏗️ Terraform (via FluxCD)**: External service configuration
+- **📝 SOPS**: Encrypted secrets in Git
+- **🎯 Kustomize**: Kubernetes manifest management
+
+## 🔧 Configuration Management
+
+### Ansible Automation
+The `ansible/` directory contains all automation for cluster lifecycle:
+
+- **Node Bootstrap**: OS configuration, networking, security hardening
+- **Cluster Deployment**: k3s installation with k3sup
+- **Infrastructure Setup**: Core services installation
+- **Maintenance Operations**: Updates, reboots, scaling
+
+### GitOps with FluxCD
+The `fluxcd/` directory implements GitOps workflows:
+
+- **Infrastructure Controllers**: Deploy core Kubernetes controllers
+- **Infrastructure Configs**: Cluster-wide configurations and policies  
+- **Applications**: User-facing services and dashboards
+
+### Terraform Integration
+The `tf/` directory provides Infrastructure as Code for external services:
+
+- **Vault Management**: Policies, auth methods, PKI
+- **Authentik Configuration**: OIDC applications, user groups
+- **External Integrations**: Cloud services, DNS, monitoring
+
+## 🛡️ Security Features
+
+### Zero-Trust Architecture
+- **mTLS Everywhere**: Service mesh communication
+- **RBAC**: Kubernetes role-based access control
+- **Network Policies**: Micro-segmentation
+- **Pod Security Standards**: Container security enforcement
+
+### Secrets Management
+- **HashiCorp Vault**: Centralized secrets storage
+- **External Secrets Operator**: Kubernetes secrets injection
+- **SOPS Encryption**: Git-stored encrypted secrets
+- **Automatic Rotation**: Certificate and credential lifecycle
+
+### Identity & Access
+- **Authentik SSO**: Single sign-on for all services
+- **OIDC Integration**: Standards-based authentication
+- **MFA Support**: Multi-factor authentication
+- **Fine-grained RBAC**: Service-level permissions
+
+## 📊 Monitoring & Observability
+
+### Metrics & Alerting
+- **VictoriaMetrics**: High-performance metrics storage
+- **Grafana**: Rich dashboards and visualization
+- **Built-in Dashboards**: Cluster, application, and business metrics
+- **Alert Manager**: Intelligent alert routing
+
+### Logging & Tracing
+- **Structured Logging**: JSON-formatted application logs
+- **Centralized Collection**: Cluster-wide log aggregation
+- **Retention Policies**: Automated log lifecycle management
+
+## 🔄 GitOps Workflow
+
+### Continuous Delivery
+1. **Source Control**: All infrastructure defined in Git
+2. **Automated Sync**: FluxCD monitors repository changes
+3. **Declarative Updates**: Kubernetes resources reconciled automatically
+4. **Rollback Capability**: Git-based change history
+
+### Development Process
+1. Make changes to manifests in feature branches
+2. Create pull request for review
+3. Merge to main branch triggers deployment
+4. FluxCD applies changes to cluster automatically
+
+## 🏠 Domain & Services
+
+### External Access
+All services are accessible via `*.fzymgc.house` domains:
+
+- **Grafana**: https://grafana.fzymgc.house
+- **Authentik**: https://auth.fzymgc.house  
+- **Vault**: https://vault.fzymgc.house
+- **Traefik Dashboard**: https://traefik.fzymgc.house
+
+### SSL/TLS
+- **Automatic Certificates**: cert-manager with Let's Encrypt
+- **Internal CA**: Custom certificate authority for internal services
+- **Wildcard Certificates**: Efficient certificate management
+
+## 🔧 Maintenance Operations
+
+### Cluster Updates
+```bash
+# Update all nodes
+ansible-playbook -i ansible/inventory/hosts.yml ansible/reboot-nodes-playbook.yml
+
+# Update specific components
+ansible-playbook -i ansible/inventory/hosts.yml ansible/k3s-playbook.yml --tags k8s-longhorn
+```
+
+### Application Management
+```bash
+# Force FluxCD sync
+flux reconcile kustomization apps --with-source
+
+# Suspend/resume applications  
+flux suspend helmrelease grafana -n grafana
+flux resume helmrelease grafana -n grafana
+```
+
+### Backup & Recovery
+- **Automated Backups**: Longhorn volume snapshots
+- **Database Backups**: PostgreSQL streaming backup to object storage
+- **Vault Snapshots**: Automated Vault data backup
+- **Disaster Recovery**: Full cluster restore procedures
+
+## 📚 Additional Resources
+
+### Documentation
+- [FluxCD Documentation](https://fluxcd.io/flux/)
+- [Traefik Ingress](https://doc.traefik.io/traefik/)
+- [Longhorn Storage](https://longhorn.io/docs/)
+- [HashiCorp Vault](https://developer.hashicorp.com/vault)
+
+### Troubleshooting
+- Check FluxCD status: `flux get all`
+- View logs: `kubectl logs -n flux-system -l app=source-controller`
+- Validate manifests: `kubectl apply --dry-run=client -k fluxcd/clusters/main/`
+
+## 📄 License
+
+This project is licensed under the MIT License - see the individual files for details.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly in a development environment
+5. Submit a pull request with detailed description
+
+---
+
+**Note**: This is a personal home infrastructure setup. Adapt configurations for your specific environment and security requirements.
 

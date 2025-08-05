@@ -66,18 +66,11 @@
     }
   ],
   "vulnerabilityAlerts": {
-    "enabled": true,
-    "schedule": ["at any time"]
-  },
-  "dependencyDashboard": {
     "enabled": true
   },
+  "dependencyDashboard": true,
   "prConcurrentLimit": 5,
   "prHourlyLimit": 2,
-  "commitMessageAction": "Update",
-  "commitMessagePrefix": "chore(deps):",
-  "commitMessageTopic": "{{depName}}",
-  "commitMessageExtra": "to {{newVersion}}",
   "labels": ["dependencies", "renovate"],
   "assignees": [],
   "reviewers": [],
@@ -89,28 +82,5 @@
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 4am on monday"]
-  },
-  "ignorePaths": [
-    "**/node_modules/**",
-    "**/vendor/**"
-  ],
-  "enabledManagers": [
-    "dockerfile",
-    "helmv3",
-    "terraform",
-    "docker-compose",
-    "git-submodules"
-  ],
-  "docker": {
-    "enabled": true
-  },
-  "helmv3": {
-    "enabled": true
-  },
-  "terraform": {
-    "enabled": true
-  },
-  "git-submodules": {
-    "enabled": true
   }
 }

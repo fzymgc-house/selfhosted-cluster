@@ -2,5 +2,115 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
-  ]
+  ],
+  "schedule": [
+    "before 4am on monday"
+  ],
+  "timezone": "America/New_York",
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch",
+      "automerge": true
+    },
+    {
+      "matchPackagePatterns": ["^hashicorp/"],
+      "groupName": "hashicorp providers",
+      "groupSlug": "hashicorp-providers"
+    },
+    {
+      "matchPackagePatterns": ["^kubernetes$", "^k3s$"],
+      "groupName": "kubernetes components",
+      "groupSlug": "kubernetes-components",
+      "schedule": ["before 4am on monday"]
+    },
+    {
+      "matchPackagePatterns": ["^cert-manager$", "^traefik$", "^metallb$"],
+      "groupName": "core infrastructure components",
+      "groupSlug": "core-infrastructure"
+    },
+    {
+      "matchPackagePatterns": ["^grafana", "^victoriametrics", "^prometheus"],
+      "groupName": "monitoring stack",
+      "groupSlug": "monitoring-stack"
+    },
+    {
+      "matchPackagePatterns": ["^vault$", "^authentik$"],
+      "groupName": "security components",
+      "groupSlug": "security-components"
+    },
+    {
+      "matchPackagePatterns": ["^fluxcd", "^flux-iac"],
+      "groupName": "fluxcd components",
+      "groupSlug": "fluxcd-components"
+    },
+    {
+      "matchPackagePatterns": ["^hashicorp/terraform$"],
+      "groupName": "terraform core",
+      "groupSlug": "terraform-core"
+    },
+    {
+      "matchPackagePatterns": ["^ghcr\\.io/"],
+      "groupName": "container images",
+      "groupSlug": "container-images"
+    },
+    {
+      "matchPackagePatterns": ["^docker://"],
+      "groupName": "docker images",
+      "groupSlug": "docker-images"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": ["at any time"]
+  },
+  "dependencyDashboard": {
+    "enabled": true
+  },
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "commitMessageAction": "Update",
+  "commitMessagePrefix": "chore(deps):",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+  "labels": ["dependencies", "renovate"],
+  "assignees": [],
+  "reviewers": [],
+  "automerge": false,
+  "automergeType": "pr",
+  "platformAutomerge": false,
+  "rebaseWhen": "auto",
+  "rangeStrategy": "auto",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 4am on monday"]
+  },
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/vendor/**"
+  ],
+  "enabledManagers": [
+    "dockerfile",
+    "helmv3",
+    "terraform",
+    "docker-compose",
+    "git-submodules"
+  ],
+  "docker": {
+    "enabled": true
+  },
+  "helmv3": {
+    "enabled": true
+  },
+  "terraform": {
+    "enabled": true
+  },
+  "git-submodules": {
+    "enabled": true
+  }
 }

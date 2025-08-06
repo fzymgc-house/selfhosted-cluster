@@ -22,23 +22,24 @@ spec:
       retries: 3
   values:
     configuration:
-      provider: aws
       backupStorageLocation:
-        name: default
-        bucket: fzymgc-cluster-storage
-        prefix: velero/backups
-        config:
-          region: auto
-          s3ForcePathStyle: "true"
-          s3Url: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
-          publicUrl: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
+        - name: default
+          provider: aws
+          bucket: fzymgc-cluster-storage
+          prefix: velero/backups
+          config:
+            region: auto
+            s3ForcePathStyle: "true"
+            s3Url: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
+            publicUrl: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
       volumeSnapshotLocation:
-        name: default
-        config:
-          region: auto
-          s3ForcePathStyle: "true"
-          s3Url: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
-          publicUrl: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
+        - name: default
+          provider: aws
+          config:
+            region: auto
+            s3ForcePathStyle: "true"
+            s3Url: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
+            publicUrl: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
       credentials:
         useSecret: true
         name: velero-cloud-credentials
@@ -49,8 +50,8 @@ spec:
         volumeMounts:
           - name: plugins
             mountPath: /target
-    defaultVolumesToRestic: false
-    defaultResticPruneFrequency: "168h"
+    defaultVolumesToFsBackup: false
+    defaultRepoMaintainFrequency: "168h"
     metrics:
       enabled: true
       serviceMonitor:

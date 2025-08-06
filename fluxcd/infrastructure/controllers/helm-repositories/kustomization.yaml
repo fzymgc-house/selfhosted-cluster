@@ -15,4 +15,5 @@ resources:
   - ./openobserve.yaml
   - ./victoriametrics.yaml
   - ./grafana-operator.yaml
+  - ./prometheus-community.yaml
   - ./velero.yaml

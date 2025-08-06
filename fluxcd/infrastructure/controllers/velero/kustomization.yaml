@@ -8,5 +8,4 @@ resources:
   - ./helm-install.yaml
   - ./backup-storage-location.yaml
   - ./volume-snapshot-location.yaml
-  - ./backup-schedule.yaml
   - ./monitoring 

@@ -82,5 +82,8 @@
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 4am on monday"]
+  },
+  "flux": {
+    "managerFilePatterns": ["/fluxcd/.+\\.ya?ml$/"]
   }
 }

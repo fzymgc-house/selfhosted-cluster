@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ./namespace.yaml
+  - ./rbac.yaml
+  - ./secrets.yaml
+  - ./helm-install.yaml
+  - ./backup-storage-location.yaml
+  - ./volume-snapshot-location.yaml
+  - ./backup-schedule.yaml
+  - ./monitoring 

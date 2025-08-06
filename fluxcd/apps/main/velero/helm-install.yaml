@@ -1,0 +1,74 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: velero
+  namespace: velero
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: velero
+      version: "6.0.0"
+      sourceRef:
+        kind: HelmRepository
+        name: velero
+        namespace: flux-system
+  install:
+    createNamespace: false
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    configuration:
+      provider: aws
+      backupStorageLocation:
+        name: default
+        bucket: fzymgc-cluster-storage
+        prefix: velero/backups
+        config:
+          region: auto
+          s3ForcePathStyle: "true"
+          s3Url: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
+          publicUrl: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
+      volumeSnapshotLocation:
+        name: default
+        config:
+          region: auto
+          s3ForcePathStyle: "true"
+          s3Url: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
+          publicUrl: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
+      credentials:
+        useSecret: true
+        name: velero-cloud-credentials
+        key: cloud
+    initContainers:
+      - name: velero-plugin-for-aws
+        image: velero/velero-plugin-for-aws:v1.8.0
+        volumeMounts:
+          - name: plugins
+            mountPath: /target
+    defaultVolumesToRestic: false
+    defaultResticPruneFrequency: "168h"
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+        interval: 30s
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    serviceAccount:
+      create: false
+      name: velero
+    tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: "true" 

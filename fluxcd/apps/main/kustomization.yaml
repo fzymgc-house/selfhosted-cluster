@@ -11,4 +11,3 @@ resources:
   - ./grafana-operator
   - ./system-dashboards
   - ./grafana
-  - ./velero

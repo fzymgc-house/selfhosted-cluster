@@ -1,0 +1,205 @@
+---
+description: Monitoring stack configuration and observability patterns
+globs: ["fluxcd/apps/**/grafana*.yaml", "fluxcd/apps/**/victoria*.yaml", "fluxcd/apps/**/monitoring*.yaml"]
+alwaysApply: false
+---
+
+# Monitoring & Observability Rules
+
+## Monitoring Stack Overview
+- **Metrics**: VictoriaMetrics (Prometheus-compatible)
+- **Visualization**: Grafana with Grafana Operator
+- **Dashboards**: Managed as code in Git
+- **Alerting**: AlertManager (future)
+- **Logging**: Structured JSON logging
+- **Tracing**: OpenTelemetry (future)
+
+## VictoriaMetrics Configuration
+
+### Deployment Pattern
+- Use HelmRelease for deployment
+- Configure retention period (90d default)
+- Set appropriate resource limits
+- Use persistent storage
+- Enable ServiceMonitor for scraping
+
+### Scrape Configurations
+- Use ServiceMonitor for Prometheus Operator
+- Set appropriate intervals (30s default)
+- Include proper relabeling rules
+- Configure metric endpoints
+- Use proper selectors
+
+## Grafana Configuration
+
+### Grafana Instance via Operator
+- Use Grafana Operator for deployment
+- Configure PostgreSQL backend
+- Enable OIDC authentication
+- Set proper resource limits
+- Include proper security contexts
+
+### Data Sources
+- Configure VictoriaMetrics as primary
+- Set appropriate time intervals
+- Use proxy access mode
+- Include proper authentication
+- Set query timeouts
+
+### Dashboard Management
+- Create dashboards as code
+- Use ConfigMaps for definitions
+- Include proper folder organization
+- Set appropriate refresh intervals
+- Use version control
+
+### Dashboard ConfigMap Template
+- Use JSON format for dashboards
+- Include proper metadata
+- Set appropriate UIDs
+- Include version information
+- Use proper panel configurations
+
+## Metrics Standards
+
+### Application Metrics
+Every application should expose:
+- **RED Metrics**: Rate, Errors, Duration
+- **USE Metrics**: Utilization, Saturation, Errors
+- **Business Metrics**: Application-specific KPIs
+
+### Metric Naming Conventions
+Follow Prometheus naming conventions:
+- Format: `<namespace>_<subsystem>_<name>_<unit>`
+- Examples: `http_requests_total`, `http_request_duration_seconds`
+- Use consistent naming across applications
+
+### Labels Best Practices
+- Use consistent label names
+- Avoid high cardinality
+- Include service and environment labels
+- Use descriptive label values
+- Document label purposes
+
+## Logging Configuration
+
+### Structured Logging Format
+- Use JSON format for all logs
+- Include timestamp and level
+- Add service and namespace information
+- Include request IDs for tracing
+- Add relevant context fields
+
+### Log Levels
+- **DEBUG**: Detailed diagnostic information
+- **INFO**: General informational messages
+- **WARN**: Warning messages for potential issues
+- **ERROR**: Error messages for failures
+- **FATAL**: Critical failures requiring immediate attention
+
+### Application Logging Configuration
+- Use structured logging libraries
+- Configure appropriate log levels
+- Include proper formatters
+- Set up log rotation
+- Configure log aggregation
+
+## Dashboard Templates
+
+### System Dashboard Components
+- CPU usage metrics
+- Memory usage patterns
+- Network I/O statistics
+- Disk I/O metrics
+- Pod restart counters
+
+### Application Dashboard Components
+- Request rate metrics
+- Error rate calculations
+- P95 latency measurements
+- Active connection counts
+- Queue size monitoring
+
+### Database Dashboard Components
+- Connection pool metrics
+- Query performance data
+- Cache hit ratios
+- Replication lag
+- Table size information
+
+## Alerting Rules
+
+### Alert Definition Template
+- Use PrometheusRule resources
+- Set appropriate severity levels
+- Include proper annotations
+- Configure alert grouping
+- Set appropriate thresholds
+
+### Alert Severity Levels
+- **info**: Informational, no action required
+- **warning**: Potential issue, investigate soon
+- **critical**: Immediate action required
+- **page**: Wake someone up
+
+## Service Level Objectives (SLOs)
+
+### SLO Definition
+- Define availability targets (99.9% over 30 days)
+- Set latency objectives (95% under 200ms)
+- Include error budget calculations
+- Monitor SLO compliance
+- Alert on budget consumption
+
+### Error Budget Monitoring
+- Track error budget consumption
+- Alert when budget is low
+- Include rollback procedures
+- Monitor trend analysis
+- Document SLO targets
+
+## Troubleshooting Queries
+
+### Performance Investigation
+- Slow query analysis
+- Memory leak detection
+- CPU throttling monitoring
+- Disk space predictions
+- Network latency analysis
+
+### Capacity Planning
+- Resource utilization trends
+- Request growth analysis
+- Predicted resource needs
+- Scaling recommendations
+- Cost optimization
+
+## Best Practices
+
+### Metric Collection
+- Keep cardinality under control
+- Use recording rules for expensive queries
+- Set appropriate retention periods
+- Use proper metric types
+- Include proper documentation
+
+### Dashboard Design
+- Start with overview, drill down to details
+- Use consistent color schemes
+- Include relevant time ranges
+- Add helpful annotations
+- Use variables for flexibility
+
+### Alert Design
+- Alert on symptoms, not causes
+- Include runbook links
+- Avoid alert fatigue
+- Test alerts in staging first
+- Review and tune regularly
+
+### Performance Optimization
+- Use recording rules for complex queries
+- Downsample old data
+- Optimize label cardinality
+- Use appropriate scrape intervals
+- Monitor monitoring system performance

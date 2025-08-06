@@ -1,0 +1,94 @@
+---
+description: Kubernetes manifests and FluxCD GitOps patterns for the cluster
+globs: ["fluxcd/**/*.yaml", "fluxcd/**/*.yml", "**/*.yaml", "**/*.yml"]
+alwaysApply: false
+---
+
+# Kubernetes & FluxCD Rules
+
+## FluxCD Resources
+
+### Kustomization Resources
+- Use `apiVersion: kustomize.toolkit.fluxcd.io/v1`
+- Include proper dependencies with `dependsOn`
+- Set appropriate intervals (1h for stable, 1m for active development)
+- Always enable pruning: `prune: true`
+- Use SOPS for secret decryption when needed
+
+### HelmRelease Resources
+- Use `apiVersion: helm.toolkit.fluxcd.io/v2` (or v2beta1/v2beta2 as appropriate)
+- Always specify chart version explicitly
+- Include remediation strategies with retries
+- Set drift detection mode
+- Define proper dependencies
+
+### HelmRepository Resources
+- Place in `infrastructure/controllers/helm-repositories/`
+- Use `apiVersion: source.toolkit.fluxcd.io/v1`
+- Set appropriate intervals (usually 1h)
+
+## Kubernetes Resources
+
+### Namespaces
+- Create namespace.yaml as first resource in each app directory
+- Keep it simple with just name and optional labels
+
+### Kustomization Files
+- Every directory with Kubernetes resources needs a `kustomization.yaml`
+- List resources in logical order (namespace first, then configs, then deployments)
+- Use standard format with `apiVersion: kustomize.config.k8s.io/v1beta1`
+
+### Certificates (cert-manager)
+- Use `apiVersion: cert-manager.io/v1`
+- Reference appropriate issuer (fzymgc-house-issuer for internal)
+- Standard duration and renewal settings
+
+### External Secrets
+- Use `apiVersion: external-secrets.io/v1beta1`
+- Reference the vault ClusterSecretStore
+- Use templating for secret structure
+
+### Traefik IngressRoutes
+- Use `apiVersion: traefik.io/v1alpha1`
+- Always use TLS with proper certificates
+- Include middleware when needed
+
+## Resource Patterns
+
+### Multi-Resource Files
+- Separate resources with `---`
+- Order: Namespace → ConfigMaps/Secrets → Deployments → Services → Ingress
+
+### Labels and Annotations
+- Use consistent labels following Kubernetes conventions
+- Include app.kubernetes.io/* labels
+
+### Resource Limits
+- Always set resource requests and limits when known
+- Use appropriate CPU and memory values
+- Consider storage requirements for stateful services
+
+### Storage
+- Use appropriate storage classes:
+  - `longhorn`: Standard replicated storage
+  - `longhorn-encrypted`: Encrypted storage for sensitive data
+  - `postgres-storage`: Optimized for PostgreSQL workloads
+
+## FluxCD Terraform Resources
+- Use the custom tofu-runner image
+- Mount Vault certificates
+- Provide Vault token via secret
+- Set appropriate intervals and retry strategies
+
+## Best Practices
+1. Always use explicit API versions (no shortcuts)
+2. Set proper health checks and probes
+3. Use anti-affinity rules for HA deployments
+4. Implement proper RBAC for service accounts
+5. Use NetworkPolicies for service isolation
+6. Set PodDisruptionBudgets for critical services
+7. Use topologySpreadConstraints for even distribution
+8. Implement proper backup strategies for stateful services
+
+7. Use topologySpreadConstraints for even distribution
+8. Implement proper backup strategies for stateful services

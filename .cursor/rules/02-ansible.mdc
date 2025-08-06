@@ -1,0 +1,188 @@
+---
+description: Ansible automation patterns for cluster deployment and node management
+globs: ["ansible/**/*.yml", "ansible/**/*.yaml"]
+alwaysApply: false
+---
+
+# Ansible Rules
+
+## Playbook Standards
+
+### File Headers
+- Always include SPDX license identifier and language hint
+- Use `# SPDX-License-Identifier: MIT-0`
+- Include `# code: language=ansible`
+
+### Playbook Structure
+- Use descriptive playbook names
+- Include `become: true` if root needed
+- Set `gather_facts: true` if facts needed
+- Use tags for organization
+
+## Role Structure
+
+### Required Directories
+- `defaults/` - Default variables (lowest precedence)
+- `tasks/` - Task files
+- `handlers/` - Handler definitions
+- `templates/` - Jinja2 templates
+- `files/` - Static files
+- `vars/` - Role variables (high precedence)
+- `meta/` - Role metadata
+
+### Task Files
+- Use `import_tasks` for static inclusion
+- Use `include_tasks` for dynamic inclusion
+- Always use tags for organization
+- Include conditional logic with `when` statements
+
+## Variable Naming
+- Use snake_case for all variables
+- Prefix role variables with role name: `k3sup_version`
+- Use descriptive names: `node_network_interface` not `iface`
+- Boolean variables should be questions: `enable_monitoring`
+
+## Module Usage
+
+### Always Use FQCN (Fully Qualified Collection Name)
+- Use `ansible.builtin.apt` not `apt`
+- Use `ansible.builtin.file` not `file`
+- Use `ansible.builtin.template` not `template`
+
+### Common Module Patterns
+
+#### Package Management
+- Use `ansible.builtin.apt` with `update_cache: true`
+- Set `cache_valid_time: 3600` for performance
+- Use lists for multiple packages
+
+#### File Operations
+- Use `ansible.builtin.file` for directories and permissions
+- Use `ansible.builtin.template` for configuration files
+- Always set `backup: true` for important files
+
+#### Service Management
+- Use `ansible.builtin.systemd` for service control
+- Set `enabled: true` for persistent services
+- Use `daemon_reload: true` when needed
+
+## Inventory Management
+
+### Host Variables
+- Store in `host_vars/<hostname>.yml`
+- Use descriptive variable names
+- Include network configuration
+
+### Group Variables
+- Store in `group_vars/<groupname>.yml`
+- Use for shared configuration
+- Include cluster-wide settings
+
+### Dynamic Groups
+- Use patterns in hosts.yml
+- Use ranges like `tpi-alpha-[1:4]`
+- Comment out unused hosts
+
+## Templates (Jinja2)
+
+### File Naming
+- Use `.j2` extension: `config.yaml.j2`
+- Name descriptively: `nginx-site.conf.j2`
+
+### Template Best Practices
+- Include `{{ ansible_managed }}` comment
+- Use defaults for optional values
+- Use complex logic in separate blocks
+- Use computed values with filters
+
+## Handlers
+
+### Handler Definition
+- Define in `handlers/main.yml`
+- Use descriptive names
+- Use `listen` for grouped handlers
+
+### Handler Usage
+- Use `notify` in tasks
+- Group related handlers with `listen`
+- Keep handlers focused and simple
+
+## Error Handling
+
+### Use Block/Rescue/Always
+- Wrap complex operations in blocks
+- Include rescue for error handling
+- Use always for cleanup operations
+- Set appropriate timeouts
+
+## Idempotency
+
+### Check Mode Support
+- Use `check_mode: false` for always-run tasks
+- Use `changed_when: false` for read-only operations
+- Use `failed_when: false` for non-critical failures
+
+### Changed When
+- Use `changed_when` for custom change detection
+- Use `register` to capture command output
+- Check output for specific patterns
+
+## Security Best Practices
+
+### Vault Usage
+- Use `ansible-vault encrypt_string` for sensitive data
+- Include `no_log: true` for sensitive tasks
+- Use vault files for complex secrets
+
+### No Log for Sensitive Tasks
+- Set `no_log: true` for password tasks
+- Use vault for credential management
+- Avoid logging sensitive output
+
+## Performance Optimization
+
+### Fact Gathering
+- Disable when not needed with `gather_facts: false`
+- Use `setup` module for specific facts
+- Cache facts when possible
+
+### Async Tasks
+- Use `async` for long-running tasks
+- Set appropriate timeouts
+- Use `async_status` to check completion
+- Include retry logic
+
+## Testing
+
+### Syntax Check
+- Use `ansible-playbook --syntax-check`
+- Validate YAML before running
+
+### Dry Run
+- Use `ansible-playbook --check --diff`
+- Review changes before applying
+
+### Limit Execution
+- Use `--limit hostname` for specific hosts
+- Use `--tags specific-tag` for specific tasks
+- Test on subset before full deployment
+
+## Common Patterns
+
+### Wait for Service
+- Use `ansible.builtin.wait_for` for service readiness
+- Set appropriate timeouts and delays
+- Check both port and path when needed
+
+### Conditional Includes
+- Use `include_tasks` with `when` conditions
+- Check OS family for platform-specific tasks
+- Use fact-based conditions
+
+### Loop with Index
+- Use `loop` with `loop_control`
+- Include `index_var` for index access
+- Use `with_indexed_items` when needed
+
+- Include `index_var` for index access
+- Use `with_indexed_items` when needed

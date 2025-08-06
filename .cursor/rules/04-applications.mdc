@@ -1,0 +1,200 @@
+---
+description: Application deployment patterns and templates for core services
+globs: ["fluxcd/apps/**/*.yaml", "fluxcd/apps/**/*.yml"]
+alwaysApply: false
+---
+
+# Application Deployment Rules
+
+## Application Structure
+Each application in `fluxcd/apps/main/` should follow this structure:
+- `namespace.yaml` - Namespace definition
+- `kustomization.yaml` - Kustomize configuration
+- `helm-install.yaml` - HelmRelease (if Helm-based)
+- `secrets.yaml` - ExternalSecret definitions
+- `certificate.yaml` - TLS certificates
+- `ingress-route.yaml` - Traefik IngressRoute
+- `*.yaml` - Additional resources
+
+## Core Applications
+
+### Vault
+- **Purpose**: Secret management and PKI
+- **Namespace**: `vault`
+- **Access**: https://vault.fzymgc.house
+- **Key Patterns**:
+  - HA setup with Raft storage
+  - TLS enabled with internal certificates
+  - Auto-unseal configured
+  - Integrated with Kubernetes auth
+  - Snapshot backups enabled
+
+### Authentik
+- **Purpose**: Identity Provider and SSO
+- **Namespace**: `authentik`
+- **Access**: https://auth.fzymgc.house
+- **Key Patterns**:
+  - OIDC provider for all applications
+  - LDAP outpost for legacy apps
+  - PostgreSQL backend via CloudNativePG
+  - Redis cache via Valkey
+  - Terraform-managed configuration
+
+### CloudNativePG (CNPG)
+- **Purpose**: PostgreSQL database clusters
+- **Namespace**: `postgres`
+- **Key Patterns**:
+  - Always use odd numbers for HA (3 instances)
+  - Use `primaryUpdateStrategy: unsupervised`
+  - Configure proper backup strategies
+  - Set appropriate resource limits
+  - Use dedicated storage classes
+
+### Grafana
+- **Purpose**: Observability and dashboards
+- **Namespace**: `grafana`
+- **Access**: https://grafana.fzymgc.house
+- **Key Patterns**:
+  - Deployed via Grafana Operator
+  - OIDC authentication via Authentik
+  - PostgreSQL backend for configuration
+  - VictoriaMetrics as primary datasource
+  - Dashboards managed as code
+
+### External Secrets Operator
+- **Purpose**: Sync secrets from Vault to Kubernetes
+- **Namespace**: `external-secrets`
+- **Key Patterns**:
+  - Use ClusterSecretStore for Vault
+  - Configure Kubernetes authentication
+  - Use templating for secret structure
+  - Set appropriate refresh intervals
+
+### Valkey (Redis)
+- **Purpose**: In-memory cache and message broker
+- **Namespace**: `valkey`
+- **Key Patterns**:
+  - High availability with sentinel
+  - Persistent storage optional
+  - Password from ExternalSecret
+  - Used by Authentik and other apps
+
+### VictoriaMetrics
+- **Purpose**: Metrics storage and query
+- **Namespace**: `monitoring`
+- **Key Patterns**:
+  - Single-node or cluster mode
+  - Long-term retention
+  - Prometheus-compatible API
+  - Integrated with Grafana
+
+## Application Templates
+
+### Basic Application Deployment
+- Create namespace.yaml first
+- Use Deployment with proper replicas
+- Set resource requests and limits
+- Include health checks and probes
+- Configure service accounts and RBAC
+
+### Database-Connected Application
+- Use CloudNativePG for PostgreSQL
+- Create ExternalSecret for credentials
+- Use proper connection strings
+- Configure backup strategies
+- Set appropriate resource limits
+
+## Service Exposure Patterns
+
+### Internal Services (ClusterIP)
+- Use ClusterIP for internal communication
+- Configure proper selectors
+- Use descriptive service names
+- Include port mappings
+
+### External Services (via Traefik)
+- Create Certificate with cert-manager
+- Use IngressRoute with TLS
+- Include middleware when needed
+- Set proper entry points
+
+### Load Balancer Services (MetalLB)
+- Use LoadBalancer type for external access
+- Configure IP allocation
+- Set proper annotations
+- Include health checks
+
+## StatefulSet Applications
+- Use StatefulSet for stateful applications
+- Configure volume claim templates
+- Set proper update strategies
+- Include proper service names
+- Configure persistent storage
+
+## Application Security
+
+### Service Accounts and RBAC
+- Create dedicated service accounts
+- Use least privilege principles
+- Configure proper roles and bindings
+- Include namespace-specific permissions
+
+### Network Policies
+- Implement default deny policies
+- Allow specific traffic patterns
+- Include DNS and health check access
+- Configure cross-namespace communication
+
+### Pod Security Standards
+- Use restricted pod security standards
+- Configure security contexts
+- Drop unnecessary capabilities
+- Use read-only root filesystems
+
+## Monitoring Integration
+
+### Prometheus Metrics
+- Expose metrics endpoints
+- Use proper metric names
+- Include appropriate labels
+- Configure service monitors
+
+### Grafana Dashboard
+- Create dashboards as code
+- Use ConfigMaps for dashboard definitions
+- Include proper folder organization
+- Set appropriate refresh intervals
+
+## Backup Strategies
+
+### Volume Snapshots
+- Use Longhorn snapshots
+- Configure retention policies
+- Test restore procedures
+- Document backup schedules
+
+### Database Backups
+- Use CloudNativePG backup features
+- Configure point-in-time recovery
+- Test backup restoration
+- Monitor backup success
+
+## Deployment Strategies
+
+### Blue-Green Deployment
+- Use separate deployments with version labels
+- Switch service selector for instant cutover
+- Keep old version for quick rollback
+- Monitor during transition
+
+### Canary Deployment
+- Use Traefik weighted routing
+- Gradually increase traffic to new version
+- Monitor metrics during rollout
+- Include rollback procedures
+
+### Feature Flags
+- Use ConfigMaps for feature toggles
+- Implement in application code
+- Change without redeployment
+- Monitor feature usage

@@ -1,0 +1,180 @@
+---
+description: Security best practices for secrets management, RBAC, and network policies
+globs: ["fluxcd/**/*.yaml", "fluxcd/**/*.yml", "tf/**/*.tf"]
+alwaysApply: false
+---
+
+# Security Rules
+
+## Security Principles
+1. **Zero Trust**: Never trust, always verify
+2. **Least Privilege**: Minimal necessary permissions
+3. **Defense in Depth**: Multiple layers of security
+4. **Secrets Management**: Never store secrets in Git
+5. **Audit Everything**: Log and monitor all access
+
+## Secrets Management
+
+### Vault Integration
+- **Primary Secret Store**: All secrets originate from Vault
+- **Path Structure**: `secret/fzymgc-house/<category>/<app>`
+- **Rotation Policy**: Regular rotation for all credentials
+- **Access Control**: Role-based with Kubernetes auth
+
+### External Secrets Operator Patterns
+- Use ClusterSecretStore for Vault backend
+- Configure Kubernetes authentication
+- Use templating for secret structure
+- Set appropriate refresh intervals
+- Include proper error handling
+
+### SOPS for GitOps Secrets
+- Encrypt sensitive values with SOPS
+- Use age encryption for simplicity
+- Include proper metadata
+- Test decryption in CI/CD
+
+## TLS/SSL Configuration
+
+### Certificate Management with cert-manager
+- Use ClusterIssuer for internal CA
+- Configure Vault PKI for certificates
+- Set appropriate durations and renewal
+- Include proper subject alternative names
+- Use wildcard certificates when appropriate
+
+### mTLS Between Services
+- Enable mTLS for service communication
+- Configure proper certificate validation
+- Use service mesh patterns
+- Include proper error handling
+
+## RBAC Configuration
+
+### Service Account Best Practices
+- Create dedicated service accounts
+- Use `automountServiceAccountToken: false`
+- Set appropriate namespaces
+- Include proper annotations
+
+### Role with Least Privilege
+- Define specific resource access
+- Use resource names when possible
+- Include proper verbs
+- Document role purposes
+
+### RoleBinding
+- Bind roles to service accounts
+- Use namespace-specific bindings
+- Include proper subjects
+- Document binding purposes
+
+### ClusterRole for Cross-Namespace Access
+- Use ClusterRole for cross-namespace access
+- Include field selectors to limit scope
+- Use proper resource names
+- Document access patterns
+
+## Network Security
+
+### Network Policies
+- Implement default deny policies
+- Allow specific traffic patterns
+- Include DNS and health check access
+- Configure cross-namespace communication
+- Document policy purposes
+
+### Pod Security Policies
+- Use restricted pod security standards
+- Configure security contexts
+- Drop unnecessary capabilities
+- Use read-only root filesystems
+- Include proper annotations
+
+### Security Context
+- Set `runAsNonRoot: true`
+- Use specific user IDs
+- Drop unnecessary capabilities
+- Configure read-only filesystems
+- Include proper volume mounts
+
+## Authentication & Authorization
+
+### Authentik Integration
+- Configure OIDC provider
+- Use proper scopes and claims
+- Include role mapping
+- Set appropriate timeouts
+- Configure proper redirects
+
+### Vault Policies
+- Define application-specific policies
+- Use least privilege principles
+- Include proper capabilities
+- Document policy purposes
+- Test policy access
+
+### Kubernetes Auth Role
+- Configure service account authentication
+- Set appropriate TTL values
+- Include proper role bindings
+- Use descriptive role names
+- Document authentication patterns
+
+## Security Scanning
+
+### Image Scanning
+- Use Trivy for vulnerability scanning
+- Scan images in CI/CD pipeline
+- Block high/critical vulnerabilities
+- Regular rescanning of deployed images
+- Include scanning in deployment process
+
+### Runtime Security
+- Consider Falco for runtime threat detection
+- Monitor for anomalous behavior
+- Alert on privilege escalation attempts
+- Track file system modifications
+- Include proper logging
+
+### Admission Controllers
+- Use OPA Gatekeeper for policy enforcement
+- Validate resource configurations
+- Enforce naming conventions
+- Prevent insecure configurations
+- Include proper error messages
+
+## Compliance & Auditing
+
+### Audit Logging
+- Enable Kubernetes audit logging
+- Forward to centralized logging system
+- Retain for compliance period
+- Regular audit log review
+- Include proper retention policies
+
+### Resource Tracking
+- Add annotations for tracking
+- Include owner and purpose
+- Document data classification
+- Include compliance requirements
+- Track resource lifecycle
+
+### Backup Encryption
+- Encrypt all backups at rest
+- Use separate encryption keys
+- Store backups in separate location
+- Test restore procedures regularly
+- Include proper key management
+
+## Security Checklist
+- [ ] All secrets in Vault or encrypted with SOPS
+- [ ] TLS enabled for all services
+- [ ] Network policies implemented
+- [ ] RBAC with least privilege
+- [ ] Pod security standards enforced
+- [ ] Security contexts configured
+- [ ] Image scanning enabled
+- [ ] Audit logging configured
+- [ ] Backup encryption enabled
+- [ ] Regular security updates applied

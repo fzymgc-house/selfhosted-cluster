@@ -1,8 +1,0 @@
----
-description:
-globs: *.tf,*.tfvars
-alwaysApply: false
----
-- Follow the Hashicorp style guide here: https://developer.hashicorp.com/terraform/language/style
-- Use kebab case filenames
-- use nouns for resource names and do not include the resource type in the name

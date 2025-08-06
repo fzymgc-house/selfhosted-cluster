@@ -1,0 +1,193 @@
+---
+description: CI/CD workflows and GitOps patterns for continuous delivery
+globs: [".github/**/*.yml", ".github/**/*.yaml", "fluxcd/**/*.yaml", "fluxcd/**/*.yml"]
+alwaysApply: false
+---
+
+# CI/CD & GitOps Rules
+
+## GitOps Principles
+1. **Declarative**: Entire system described declaratively
+2. **Versioned**: All configurations stored in Git
+3. **Immutable**: No manual changes to clusters
+4. **Continuous**: Automatic reconciliation
+5. **Observable**: Clear visibility into system state
+
+## FluxCD Configuration
+
+### Bootstrap Configuration
+- Use OCIRepository for source management
+- Configure proper intervals and timeouts
+- Enable pruning for cleanup
+- Use SOPS for secret decryption
+- Set appropriate retry strategies
+
+### Repository Structure
+- Organize by cluster entry points
+- Separate infrastructure and applications
+- Use consistent naming patterns
+- Include proper dependencies
+- Document structure purpose
+
+### Kustomization Dependencies
+- Use `dependsOn` for proper ordering
+- Set appropriate intervals
+- Enable pruning for cleanup
+- Use postBuild substitutions
+- Include proper error handling
+
+## GitHub Actions Workflows
+
+### OCI Artifact Publishing
+- Use Flux CLI for artifact management
+- Configure proper authentication
+- Include version tagging
+- Set up automated publishing
+- Include proper error handling
+
+### Terraform Validation
+- Validate syntax and format
+- Check provider versions
+- Run security scans
+- Include proper error reporting
+- Test with dry-run
+
+### YAML Validation
+- Use yamllint for formatting
+- Validate Kubernetes manifests
+- Check for common issues
+- Include proper error messages
+- Run in CI pipeline
+
+## Renovate Configuration
+
+### Update Strategies
+- Disable major version updates by default
+- Group related dependencies
+- Set appropriate schedules
+- Include proper automerging
+- Configure vulnerability alerts
+
+### Package Rules
+- Group by component type
+- Set appropriate update intervals
+- Include proper labels
+- Configure concurrent limits
+- Set up proper notifications
+
+## Development Workflow
+
+### Feature Branch Workflow
+- Create feature branches for changes
+- Validate changes locally
+- Use proper commit messages
+- Create pull requests
+- Wait for CI checks
+
+### Local Testing with Kind
+- Use Kind for local cluster
+- Install Flux locally
+- Test configurations
+- Validate deployments
+- Debug issues locally
+
+### Flux CLI Commands
+- Check Flux status regularly
+- Force reconciliation when needed
+- Suspend/resume as appropriate
+- Monitor events and logs
+- Debug issues systematically
+
+## Deployment Strategies
+
+### Progressive Delivery with Flagger
+- Use canary deployments
+- Set appropriate thresholds
+- Monitor metrics during rollout
+- Include rollback procedures
+- Test in staging first
+
+### Blue-Green Deployment
+- Use separate deployments
+- Switch service selectors
+- Keep old version for rollback
+- Monitor during transition
+- Include proper testing
+
+## Rollback Procedures
+
+### Flux Rollback
+- Suspend Kustomization
+- Revert Git commit
+- Resume reconciliation
+- Force sync if needed
+- Monitor rollback success
+
+### Helm Rollback
+- List available releases
+- Check release history
+- Rollback to previous version
+- Rollback to specific revision
+- Monitor rollback success
+
+## Secret Management in CI/CD
+
+### SOPS Encryption
+- Encrypt sensitive values
+- Use age encryption
+- Include proper metadata
+- Test decryption in CI
+- Document encryption process
+
+### External Secrets in CI
+- Use External Secrets for CI secrets
+- Configure Vault backend
+- Include proper authentication
+- Set appropriate refresh intervals
+- Monitor secret sync
+
+## Monitoring Deployments
+
+### Flux Alerts
+- Configure notification providers
+- Set appropriate event filters
+- Include exclusion lists
+- Monitor reconciliation status
+- Alert on failures
+
+### Deployment Metrics
+- Track deployment success rate
+- Monitor reconciliation duration
+- Count suspended resources
+- Track drift detection
+- Monitor resource health
+
+## Best Practices
+
+### Git Repository
+- Use semantic commit messages
+- Sign commits with GPG
+- Protect main branch
+- Require PR reviews
+- Run CI checks before merge
+
+### Flux Configuration
+- Set appropriate intervals
+- Use health checks
+- Configure retries
+- Enable drift detection
+- Use dependency management
+
+### Security
+- Scan images for vulnerabilities
+- Sign container images
+- Use admission controllers
+- Implement RBAC
+- Audit all changes
+
+### Observability
+- Monitor reconciliation metrics
+- Set up alerts for failures
+- Track deployment frequency
+- Measure lead time
+- Monitor rollback rate

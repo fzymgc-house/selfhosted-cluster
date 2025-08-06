@@ -1,0 +1,167 @@
+---
+description: Terraform infrastructure patterns for external services and Vault configuration
+globs: ["tf/**/*.tf", "tf/**/*.tfvars", "**/*.tf", "**/*.tfvars"]
+alwaysApply: false
+---
+
+# Terraform Rules
+
+## File Organization
+
+### Standard Module Files
+Every Terraform module should have:
+- `versions.tf` - Provider version constraints
+- `terraform.tf` - Provider configurations
+- `variables.tf` - Input variables
+- `outputs.tf` - Output values
+- `main.tf` - Main resource definitions
+- `vault.tf` - Vault-specific resources (if applicable)
+- `README.md` - Module documentation
+
+### File Naming Patterns
+- Group related resources: `policy-<name>.tf`
+- Use descriptive names: `k8s-cert-manager.tf`
+- Separate concerns: `entities.tf`, `groups-and-roles.tf`
+
+## Provider Configuration
+
+### Version Constraints (versions.tf)
+- Use `required_version = ">= 1.0"`
+- Specify provider versions with `~>` for minor updates
+- Include all required providers
+
+### Provider Setup (terraform.tf)
+- Configure Vault provider for secrets
+- Set up OnePassword provider for external secrets
+- Configure Kubernetes provider for in-cluster operations
+
+## Resource Naming
+
+### Resource Names
+- Use underscore_separated names
+- Be descriptive: `vault_policy_cert_manager` not `vault_policy_cm`
+- Include resource type in name when ambiguous
+
+### Resource Labels and Tags
+- Use consistent labels across resources
+- Include managed-by tags
+- Add environment and purpose tags
+
+## Variable Definitions
+
+### Input Variables (variables.tf)
+- Use descriptive variable names
+- Include validation blocks
+- Set appropriate defaults
+- Mark sensitive variables with `sensitive = true`
+
+### Output Values (outputs.tf)
+- Provide useful outputs for other modules
+- Include descriptions
+- Mark sensitive outputs appropriately
+
+## Vault-Specific Patterns
+
+### Policy Files
+- Use `data "vault_policy_document"` for complex policies
+- Define policies with least privilege
+- Use descriptive policy names
+- Include proper capabilities
+
+### Kubernetes Auth Backend
+- Configure Kubernetes authentication
+- Set appropriate role bindings
+- Use service account authentication
+- Set token TTL appropriately
+
+### Secret Engines
+- Use KV v2 for application secrets
+- Configure proper mount paths
+- Set appropriate options
+- Use custom metadata
+
+## Best Practices
+
+### State Management
+- State is managed by FluxCD's Terraform controller
+- Never commit state files to Git
+- Use remote state with encryption
+
+### Resource Dependencies
+- Use explicit dependencies with `depends_on`
+- Reference resources by name
+- Avoid circular dependencies
+
+### Dynamic Blocks
+- Use for repeated configurations
+- Use `for_each` for multiple similar resources
+- Keep dynamic blocks readable
+
+### For Each Loops
+- Use `for_each` for multiple resources
+- Use maps for complex configurations
+- Reference each.value appropriately
+
+### Data Sources
+- Use data sources for existing resources
+- Reference external configurations
+- Use for cross-module references
+
+### Local Values
+- Use `locals` for computed values
+- Group related local values
+- Use for complex transformations
+
+## Module Patterns
+
+### Module Structure
+- Use consistent module structure
+- Include proper variable validation
+- Provide useful outputs
+- Document module usage
+
+### Module Outputs
+- Export necessary values
+- Include descriptions
+- Mark sensitive outputs
+
+## Testing and Validation
+
+### Terraform Validation
+- Use `terraform init -backend=false`
+- Run `terraform fmt -check -recursive`
+- Use `terraform validate`
+- Test with `terraform plan`
+
+### Pre-commit Hooks
+- Use terraform fmt
+- Run terraform validate
+- Generate documentation
+- Use tflint for additional checks
+
+## Security Considerations
+
+### Sensitive Variables
+- Mark sensitive variables appropriately
+- Use Vault for all secrets
+- Never hardcode credentials
+- Use data sources for existing secrets
+
+### Provider Authentication
+- Use environment variables for provider auth
+- Leverage Kubernetes service accounts when in-cluster
+- Use OIDC/JWT for cloud providers
+- Rotate credentials regularly
+
+## Integration with FluxCD
+
+### Terraform Controller Resources
+- Use `apiVersion: infra.contrib.fluxcd.io/v1alpha2`
+- Configure proper intervals and retries
+- Use custom runner image
+- Mount Vault certificates
+
+### Variable Injection
+- Use Kubernetes secrets for variables
+- Reference External Secrets
+- Use SOPS for encrypted values

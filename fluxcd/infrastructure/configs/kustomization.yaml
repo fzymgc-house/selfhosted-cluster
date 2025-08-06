@@ -7,3 +7,5 @@ resources:
   - ./longhorn-storage-classes.yaml
   - ./longhorn-volumesnapshots.yaml
   - ./backup-schedule.yaml
+  - ./backup-storage-location.yaml
+  - ./volume-snapshot-location.yaml

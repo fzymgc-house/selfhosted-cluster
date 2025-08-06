@@ -6,6 +6,4 @@ resources:
   - ./rbac.yaml
   - ./secrets.yaml
   - ./helm-install.yaml
-  - ./backup-storage-location.yaml
-  - ./volume-snapshot-location.yaml
   - ./monitoring 

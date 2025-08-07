@@ -21,6 +21,8 @@ spec:
     remediation:
       retries: 3
   values:
+    snapshotsEnabled: false
+    deployNodeAgent: true
     configuration:
       backupStorageLocation:
         - name: default

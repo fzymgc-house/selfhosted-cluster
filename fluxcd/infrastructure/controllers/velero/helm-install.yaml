@@ -25,27 +25,17 @@ spec:
       backupStorageLocation:
         - name: default
           provider: velero.io/aws
-          credential:
-            useSecret: true
+          bucket: fzymgc-cluster-storage
+          prefix: velero/backups
+          default: true
+          credential:        
             name: cloud-credentials
-          objectStorage:
-            bucket: fzymgc-cluster-storage
-            prefix: velero/backups
-            region: auto
+            key: cloud
           config:
             s3ForcePathStyle: "true"
             s3Url: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
             publicUrl: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
-      volumeSnapshotLocation:
-        - name: default
-          provider: velero.io/aws
-          credential:
-            useSecret: true
-            name: cloud-credentials
-          config:
-            s3ForcePathStyle: "true"
-            s3Url: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
-            publicUrl: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com            
+            checksumAlgorithm: ""
     initContainers:
       - name: velero-plugin-for-aws
         image: velero/velero-plugin-for-aws:v1.12.2

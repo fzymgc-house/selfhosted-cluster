@@ -30,8 +30,6 @@ spec:
       - persistentvolumeclaims
       - persistentvolumes
     storageLocation: default
-    volumeSnapshotLocations:
-      - default
     ttl: 720h  # 30 days
 ---
 apiVersion: velero.io/v1
@@ -69,6 +67,4 @@ spec:
       - ingressroutes
       - certificates
     storageLocation: default
-    volumeSnapshotLocations:
-      - default
     ttl: 2160h  # 90 days 

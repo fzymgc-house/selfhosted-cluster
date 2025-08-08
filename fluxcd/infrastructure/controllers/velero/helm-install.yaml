@@ -41,20 +41,6 @@ spec:
             s3Url: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
             publicUrl: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
             checksumAlgorithm: ""
-      volumeSnapshotLocation:
-        - name: default
-          provider: velero.io/aws
-          bucket: fzymgc-cluster-storage
-          prefix: velero/snapshots
-          default: true
-          credential:        
-            name: cloud-credentials
-            key: cloud
-          config:
-            s3ForcePathStyle: "true"
-            s3Url: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
-            publicUrl: https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com
-            region: auto
     initContainers:
       - name: velero-plugin-for-aws
         image: velero/velero-plugin-for-aws:v1.12.2

@@ -34,6 +34,18 @@ spec:
         - protocol: TCP
           port: 53
     - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: coredns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
         - namespaceSelector: {}
       ports:
         - protocol: TCP

@@ -58,7 +58,7 @@
 - [ ] Grafana integration
   - [x] `GrafanaDatasource` for Prometheus
   - [x] `GrafanaDatasource` for Loki
-  - [ ] Curated `GrafanaDashboard` CRs added
+  - [x] Curated `GrafanaDashboard` CRs added
 - [ ] Flux wiring
   - [x] `fluxcd/apps/main/kustomization.yaml` includes `./monitoring`
   - [ ] Reconciliation order validated (secrets -> releases)

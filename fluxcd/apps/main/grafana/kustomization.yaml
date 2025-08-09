@@ -12,3 +12,4 @@ resources:
   - grafana-certificate.yaml 
   - datasources/prometheus-ds.yaml
   - datasources/loki-ds.yaml
+  - dashboards

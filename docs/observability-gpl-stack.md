@@ -36,25 +36,25 @@
 - [x] Helm repo for Grafana charts added under `flux-system`
 - [x] `monitoring` (and `loki` if separate) namespaces created
 - [ ] `kube-prometheus-stack` HelmRelease
-  - [ ] Disable bundled Grafana
-  - [ ] Prometheus 2 replicas, 50Gi PVC, retention 15d, anti-affinity, PDB
-  - [ ] Alertmanager 3 replicas, anti-affinity, PDB
-  - [ ] ServiceMonitors/PodMonitors discovery enabled
-  - [ ] IngressRoutes with TLS and `modern-auth` (optional)
+  - [x] Disable bundled Grafana
+  - [x] Prometheus 2 replicas, 50Gi PVC, retention 15d, anti-affinity, PDB
+  - [x] Alertmanager 3 replicas, anti-affinity, PDB
+  - [x] ServiceMonitors/PodMonitors discovery enabled
+  - [x] IngressRoutes with TLS and `modern-auth` (optional)
   - [x] ExternalSecret for `alertmanager-config`
 - [ ] Loki distributed HelmRelease
-  - [ ] R2 object storage via ExternalSecret
-  - [ ] 3x for critical components; anti-affinity; PDBs
-  - [ ] Retention 14d; PVCs if required
-  - [ ] NetworkPolicy to restrict ingress
+  - [x] R2 object storage via ExternalSecret
+  - [ ] 3x for critical components; anti-affinity; PDBs (replicas set; PDBs pending)
+  - [x] Retention 14d; PVCs if required
+  - [x] NetworkPolicy to restrict ingress
 - [ ] Grafana Alloy HelmRelease (agent)
-  - [ ] Kubernetes autodiscovery and container logs collection (filelog)
-  - [ ] Ship logs to Loki service inside cluster
-  - [ ] Tolerations for control-plane; resource limits
-  - [ ] Egress restricted to Loki service
+  - [x] Kubernetes autodiscovery and container logs collection (filelog)
+  - [x] Ship logs to Loki service inside cluster
+  - [x] Tolerations for control-plane; resource limits
+  - [x] Egress restricted to Loki service
 - [ ] Grafana integration
-  - [ ] `GrafanaDatasource` for Prometheus
-  - [ ] `GrafanaDatasource` for Loki
+  - [x] `GrafanaDatasource` for Prometheus
+  - [x] `GrafanaDatasource` for Loki
   - [ ] Curated `GrafanaDashboard` CRs added
 - [ ] Flux wiring
   - [x] `fluxcd/apps/main/kustomization.yaml` includes `./monitoring`

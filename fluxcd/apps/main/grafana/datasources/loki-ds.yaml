@@ -6,6 +6,9 @@ metadata:
   labels:
     grafana.integreatly.org/instance: grafana
 spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
   datasource:
     name: Loki
     type: loki

@@ -4,7 +4,6 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
-  - ../namespace.yaml
   - ./external-secret-s3.yaml
   - ./helm-install.yaml
   - ./networkpolicies.yaml

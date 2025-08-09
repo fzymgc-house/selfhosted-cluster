@@ -29,7 +29,7 @@
 - **retention**: metrics 15d, logs 14d
 - **storage**: Prometheus PVC 50Gi on `longhorn`; Loki object store in R2
 - **Vault paths**:
-  - Loki R2 creds: `fzymgc-house/cluster/loki` with keys `bucket`, `endpoint`, `region`, `r2_access_key_id`, `r2_secret_access_key`
+  - Loki R2 creds: `fzymgc-house/cluster/loki` with keys `r2_bucket`, `r2_endpoint`, `r2_region`, `r2_access_key_id`, `r2_secret_access_key`
   - Alertmanager config: `kv/data/observability/alertmanager`
 
 ### Task checklist

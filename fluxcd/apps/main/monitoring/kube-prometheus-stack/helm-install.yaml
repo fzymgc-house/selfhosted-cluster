@@ -30,6 +30,13 @@ spec:
       alertmanagerSpec:
         replicas: 3
         podAntiAffinity: hard
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
     prometheus:
       podDisruptionBudget:
         enabled: true
@@ -50,3 +57,10 @@ spec:
                   storage: 50Gi
         enableAdminAPI: false
         walCompression: true
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2Gi
+          limits:
+            cpu: 2
+            memory: 4Gi

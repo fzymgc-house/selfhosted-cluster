@@ -38,7 +38,7 @@ spec:
       schemaConfig:
         configs:
           - from: 2024-01-01
-            store: boltdb-shipper
+            store: tsdb
             object_store: s3
             schema: v13
             index:
@@ -57,18 +57,60 @@ spec:
         enabled: true
         storageClass: longhorn
         size: 10Gi
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1
+          memory: 1Gi
     querier:
       replicas: 3
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 1
+          memory: 1Gi
     queryFrontend:
       replicas: 3
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
     distributor:
       replicas: 3
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
     ruler:
       enabled: true
       replicas: 2
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
     gateway:
       enabled: true
       replicas: 2
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
   valuesFrom:
     - kind: Secret
       name: loki-s3

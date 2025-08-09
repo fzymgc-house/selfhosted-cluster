@@ -6,3 +6,4 @@ namespace: monitoring
 resources:
   - ../namespace.yaml
   - ./helm-install.yaml
+  - ./networkpolicies.yaml

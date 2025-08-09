@@ -11,3 +11,4 @@ resources:
   - ./grafana-operator
   - ./system-dashboards
   - ./grafana
+  - ./monitoring

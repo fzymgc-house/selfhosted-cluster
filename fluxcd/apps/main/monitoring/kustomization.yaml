@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring
+
+resources:
+  - namespace.yaml
+  # placeholder; stack components will be added under ./kube-prometheus-stack, ./loki, ./alloy

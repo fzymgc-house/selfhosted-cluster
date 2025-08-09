@@ -4,8 +4,7 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
-  - namespace.yaml
-  - ./kube-prometheus-stack
-  - ./loki
-  - ./alloy
-  - ./alertmanager-discord
+  - ../namespace.yaml
+  - external-secret.yaml
+  - deployment.yaml
+  - service.yaml

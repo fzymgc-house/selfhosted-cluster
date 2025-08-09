@@ -66,7 +66,7 @@
   - [ ] Grafana datasources green
   - [ ] Prometheus targets up (kube, velero, etc.)
   - [ ] Loki queries return logs
-  - [ ] Test alert delivered (Slack/Webhook)
+  - [ ] Test alert delivered (Discord webhook)
 
 ### Follow-ups from PR review
 - [x] Loki storage schema: update to current TSDB configuration (or confirm `schemaConfig` compatibility) and document any migration steps if changing schemas.
@@ -76,6 +76,7 @@
 - [x] Set explicit resource requests/limits for Prometheus and Alertmanager as well.
 - [x] Add per-component PDBs and anti-affinity settings for Loki where supported by the chart.
 - [ ] Add curated Kubernetes and Loki dashboards under `fluxcd/apps/main/grafana/dashboards/` and organize into folders.
+ - [x] Add Discord alert relay Deployment/Service and ExternalSecret; wire into monitoring kustomization.
 
 ### Rollout order
 1. Add Helm repo(s) and namespaces

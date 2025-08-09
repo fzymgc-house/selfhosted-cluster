@@ -4,7 +4,6 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
-  - ../namespace.yaml
   - external-secret.yaml
   - deployment.yaml
   - service.yaml

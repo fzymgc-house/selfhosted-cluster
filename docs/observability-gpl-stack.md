@@ -31,7 +31,7 @@
 - **Vault paths**:
   - Loki R2 creds: `fzymgc-house/cluster/loki` with keys `r2_bucket`, `r2_endpoint`, `r2_region`, `r2_access_key_id`, `r2_secret_access_key`
   - Alertmanager config: `fzymgc-house/cluster/alertmanager` with key `config` (full Alertmanager YAML)
-  - Discord relay webhook: `fzymgc-house/cluster/alertmanager-discord` with key `webhook_url`
+  - Discord relay webhook: `fzymgc-house/cluster/alertmanager` with key `alertmanager-discord-webhook-url`
 
 ### Task checklist
 - [x] Helm repo for Grafana charts added under `flux-system`

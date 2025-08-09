@@ -23,14 +23,23 @@ spec:
     grafana:
       enabled: false
     alertmanager:
+      podDisruptionBudget:
+        enabled: true
+        minAvailable: 1
       configSecret: alertmanager-config
       alertmanagerSpec:
         replicas: 3
         podAntiAffinity: hard
     prometheus:
+      podDisruptionBudget:
+        enabled: true
+        minAvailable: 1
       prometheusSpec:
         replicas: 2
         retention: 15d
+        serviceMonitorSelectorNilUsesHelmValues: false
+        podMonitorSelectorNilUsesHelmValues: false
+        probeSelectorNilUsesHelmValues: false
         storageSpec:
           volumeClaimTemplate:
             spec:

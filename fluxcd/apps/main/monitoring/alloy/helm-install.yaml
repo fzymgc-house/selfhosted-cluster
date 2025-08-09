@@ -1,0 +1,68 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: alloy
+  namespace: monitoring
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: alloy
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    alloy:
+      configMap:
+        create: true
+        content: |
+          discovery.kubernetes "nodes" {}
+          discovery.kubernetes "pods" { selectors { role = "pod" } }
+
+          // Discover and tail container logs with Kubernetes metadata
+          loki.source.kubernetes "pods" {
+            targets    = discovery.kubernetes.pods.targets
+            forward_to = [loki.write.default.receiver]
+            // Basic drop of very noisy logs
+            relabel_rules = <<-EOT
+              # Drop kube-probe and health endpoints
+              - action: drop
+                source_labels: ['__path__']
+                regex: '.*/kube-probe/.*'
+              # Example: drop very verbose namespaces
+              - action: drop
+                source_labels: ['namespace']
+                regex: 'kube-system'
+            EOT
+          }
+
+          loki.write "default" {
+            endpoint { url = "http://loki-distributed-gateway.monitoring.svc.cluster.local/loki/api/v1/push" }
+          }
+    daemonset:
+      enabled: true
+      extraVolumeMounts:
+        - name: varlog
+          mountPath: /var/log
+      extraVolumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      resources:
+        requests:
+          cpu: 100m
+          memory: 200Mi
+        limits:
+          cpu: 500m
+          memory: 400Mi

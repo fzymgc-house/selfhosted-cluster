@@ -13,5 +13,6 @@ resources:
   - ./cnpg.yaml
   - ./authentik.yaml
   - ./grafana-operator.yaml
+  - ./grafana.yaml
   - ./prometheus-community.yaml
   - ./velero.yaml

@@ -1,0 +1,14 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: ds-prometheus
+  namespace: grafana
+  labels:
+    grafana.integreatly.org/instance: grafana
+spec:
+  datasource:
+    name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://kube-prometheus-stack-prometheus.monitoring:9090
+    isDefault: true

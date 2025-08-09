@@ -6,5 +6,8 @@ metadata:
   labels:
     grafana.integreatly.org/instance: grafana
 spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
   folder: Loki
   url: https://raw.githubusercontent.com/grafana/loki/main/production/helm/loki-distributed/dashboards/loki-mixin-logs-overview.json

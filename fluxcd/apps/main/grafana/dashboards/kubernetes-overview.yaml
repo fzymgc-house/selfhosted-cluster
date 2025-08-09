@@ -6,5 +6,8 @@ metadata:
   labels:
     grafana.integreatly.org/instance: grafana
 spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
   folder: Kubernetes
   url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-system-api-server.json

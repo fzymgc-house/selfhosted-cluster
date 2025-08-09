@@ -30,7 +30,7 @@
 - **storage**: Prometheus PVC 50Gi on `longhorn`; Loki object store in R2
 - **Vault paths**:
   - Loki R2 creds: `fzymgc-house/cluster/loki` with keys `r2_bucket`, `r2_endpoint`, `r2_region`, `r2_access_key_id`, `r2_secret_access_key`
-  - Alertmanager config: `kv/data/observability/alertmanager`
+  - Alertmanager config: `fzymgc-house/cluster/alertmanager` with key `config` (full Alertmanager YAML)
 
 ### Task checklist
 - [x] Helm repo for Grafana charts added under `flux-system`

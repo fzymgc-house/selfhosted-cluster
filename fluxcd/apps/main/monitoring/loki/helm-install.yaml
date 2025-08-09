@@ -64,6 +64,15 @@ spec:
         limits:
           cpu: 1
           memory: 1Gi
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values: ["ingester"]
+              topologyKey: kubernetes.io/hostname
     querier:
       replicas: 3
       resources:
@@ -73,6 +82,15 @@ spec:
         limits:
           cpu: 1
           memory: 1Gi
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values: ["querier"]
+              topologyKey: kubernetes.io/hostname
     queryFrontend:
       replicas: 3
       resources:
@@ -82,6 +100,15 @@ spec:
         limits:
           cpu: 500m
           memory: 512Mi
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values: ["query-frontend"]
+              topologyKey: kubernetes.io/hostname
     distributor:
       replicas: 3
       resources:
@@ -91,6 +118,15 @@ spec:
         limits:
           cpu: 500m
           memory: 512Mi
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values: ["distributor"]
+              topologyKey: kubernetes.io/hostname
     ruler:
       enabled: true
       replicas: 2
@@ -101,6 +137,15 @@ spec:
         limits:
           cpu: 500m
           memory: 512Mi
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values: ["ruler"]
+              topologyKey: kubernetes.io/hostname
     gateway:
       enabled: true
       replicas: 2
@@ -111,6 +156,18 @@ spec:
         limits:
           cpu: 200m
           memory: 256Mi
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values: ["gateway"]
+              topologyKey: kubernetes.io/hostname
+    pdb:
+      create: true
+      minAvailable: 1
   valuesFrom:
     - kind: Secret
       name: loki-s3

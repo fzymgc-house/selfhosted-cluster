@@ -24,22 +24,27 @@ spec:
         create: true
         content: |
           discovery.kubernetes "nodes" {}
-          discovery.kubernetes "pods" {
-            selectors { role = "pod" }
-          }
+          discovery.kubernetes "pods" { selectors { role = "pod" } }
 
-          local.file_match "container_logs" {
-            paths = ["/var/log/containers/*.log"]
+          // Discover and tail container logs with Kubernetes metadata
+          loki.source.kubernetes "pods" {
+            targets    = discovery.kubernetes.pods.targets
+            forward_to = [loki.write.default.receiver]
+            // Basic drop of very noisy logs
+            relabel_rules = <<-EOT
+              # Drop kube-probe and health endpoints
+              - action: drop
+                source_labels: ['__path__']
+                regex: '.*/kube-probe/.*'
+              # Example: drop very verbose namespaces
+              - action: drop
+                source_labels: ['namespace']
+                regex: 'kube-system'
+            EOT
           }
 
           loki.write "default" {
             endpoint { url = "http://loki-distributed-gateway.monitoring.svc.cluster.local/loki/api/v1/push" }
-          }
-
-          loki.source.file "kubernetes" {
-            targets    = local.file_match.container_logs.targets
-            forward_to = [loki.write.default.receiver]
-            // Add multiline and kube metadata processing as needed
           }
     daemonset:
       enabled: true

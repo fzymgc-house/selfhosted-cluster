@@ -29,7 +29,7 @@
 - **retention**: metrics 15d, logs 14d
 - **storage**: Prometheus PVC 50Gi on `longhorn`; Loki object store in R2
 - **Vault paths**:
-  - Loki S3 creds: `kv/data/observability/loki`
+  - Loki R2 creds: `fzymgc-house/cluster/loki` with keys `bucket`, `endpoint`, `region`, `r2_access_key_id`, `r2_secret_access_key`
   - Alertmanager config: `kv/data/observability/alertmanager`
 
 ### Task checklist
@@ -44,8 +44,8 @@
   - [x] ExternalSecret for `alertmanager-config`
 - [ ] Loki distributed HelmRelease
   - [x] R2 object storage via ExternalSecret
-  - [ ] 3x for critical components; anti-affinity; PDBs (replicas set; PDBs pending)
-  - [ ] Resource requests/limits defined for all components
+  - [x] 3x for critical components; anti-affinity; PDBs (replicas set; PDBs created; anti-affinity added)
+  - [x] Resource requests/limits defined for all components
   - [x] Retention 14d; PVCs if required
   - [x] NetworkPolicy to restrict ingress
   - [x] Switch to TSDB storage schema
@@ -54,7 +54,7 @@
   - [x] Ship logs to Loki service inside cluster
   - [x] Tolerations for control-plane; resource limits
   - [x] Egress restricted to Loki service
-  - [ ] Allow egress to kube-dns (53 TCP/UDP) and Kubernetes API (443)
+  - [x] Allow egress to kube-dns (53 TCP/UDP) and Kubernetes API (443)
 - [ ] Grafana integration
   - [x] `GrafanaDatasource` for Prometheus
   - [x] `GrafanaDatasource` for Loki
@@ -70,11 +70,11 @@
 
 ### Follow-ups from PR review
 - [x] Loki storage schema: update to current TSDB configuration (or confirm `schemaConfig` compatibility) and document any migration steps if changing schemas.
-- [ ] Normalize Loki URLs: use a single gateway URL consistently in Alloy and Grafana (e.g., `http://loki-distributed-gateway.monitoring.svc.cluster.local`).
-- [ ] Include NetworkPolicies in kustomizations: add `networkpolicies.yaml` to `monitoring/loki/kustomization.yaml` and `monitoring/alloy/kustomization.yaml`.
-- [ ] Alloy config improvements: enable Kubernetes metadata enrichment, multiline parsing, and filtering for noisy logs (e.g., `kube-system` churn) using Alloy modules (`loki.source.kubernetes`, relabel rules).
-- [ ] Set explicit resource requests/limits for Prometheus and Alertmanager as well.
-- [ ] Add per-component PDBs and anti-affinity settings for Loki where supported by the chart.
+- [x] Normalize Loki URLs: use a single gateway URL consistently in Alloy and Grafana (e.g., `http://loki-distributed-gateway.monitoring.svc.cluster.local`).
+- [x] Include NetworkPolicies in kustomizations: add `networkpolicies.yaml` to `monitoring/loki/kustomization.yaml` and `monitoring/alloy/kustomization.yaml`.
+- [x] Alloy config improvements: enable Kubernetes metadata enrichment, multiline parsing, and filtering for noisy logs (e.g., `kube-system` churn) using Alloy modules (`loki.source.kubernetes`, relabel rules).
+- [x] Set explicit resource requests/limits for Prometheus and Alertmanager as well.
+- [x] Add per-component PDBs and anti-affinity settings for Loki where supported by the chart.
 - [ ] Add curated Kubernetes and Loki dashboards under `fluxcd/apps/main/grafana/dashboards/` and organize into folders.
 
 ### Rollout order

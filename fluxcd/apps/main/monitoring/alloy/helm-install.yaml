@@ -1,0 +1,56 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: alloy
+  namespace: monitoring
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: alloy
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    alloy:
+      configMap:
+        create: true
+        content: |
+          discovery.kubernetes "nodes" {}
+          discovery.kubernetes "pods" {
+            selectors { role = "pod" }
+          }
+
+          local.file_match "container_logs" {
+            paths = ["/var/log/containers/*.log"]
+          }
+
+          loki.write "default" {
+            endpoint { url = "http://loki-distributed-gateway.monitoring.svc.cluster.local/loki/api/v1/push" }
+          }
+
+          loki.source.file "kubernetes" {
+            targets    = local.file_match.container_logs.targets
+            forward_to = [loki.write.default.receiver]
+            // Add multiline and kube metadata processing as needed
+          }
+    daemonset:
+      enabled: true
+      extraVolumeMounts:
+        - name: varlog
+          mountPath: /var/log
+      extraVolumes:
+        - name: varlog
+          hostPath:
+            path: /var/log
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule

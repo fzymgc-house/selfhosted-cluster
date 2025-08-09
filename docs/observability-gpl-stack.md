@@ -41,7 +41,7 @@
   - [ ] Alertmanager 3 replicas, anti-affinity, PDB
   - [ ] ServiceMonitors/PodMonitors discovery enabled
   - [ ] IngressRoutes with TLS and `modern-auth` (optional)
-  - [ ] ExternalSecret for `alertmanager-config`
+  - [x] ExternalSecret for `alertmanager-config`
 - [ ] Loki distributed HelmRelease
   - [ ] R2 object storage via ExternalSecret
   - [ ] 3x for critical components; anti-affinity; PDBs

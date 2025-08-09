@@ -1,0 +1,100 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: loki-distributed
+  namespace: monitoring
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: loki-distributed
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    loki:
+      auth_enabled: false
+      storage:
+        type: s3
+        bucketNames:
+          chunks: $(S3_BUCKET)
+          ruler: $(S3_BUCKET)
+          admin: $(S3_BUCKET)
+        s3:
+          s3ForcePathStyle: true
+          insecure: false
+          s3: $(S3_ENDPOINT)
+          endpoint: $(S3_ENDPOINT)
+          region: $(S3_REGION)
+          accessKeyId: $(S3_ACCESS_KEY)
+          secretAccessKey: $(S3_SECRET_KEY)
+      schemaConfig:
+        configs:
+          - from: 2024-01-01
+            store: boltdb-shipper
+            object_store: s3
+            schema: v13
+            index:
+              prefix: loki_index_
+              period: 24h
+      compactor:
+        working_directory: /var/loki/compactor
+        shared_store: s3
+      limits_config:
+        retention_period: 336h # 14d
+    chunksCache:
+      allocatedMemory: 1024
+    ingester:
+      replicas: 3
+      persistence:
+        enabled: true
+        storageClass: longhorn
+        size: 10Gi
+    querier:
+      replicas: 3
+    queryFrontend:
+      replicas: 3
+    distributor:
+      replicas: 3
+    ruler:
+      enabled: true
+      replicas: 2
+    gateway:
+      enabled: true
+      replicas: 2
+  valuesFrom:
+    - kind: Secret
+      name: loki-s3
+      valuesKey: S3_BUCKET
+      targetPath: loki.storage.bucketNames.chunks
+    - kind: Secret
+      name: loki-s3
+      valuesKey: S3_BUCKET
+      targetPath: loki.storage.bucketNames.ruler
+    - kind: Secret
+      name: loki-s3
+      valuesKey: S3_BUCKET
+      targetPath: loki.storage.bucketNames.admin
+    - kind: Secret
+      name: loki-s3
+      valuesKey: S3_ENDPOINT
+      targetPath: loki.storage.s3.endpoint
+    - kind: Secret
+      name: loki-s3
+      valuesKey: S3_REGION
+      targetPath: loki.storage.s3.region
+    - kind: Secret
+      name: loki-s3
+      valuesKey: S3_ACCESS_KEY
+      targetPath: loki.storage.s3.accessKeyId
+    - kind: Secret
+      name: loki-s3
+      valuesKey: S3_SECRET_KEY
+      targetPath: loki.storage.s3.secretAccessKey

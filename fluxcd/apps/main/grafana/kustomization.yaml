@@ -10,3 +10,5 @@ resources:
   - grafana.yaml
   - grafana-admin-external-secret.yaml
   - grafana-certificate.yaml 
+  - datasources/prometheus-ds.yaml
+  - datasources/loki-ds.yaml

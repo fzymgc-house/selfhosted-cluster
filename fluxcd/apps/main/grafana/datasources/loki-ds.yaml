@@ -1,0 +1,15 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: ds-loki
+  namespace: grafana
+  labels:
+    grafana.integreatly.org/instance: grafana
+spec:
+  datasource:
+    name: Loki
+    type: loki
+    access: proxy
+    url: http://loki-distributed-gateway.monitoring.svc.cluster.local
+    jsonData:
+      tlsSkipVerify: true

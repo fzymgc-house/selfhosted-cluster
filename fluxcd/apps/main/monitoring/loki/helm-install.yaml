@@ -38,7 +38,7 @@ spec:
           objectPrefix: loki/
       schemaConfig:
         configs:
-          - from: 2024-01-01
+          - from: "2024-01-01"
             store: tsdb
             object_store: s3
             schema: v13
@@ -54,6 +54,7 @@ spec:
       allocatedMemory: 1024
     ingester:
       replicas: 3
+      maxUnavailable: 1
       persistence:
         enabled: true
         storageClass: longhorn
@@ -94,6 +95,7 @@ spec:
               topologyKey: kubernetes.io/hostname
     queryFrontend:
       replicas: 3
+      maxUnavailable: 1
       resources:
         requests:
           cpu: 100m
@@ -101,15 +103,6 @@ spec:
         limits:
           cpu: 500m
           memory: 512Mi
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app.kubernetes.io/component
-                    operator: In
-                    values: ["query-frontend"]
-              topologyKey: kubernetes.io/hostname
     distributor:
       replicas: 3
       resources:
@@ -131,6 +124,7 @@ spec:
     ruler:
       enabled: true
       replicas: 2
+      maxUnavailable: 1
       resources:
         requests:
           cpu: 100m
@@ -138,15 +132,6 @@ spec:
         limits:
           cpu: 500m
           memory: 512Mi
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app.kubernetes.io/component
-                    operator: In
-                    values: ["ruler"]
-              topologyKey: kubernetes.io/hostname
     gateway:
       enabled: true
       replicas: 2

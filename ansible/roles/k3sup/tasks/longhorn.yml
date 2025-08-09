@@ -19,6 +19,11 @@
         defaultDataPath: /data/longhorn
         snapshotMaxCount: 10
         defaultReplicaCount: 2
+      defaultBackupStore:
+        backupTarget: s3://fzymgc-cluster-storage@us-east-1/longhorn-backups
+        backupTargetCredentialSecret: longhorn-backup-creds
+
+
   become: false
   run_once: true
   delegate_to: localhost
@@ -103,6 +108,26 @@
         csi.storage.k8s.io/node-stage-secret-namespace: "longhorn-system"
         csi.storage.k8s.io/node-expand-secret-name: "longhorn-crypto-config"
         csi.storage.k8s.io/node-expand-secret-namespace: "longhorn-system"
+  become: false
+  run_once: true
+  delegate_to: localhost
+
+
+- name: Create longhorn backup secret
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: longhorn-system
+    definition:
+      kind: Secret
+      apiVersion: v1
+      metadata:
+        name: longhorn-backup-creds
+        namespace: longhorn-system
+      stringData:
+        AWS_ACCESS_KEY_ID: "{{ lookup('community.general.onepassword', 'fzymgc-house-longhorn-cloudflare-r2', vault='fzymgc-house', field='username') }}"
+        AWS_SECRET_ACCESS_KEY: "{{ lookup('community.general.onepassword', 'fzymgc-house-longhorn-cloudflare-r2', vault='fzymgc-house', field='password') }}"
+        AWS_ENDPOINTS: "https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com"
   become: false
   run_once: true
   delegate_to: localhost

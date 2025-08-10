@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-50"
+spec:
+  project: default
+  source:
+    chart: cert-manager
+    repoURL: https://charts.jetstack.io
+    targetRevision: v1.17.2
+    helm:
+      releaseName: cert-manager
+      valuesObject:
+        crds:
+          enabled: true
+        replicaCount: 2
+        dns01RecursiveNameservers: "https://1.1.1.1/dns-query"
+        dns01RecursiveNameserversOnly: true
+        config:
+          apiVersion: controller.config.cert-manager.io/v1alpha1
+          kind: ControllerConfiguration
+          logging:
+            verbosity: 2
+            format: text
+          enableGatewayAPI: true
+          featureGates:
+            ServerSideApply: true
+            UseCertificateRequestBasicConstraints: true
+            OtherNames: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  

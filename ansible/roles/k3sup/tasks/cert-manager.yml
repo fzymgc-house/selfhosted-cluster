@@ -41,16 +41,32 @@
     kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
     state: present
     definition:
-      apiVersion: v1
-      kind: Secret
+      apiVersion: external-secrets.io/v1
+      kind: ExternalSecret
       metadata:
         name: cloudflare-api-token
         namespace: cert-manager
-      stringData:
-        api_token: "{{ cloudflare_api_token }}"
+      spec:
+        refreshInterval: 1h
+        secretStoreRef:
+          name: onepassword-sdk
+          kind: ClusterSecretStore
+        target:
+          creationPolicy: Owner
+          name: cloudflare-api-token
+          type: Opaque
+          template:
+            engineVersion: v2
+            data:
+              api-token: "{{ '{{.api_token }}' }}"
+        data:
+          - secretKey: api_token
+            remoteRef:
+              key: cloudflare-api-token/password
   become: false
   run_once: true
   delegate_to: localhost
+  changed_when: false
 
 - name: Add cloudflare acme issuer
   kubernetes.core.k8s:
@@ -62,23 +78,43 @@
   run_once: true
   delegate_to: localhost
 
-- name: Add fzymgc-house-ica1-key
+- name: Add fzymgc-house-ica1-ca cert and key
   kubernetes.core.k8s:
     kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
     state: present
-    namespace: cert-manager
     definition:
-      apiVersion: v1
-      kind: Secret
+      apiVersion: external-secrets.io/v1
+      kind: ExternalSecret
       metadata:
         name: fzymgc-house-ica1-key
         namespace: cert-manager
-      stringData:
-        tls.crt: "{{ lookup('community.general.onepassword', 'fzymgc-ica1-ca', vault='fzymgc-house', field='fullchain') }}"
-        tls.key: "{{ lookup('community.general.onepassword', 'fzymgc-ica1-ca', vault='fzymgc-house', field='cleartext_key') }}"
+      spec:
+        refreshInterval: 1h
+        secretStoreRef:
+          name: onepassword-sdk
+          kind: ClusterSecretStore
+        target:
+          creationPolicy: Owner
+          name: fzymgc-house-ica1-key
+          type: Opaque
+          template:
+            engineVersion: v2
+            data:
+              tls.crt: |
+                "{{ '{{.tls_crt }}' }}"
+              tls.key: |
+                "{{ '{{.tls_key }}' }}"
+        data:
+          - secretKey: tls_crt
+            remoteRef:
+              key: fzymgc-ica1-ca/cert
+          - secretKey: tls_key
+            remoteRef:
+              key: fzymgc-ica1-ca/cleartext_key
   become: false
   run_once: true
   delegate_to: localhost
+  changed_when: false
 
 - name: Add fzymgc-house-issuer
   kubernetes.core.k8s:

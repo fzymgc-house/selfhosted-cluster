@@ -5,6 +5,7 @@ namespace: grafana
 
 resources:
   - namespace.yaml
+  - tf-runner-sa.yaml
   - grafana-db-creds.yaml
   - grafana-oidc-creds.yaml
   - grafana.yaml
@@ -14,3 +15,5 @@ resources:
   - datasources/loki-ds.yaml
   - dashboards
   - alerting
+  - grafana-tf-secrets.yaml
+  - terraform.yaml

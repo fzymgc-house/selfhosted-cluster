@@ -15,12 +15,12 @@ spec:
         - uid: discord-native
           type: discord
           settings:
-            url: ${DISCORD_WEBHOOK_URL}
-          secureFields:
-            - name: DISCORD_WEBHOOK_URL
-              valueFrom:
-                secretKeyRef:
-                  name: grafana-discord-webhook
-                  key: WEBHOOK_URL
+            url: ""
+  valuesFrom:
+    - targetPath: contactPoints.0.receivers.0.settings.url
+      valueFrom:
+        secretKeyRef:
+          name: grafana-discord-webhook
+          key: WEBHOOK_URL
 
 

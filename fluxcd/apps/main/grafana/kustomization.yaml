@@ -11,9 +11,8 @@ resources:
   - grafana.yaml
   - grafana-admin-external-secret.yaml
   - grafana-certificate.yaml 
+  - grafana-tf-secrets.yaml
+  - terraform.yaml
   - datasources/prometheus-ds.yaml
   - datasources/loki-ds.yaml
   - dashboards
-  - alerting
-  - grafana-tf-secrets.yaml
-  - terraform.yaml

@@ -1,7 +1,7 @@
 apiVersion: infra.contrib.fluxcd.io/v1alpha2
 kind: Terraform
 metadata:
-  name: grafana-alerting-tf
+  name: grafana-tf
   namespace: grafana
 spec:
   interval: 1m

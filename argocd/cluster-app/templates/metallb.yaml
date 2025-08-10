@@ -29,5 +29,6 @@ spec:
   ignoreDifferences:
     - kind: CustomResourceDefinition
       name: bgppeers.metallb.io
+      group: ""
       jqPathExpressions:
         - .spec.conversion.webhook.clientConfig.caBundle

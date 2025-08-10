@@ -22,8 +22,8 @@ spec:
       - ServerSideApply=true
   ignoreDifferences:
     - kind: ExternalSecret
-  
+      group: external-secrets.io
       jqPathExpressions:
-        - .spec.data[]?.remoteRef.conversionStrategy
-        - .spec.data[]?.remoteRef.decodingStrategy
-        - .spec.data[]?.remoteRef.metadataPolicy
+        - .spec.data[].remoteRef.conversionStrategy
+        - .spec.data[].remoteRef.decodingStrategy
+        - .spec.data[].remoteRef.metadataPolicy

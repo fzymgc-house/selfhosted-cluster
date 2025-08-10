@@ -34,6 +34,31 @@
   run_once: true
   delegate_to: localhost
 
+- name: Create argocd repo secret
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    definition:
+      kind: Secret
+      apiVersion: v1
+      metadata:
+        name: argocd-selfhosted-repo
+        namespace: argocd
+        labels:
+          argocd.argoproj.io/secret-type: repository
+      type: Opaque
+      stringData:
+        name: selfhosted-cluster
+        project: default
+        type: git
+        url: https://github.com/fzymgc-house/selfhosted-cluster
+        githubAppID: "1759545"
+        githubAppInstallationID: "80236294"
+        githubAppPrivateKey: "{{ lookup('community.general.onepassword', 'Fzymgc ArgoCD', vault='fzymgc-house', field='github_app_private_key') | b64decode }}"
+  become: false
+  run_once: true
+  delegate_to: localhost
+
 
 - name: Install Argo CD
   kubernetes.core.helm:
@@ -65,12 +90,15 @@
                   # userInfoURL: https://auth.fzymgc.house/application/o/userinfo/
                   rootCAs:
                     - {{ lookup('community.general.onepassword', 'fzymgc-ica1-ca', vault='fzymgc-house', field='fullchain') | b64encode }}
-                  insecureGroupsEnabled: true
+                  insecureEnableGroups: true
                   scopes:
-                    - identity
+                    - email
                     - openid
                     - profile
-                    - k3s-embedded-registries.yaml
+                    - groups
+                  getUserInfo: true
+                  claimMapping:
+                    groups: groups
         params:
           server.insecure: true
         rbac:
@@ -102,3 +130,32 @@
   delegate_to: localhost
   tags:
     - k8s-argocd-install
+
+- name: Create App of Apps Application
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    definition:
+      kind: Application
+      apiVersion: argoproj.io/v1alpha1
+      metadata:
+        name: cluster-app
+        namespace: argocd
+      spec:
+        project: default
+        source:
+          repoURL: https://github.com/fzymgc-house/selfhosted-cluster
+          targetRevision: HEAD
+          path: argocd/cluster-app
+        destination:
+          server: https://kubernetes.default.svc
+          namespace: argocd
+        syncPolicy:
+          automated:
+            prune: true
+            selfHeal: true
+          syncOptions:
+            - ServerSideApply=true
+  become: false
+  run_once: true
+  delegate_to: localhost

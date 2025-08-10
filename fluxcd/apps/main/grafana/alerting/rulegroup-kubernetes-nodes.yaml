@@ -1,0 +1,43 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaRuleGroup
+metadata:
+  name: rg-kubernetes-nodes
+  namespace: grafana
+  labels:
+    grafana.integreatly.org/instance: grafana
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  folders:
+    - title: Kubernetes
+      interval: 1m
+      orgId: 1
+      rules:
+        - title: Node NotReady
+          condition: A
+          data:
+            - refId: A
+              datasourceUid: Prometheus
+              relativeTimeRange:
+                from: 300
+                to: 0
+              model:
+                datasource:
+                  type: prometheus
+                  uid: Prometheus
+                editorMode: code
+                expr: sum by(node) (kube_node_status_condition{condition="Ready",status="true"} == 0)
+                intervalMs: 60000
+                legendFormat: "{{node}}"
+                maxDataPoints: 43200
+                refId: A
+          for: 10m
+          annotations:
+            summary: "Kubernetes node NotReady"
+          labels:
+            severity: warning
+          noDataState: NoData
+          execErrState: Error
+
+

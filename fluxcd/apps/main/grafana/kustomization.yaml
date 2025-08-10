@@ -13,3 +13,4 @@ resources:
   - datasources/prometheus-ds.yaml
   - datasources/loki-ds.yaml
   - dashboards
+  - alerting

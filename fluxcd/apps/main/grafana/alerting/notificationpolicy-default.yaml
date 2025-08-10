@@ -1,0 +1,25 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaNotificationPolicy
+metadata:
+  name: np-default
+  namespace: grafana
+  labels:
+    grafana.integreatly.org/instance: grafana
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  policy:
+    receiver: discord
+    groupBy:
+      - alertname
+      - severity
+    routes:
+      - objectMatchers:
+          - [ severity, =, critical ]
+        receiver: discord
+        groupWait: 0s
+        groupInterval: 1m
+        repeatInterval: 1h
+
+

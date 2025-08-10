@@ -20,23 +20,14 @@ spec:
     remediation:
       retries: 3
   values:
+    defaultRules:
+      create: false
     grafana:
       enabled: false
     alertmanager:
-      podDisruptionBudget:
-        enabled: true
-        minAvailable: 1
-      configSecret: alertmanager-config
-      alertmanagerSpec:
-        replicas: 3
-        podAntiAffinity: hard
-        resources:
-          requests:
-            cpu: 100m
-            memory: 256Mi
-          limits:
-            cpu: 500m
-            memory: 512Mi
+      enabled: false
+      podDisruptionBudget: null
+      configSecret: null
     prometheus:
       podDisruptionBudget:
         enabled: true

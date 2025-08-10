@@ -135,6 +135,11 @@
   tags:
     - k8s-flux-operator
 
+- name: Install Argo CD
+  ansible.builtin.import_tasks: argocd.yml
+  tags:
+    - k8s-argocd
+
 - name: Edit local kube config to set the server to the api lb
   ansible.builtin.lineinfile:
     state: present

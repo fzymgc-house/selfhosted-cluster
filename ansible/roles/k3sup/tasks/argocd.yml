@@ -1,0 +1,104 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+
+- name: Create Argo CD namespace
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    definition:
+      kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: argocd
+  become: false
+  run_once: true
+  delegate_to: localhost
+
+- name: Create argocd-oidc-secret
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    definition:
+      kind: Secret
+      apiVersion: v1
+      metadata:
+        name: argocd-oidc-secret
+        namespace: argocd
+        labels:
+          app.kubernetes.io/part-of: argocd
+      type: Opaque
+      stringData:
+        authentik.client_id: "{{ lookup('community.general.onepassword', 'Fzymgc ArgoCD', vault='fzymgc-house', field='authentik_client_id') }}"
+        authentik.client_secret: "{{ lookup('community.general.onepassword', 'Fzymgc ArgoCD', vault='fzymgc-house', field='authentik_client_secret') }}"
+  become: false
+  run_once: true
+  delegate_to: localhost
+
+
+- name: Install Argo CD
+  kubernetes.core.helm:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    namespace: argocd
+    name: argocd
+    chart_ref: argo-cd
+    chart_repo_url: https://argoproj.github.io/argo-helm
+    wait: false
+    chart_version: 8.2.7
+    values:
+      global:
+        domain: argocd.fzymgc.house
+      configs:
+        cm:
+          url: https://argocd.fzymgc.house
+          dex.config: |
+            connectors:
+              - type: oidc
+                id: oidc
+                name: oidc
+                config:
+                  issuer: https://auth.fzymgc.house/application/o/argo-cd/
+                  clientID: $argocd-oidc-secret:authentik.client_id
+                  clientSecret: $argocd-oidc-secret:authentik.client_secret
+                  # tokenURL: https://auth.fzymgc.house/application/o/token/
+                  # authorizationURL: https://auth.fzymgc.house/application/o/authorize/
+                  # userInfoURL: https://auth.fzymgc.house/application/o/userinfo/
+                  rootCAs:
+                    - {{ lookup('community.general.onepassword', 'fzymgc-ica1-ca', vault='fzymgc-house', field='fullchain') | b64encode }}
+                  insecureGroupsEnabled: true
+                  scopes:
+                    - identity
+                    - openid
+                    - profile
+                    - k3s-embedded-registries.yaml
+        params:
+          server.insecure: true
+        rbac:
+          policy.csv: |
+            g, argocd-admin, role:admin
+            g, argocd-user, role:readonly
+      certificate:
+        enabled: true
+      redis-ha:
+        enabled: true
+      controller:
+        replicas: 1
+      server:
+        replicas: 2
+        ingress:
+          enabled: true
+          annotations:
+            cert-manager.io/cluster-issuer: cert-manager
+          extraTls:
+            - hosts:
+                - argocd.fzymgc.house
+              secretName: argocd-tls
+      repoServer:
+        replicas: 2
+      applicationSet:
+        replicas: 2
+  become: false
+  run_once: true
+  delegate_to: localhost
+  tags:
+    - k8s-argocd-install

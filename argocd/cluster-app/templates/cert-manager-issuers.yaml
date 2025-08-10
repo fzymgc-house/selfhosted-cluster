@@ -20,4 +20,9 @@ spec:
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
-  
+  ignoreDifferences:
+    - kind: ExternalSecret
+      jqPathExpressions:
+        - .spec.data[] | select(.secretKey == "ca_crt") | .remoteRef.conversionStrategy
+        - .spec.data[] | select(.secretKey == "ca_crt") | .remoteRef.decodingStrategy
+        - .spec.data[] | select(.secretKey == "ca_crt") | .remoteRef.metadataPolicy

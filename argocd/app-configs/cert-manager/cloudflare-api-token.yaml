@@ -1,22 +1,23 @@
-apiVersion: v1
-kind: Secret
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
 metadata:
+  name: cloudflare-api-token
+  namespace: cert-manager
+spec:
+  refreshPolicy: Periodic
+  refreshInterval: 1h
+  secretStoreRef:
+    name: onepassword-sdk
+    kind: ClusterSecretStore
+  target:
     name: cloudflare-api-token
-type: Opaque
-stringData:
-    api-token: ENC[AES256_GCM,data:ef4b4MbTn7iTOafSKlRSnC076qviBATdfKnl+d04yHB+CtguFNgr0w==,iv:pK8sSJK8dlC8MduIaov6xDuvvlic72P1UQBwtpvpU2Y=,tag:0tVkQh+DHqooE6Hq7TdepQ==,type:str]
-sops:
-    age:
-        - recipient: age1ceu30hc9e92ytskzfv2hzw7d2wpvw9h4zdxznjst4540n8na537q8tj6lw
-          enc: |
-            -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBiQ3g5U2cwbkVXdWdrU0VV
-            bExrejg3cWxBUmlkTGhGcVczREF0cVhNU2prClFUQmFPdEJmRlZsY0M2SktLRE43
-            b043dmg0ZVN2NExVRzA5TlVHUGtkK1kKLS0tIDc3YUljSDRjSitXd2JNbHFTQTJD
-            TVNHS0V2TzVCVXZ1UjhSZDBueXVWS2cKdwvMCtEDYoNOZHsLmL4Ocq/0vXY4EGCI
-            Ad1LuYCuHOfmxXovcRuiK0qWCT6fti7SkH2aV4YGOM2N9nDQK5XDlA==
-            -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2025-06-04T18:16:39Z"
-    mac: ENC[AES256_GCM,data:6+gvi6buZzoacgYTA4UqmhZcAbcKObjENXjnrf77DiJGQ35t1Qttu1WdLU8n3IZ1NusTn15rV9lFF5Eb7/CyYFxj1s2RIAVJ6JiXs3B4kZra+qfRyb1Kn8vCZDux8mbVw6ixTlXo437kk/kT6pzI1VR/DHJfvdYJYIWJEedpPzg=,iv:ihJJLWc/pgAQXHof36SBjcPX2FPeI24t15omZm5YFZs=,tag:Joe7G0b2cT/gRuA86GnWmA==,type:str]
-    encrypted_regex: ^(data|stringData)$
-    version: 3.10.2
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      type: Opaque
+      data:
+        api-token: "{{ .api_token }}"
+  data:
+    - secretKey: api_token
+      remoteRef:
+        key: cloudflare-api-token/password

@@ -1,7 +1,0 @@
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: fzymgc-house-issuer
-spec:
-  ca:
-    secretName: fzymgc-house-ica1-key

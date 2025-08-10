@@ -22,7 +22,8 @@ spec:
       - ServerSideApply=true
   ignoreDifferences:
     - kind: ExternalSecret
+  
       jqPathExpressions:
-        - .spec.data[] | select(.secretKey == "ca_crt") | .remoteRef.conversionStrategy
-        - .spec.data[] | select(.secretKey == "ca_crt") | .remoteRef.decodingStrategy
-        - .spec.data[] | select(.secretKey == "ca_crt") | .remoteRef.metadataPolicy
+        - .spec.data[]?.remoteRef.conversionStrategy
+        - .spec.data[]?.remoteRef.decodingStrategy
+        - .spec.data[]?.remoteRef.metadataPolicy

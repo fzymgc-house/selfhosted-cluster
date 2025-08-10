@@ -4,8 +4,6 @@ kind: Kustomization
 namespace: grafana
 
 resources:
-  - ./external-secret-discord.yaml
-  - ./contactpoint-discord.yaml
   - ./notificationpolicy-default.yaml
   - ./mutetiming-maintenance.yaml
   - ./rulegroup-kubernetes-critical.yaml

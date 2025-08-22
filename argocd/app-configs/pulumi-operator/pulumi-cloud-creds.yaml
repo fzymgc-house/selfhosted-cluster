@@ -5,7 +5,7 @@ metadata:
   namespace: pulumi-operator
 spec:
   refreshPolicy: Periodic
-  refreshInterval: 1h
+  refreshInterval: 5m
   secretStoreRef:
     name: vault
     kind: ClusterSecretStore

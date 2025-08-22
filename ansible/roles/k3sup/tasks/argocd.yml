@@ -81,6 +81,28 @@
   run_once: true
   delegate_to: localhost
 
+- name: Create argocd ghcr oci secret
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    definition:
+      kind: Secret
+      apiVersion: v1
+      metadata:
+        name: ghcr-helm-oci
+        namespace: argocd
+        labels:
+          argocd.argoproj.io/secret-type: repository
+      type: Opaque
+      stringData:
+        url: ghcr.io/grafana/helm-charts
+        name: ghcr-grafana-charts
+        type: helm
+        enableOCI: "true"
+  become: false
+  run_once: true
+  delegate_to: localhost
+
 - name: Install Argo CD
   kubernetes.core.helm:
     kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"

@@ -11,4 +11,6 @@ spec:
       mode: "console"
     security:
       admin_user: "admin"
-      admin_password: "admin" 
+      admin_password: "admin"
+
+

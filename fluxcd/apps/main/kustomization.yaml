@@ -6,7 +6,6 @@ resources:
   - ./vault-tf
   - ./cnpg
   - ./authentik
-  - ./grafana-operator
   - ./system-dashboards
   - ./grafana
   - ./monitoring

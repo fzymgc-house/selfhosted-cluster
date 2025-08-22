@@ -1,0 +1,31 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: oidc-credentials
+  namespace: grafana
+spec:
+  refreshPolicy: Periodic
+  refreshInterval: 1m
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: oidc-credentials
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      data:
+        client_id: "{{ .client_id }}"
+        client_secret: "{{ .client_secret }}"
+  data:
+    - secretKey: client_id
+      remoteRef:
+        key: fzymgc-house/cluster/grafana
+        property: oidc_client_id
+    - secretKey: client_secret
+      remoteRef:
+        key: fzymgc-house/cluster/grafana
+        property: oidc_client_secret
+
+

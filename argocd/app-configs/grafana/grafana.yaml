@@ -1,0 +1,132 @@
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  name: grafana
+  namespace: grafana
+  labels:
+    dashboards: "grafana"
+spec:
+  config:
+    log:
+      mode: "console"
+    auth:
+      disable_login_form: "false"
+      oauth_auto_login: "true"
+      signout_redirect_url: "https://auth.fzymgc.house/application/o/grafana/end-session/"
+    auth.generic_oauth:
+      name: authentik
+      enabled: "true"
+      client_id: ${OAUTH_CLIENT_ID}
+      client_secret: ${OAUTH_CLIENT_SECRET}
+      scopes: "openid email profile"
+      tls_client_ca: /certs/grafana.fzymgc.house/ca.crt
+      auth_url: "https://auth.fzymgc.house/application/o/authorize/"
+      token_url: "https://auth.fzymgc.house/application/o/token/"
+      api_url: "https://auth.fzymgc.house/application/o/userinfo/"
+      role_attribute_path: contains(groups, 'grafana-admin') && 'Admin' || contains(groups, 'grafana-editor') && 'Editor' || 'Viewer'
+    database:
+      type: postgres
+    server:
+      root_url: "https://grafana.fzymgc.house"
+  disableDefaultAdminSecret: true
+  persistentVolumeClaim:
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: longhorn
+  deployment:
+    spec:
+      template:
+        spec:
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+            fsGroup: 1001
+            runAsNonRoot: true
+          containers:
+            - name: grafana
+              env:
+                - name: GF_SECURITY_ADMIN_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: grafana-admin-creds
+                      key: GF_SECURITY_ADMIN_USER
+                - name: GF_SECURITY_ADMIN_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: grafana-admin-creds
+                      key: GF_SECURITY_ADMIN_PASSWORD
+                - name: GF_DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: main-grafana-credentials
+                      key: url
+                - name: OAUTH_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: oidc-credentials
+                      key: client_id
+                - name: OAUTH_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: oidc-credentials
+                      key: client_secret
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: grafana-data
+                  mountPath: /var/lib/grafana
+                - name: certs
+                  mountPath: /certs/grafana.fzymgc.house
+          initContainers:
+            - name: grafana-init
+              image: chainguard/bash:latest
+              imagePullPolicy: Always
+              command: ["/bin/bash", "-vxc", 
+                "mkdir -p /var/lib/grafana/plugins && chown -R 1001:1001 /var/lib/grafana && chmod 770 /var/lib/grafana /var/lib/grafana/plugins"]
+              securityContext:
+                privileged: true
+                runAsNonRoot: false
+                allowPrivilegeEscalation: true
+                runAsUser: 0
+                runAsGroup: 0
+              volumeMounts:
+                - name: grafana-data
+                  mountPath: /var/lib/grafana
+          volumes:
+            - name: grafana-data
+              persistentVolumeClaim:
+                claimName: grafana-pvc
+            - name: certs
+              secret:
+                secretName: grafana-tls
+                items:
+                  - key: ca.crt
+                    path: ca.crt
+      strategy:
+        type: Recreate
+  ingress:
+    spec:
+      rules:
+        - host: grafana.fzymgc.house
+          http:
+            paths:
+              - path: /
+                pathType: Prefix
+                backend:
+                  service:
+                    name: grafana-service
+                    port:
+                      number: 3000
+      tls:
+        - hosts:
+            - grafana.fzymgc.house
+          secretName: grafana-tls
+
+

@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
   - ./vault
-  - ./external-secrets-operator
   - ./vault-tf
   - ./valkey
   - ./cnpg

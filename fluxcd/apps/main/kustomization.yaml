@@ -4,7 +4,6 @@ kind: Kustomization
 resources:
   - ./vault
   - ./vault-tf
-  - ./cnpg
   - ./authentik
   - ./system-dashboards
   - ./grafana

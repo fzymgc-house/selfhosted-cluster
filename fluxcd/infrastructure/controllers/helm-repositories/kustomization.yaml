@@ -9,7 +9,6 @@ resources:
   - ./traefik.yaml
   - ./hashicorp.yaml
   - ./external-secrets.yaml
-  - ./authentik.yaml
   
   - ./grafana.yaml
   - ./prometheus-community.yaml

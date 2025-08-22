@@ -1,4 +1,4 @@
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: main-superuser-credentials
@@ -31,7 +31,7 @@ spec:
         key: fzymgc-house/cluster/postgres/users/main-superuser
         property: password
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: main-main-admin-credentials

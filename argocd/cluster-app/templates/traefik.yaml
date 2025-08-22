@@ -1,0 +1,93 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  sources:
+    - chart: traefik-crds
+      repoURL: https://traefik.github.io/charts
+      targetRevision: 1.8.1
+      helm:
+        releaseName: traefik-crds
+    - chart: traefik
+      repoURL: https://traefik.github.io/charts
+      targetRevision: 35.4.0
+      helm:
+        releaseName: traefik
+        skipCrds: true
+        valuesObject:
+          deployment:
+            replicas: 2
+          podDisruptionBudget:
+            enabled: true
+            minAvailable: 1
+          gateway:
+            enabled: false
+          ports:
+            traefik:
+              port: 8080
+              expose:
+                default: false
+                internal: true
+            web:
+              port: 8000
+              forwardedHeaders:
+                trustedIPs:
+                  - 10.0.0.0/8
+                  - 172.16.0.0/12
+                  - 192.168.0.0/16
+                  - fc00::/7
+              redirections:
+                entryPoint:
+                  to: websecure
+                  scheme: https
+                  permanent: true
+            websecure:
+              port: 8443
+              forwardedHeaders:
+                trustedIPs:
+                  - 10.0.0.0/8
+                  - 172.16.0.0/12
+                  - 192.168.0.0/16
+                  - fc00::/7
+              http3:
+                enabled: true
+            postgres:
+              port: 5432
+              expose:
+                default: true
+              exposedPort: 5432
+              protocol: TCP
+          service:
+            single: true
+            type: LoadBalancer
+            spec:
+              loadBalancerIP: 192.168.20.145
+            additionalServices:
+              internal:
+                type: ClusterIP
+                labels:
+                  traefik-service-label: internal
+          tlsStore:
+            default:
+              defaultCertificate:
+                secretName: wildcard-fzymgc-house-tls
+          logs:
+            access:
+              enabled: true
+          additionalArguments:
+            - --api.insecure=true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true

@@ -8,8 +8,7 @@ metadata:
 spec:
   project: default
   sources:
-    - chart: valkey
-      repoURL: oci://registry-1.docker.io/bitnamicharts
+    - chart: oci://registry-1.docker.io/bitnamicharts/valkey
       targetRevision: 3.0.3
       helm:
         releaseName: valkey

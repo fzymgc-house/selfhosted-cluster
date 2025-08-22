@@ -66,7 +66,7 @@ metadata:
   name: grafana-discord-webhook
   namespace: grafana
 spec:
-  refreshInterval: 1h
+  refreshInterval: 5m
   secretStoreRef:
     kind: ClusterSecretStore
     name: vault
@@ -141,7 +141,7 @@ spec:
         receiver: discord
         groupWait: 0s
         groupInterval: 1m
-        repeatInterval: 1h
+        repeatInterval: 5m
 ```
 
 4) Optional: Define mute timings for maintenance windows.

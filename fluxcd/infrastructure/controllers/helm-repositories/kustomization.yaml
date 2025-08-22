@@ -9,7 +9,6 @@ resources:
   - ./traefik.yaml
   - ./hashicorp.yaml
   - ./external-secrets.yaml
-  - ./valkey.yaml
   - ./cnpg.yaml
   - ./authentik.yaml
   - ./grafana-operator.yaml

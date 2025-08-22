@@ -44,7 +44,7 @@ alwaysApply: false
 - Standard duration and renewal settings
 
 ### External Secrets
-- Use `apiVersion: external-secrets.io/v1beta1`
+- Use `apiVersion: external-secrets.io/v1`
 - Reference the vault ClusterSecretStore
 - Use templating for secret structure
 

@@ -7,7 +7,6 @@ resources:
   - ./metallb.yaml
   - ./cert-manager.yaml
   - ./traefik.yaml
-  - ./hashicorp.yaml
   - ./external-secrets.yaml
   
   

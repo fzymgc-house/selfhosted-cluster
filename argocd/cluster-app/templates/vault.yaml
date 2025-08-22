@@ -100,8 +100,6 @@ spec:
       - RespectIgnoreDifferences=true
   ignoreDifferences:
     - kind: StatefulSet
-      apiVersion: apps/v1
-      group: '*'
       jqPathExpressions:
         - .spec.volumeClaimTemplates[].apiVersion
         - .spec.volumeClaimTemplates[].kind

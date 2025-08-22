@@ -102,6 +102,6 @@ spec:
     - kind: StatefulSet
       group: apps
       jqPathExpressions:
-        - .spec.volumeClaimTemplates[].apiVersion
-        - .spec.volumeClaimTemplates[].kind
+        - .spec.template.volumeClaimTemplates[].apiVersion
+        - .spec.template.volumeClaimTemplates[].kind
 

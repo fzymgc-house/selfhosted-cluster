@@ -1,0 +1,82 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authentik
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  sources:
+    - chart: authentik
+      repoURL: https://charts.goauthentik.io
+      targetRevision: "2025.6.1"
+      helm:
+        releaseName: authentik
+        valuesObject:
+          global:
+            image:
+              tag: "2025.6.2"
+          authentik:
+            log_level: debug
+            postgresql:
+              host: main-rw.postgres.svc.cluster.local
+            redis:
+              host: valkey-primary.valkey.svc.cluster.local
+          server:
+            envFrom:
+              - secretRef:
+                  name: authentik-server-env
+            env:
+              - name: AUTHENTIK_POSTGRESQL__SSLROOTCERT
+                value: /certs/ca.crt
+            volumeMounts:
+              - name: authentik-tls
+                mountPath: /certs
+                readOnly: true
+            volumes:
+              - name: authentik-tls
+                secret:
+                  secretName: authentik-tls
+          worker:
+            envFrom:
+              - secretRef:
+                  name: authentik-server-env
+            env:
+              - name: AUTHENTIK_POSTGRESQL__SSLROOTCERT
+                value: /certs/ca.crt
+            volumeMounts:
+              - name: authentik-tls
+                mountPath: /certs
+                readOnly: true
+            volumes:
+              - name: authentik-tls
+                secret:
+                  secretName: authentik-tls
+          postgres:
+            enabled: false
+          redis:
+            enabled: false
+    - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
+      targetRevision: HEAD
+      path: argocd/app-configs/authentik
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: authentik
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - kind: ExternalSecret
+      group: external-secrets.io
+      jqPathExpressions:
+        - .spec.data[].remoteRef.conversionStrategy
+        - .spec.data[].remoteRef.decodingStrategy
+        - .spec.data[].remoteRef.metadataPolicy
+
+

@@ -1,0 +1,30 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: vault
+  namespace: vault
+spec:
+  entryPoints:
+    - websecure
+    - web
+  routes:
+    - match: HostSNI(`vault.fzymgc.house`)
+      services:
+        - name: vault-active
+          port: 8200
+    - match: HostSNI(`vault-0.fzymgc.house`)
+      services:
+        - name: vault-0
+          port: 8200
+    - match: HostSNI(`vault-1.fzymgc.house`)
+      services:
+        - name: vault-1
+          port: 8200
+    - match: HostSNI(`vault-2.fzymgc.house`)
+      services:
+        - name: vault-2
+          port: 8200
+  tls:
+    passthrough: true
+
+

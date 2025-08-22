@@ -4,6 +4,7 @@ metadata:
   name: cnpg
   namespace: cnpg-system
 spec:
+  suspend: true
   interval: 5m
   chart:
     spec:

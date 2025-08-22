@@ -1,0 +1,67 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: main-superuser-credentials
+  namespace: postgres
+spec:
+  refreshPolicy: Periodic
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: main-superuser-credentials
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      metadata:
+        labels:
+          cnpg.io/reload: "true"
+      type: kubernetes.io/basic-auth
+      data:
+        username: "{{ .username }}"
+        password: "{{ .password }}"
+  data:
+    - secretKey: username
+      remoteRef:
+        key: fzymgc-house/cluster/postgres/users/main-superuser
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: fzymgc-house/cluster/postgres/users/main-superuser
+        property: password
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: main-main-admin-credentials
+  namespace: postgres
+spec:
+  refreshPolicy: Periodic
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: main-main-admin-credentials
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      metadata:
+        labels:
+          cnpg.io/reload: "true"
+      type: kubernetes.io/basic-auth
+      data:
+        username: "{{ .username }}"
+        password: "{{ .password }}"
+  data:
+    - secretKey: username
+      remoteRef:
+        key: fzymgc-house/cluster/postgres/users/main-main-admin
+        property: username
+    - secretKey: password
+      remoteRef:
+        key: fzymgc-house/cluster/postgres/users/main-main-admin
+        property: password
+
+

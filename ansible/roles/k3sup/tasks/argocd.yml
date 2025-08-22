@@ -59,6 +59,27 @@
   run_once: true
   delegate_to: localhost
 
+- name: Create argocd bitnami oci secret
+  kubernetes.core.k8s:
+    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+    state: present
+    definition:
+      kind: Secret
+      apiVersion: v1
+      metadata:
+        name: docker-io-helm-oci
+        namespace: argocd
+        labels:
+          argocd.argoproj.io/secret-type: repository
+      type: Opaque
+      stringData:
+        url: registry-1.docker.io/bitnamicharts
+        name: bitnamiccharts
+        type: helm
+        enableOCI: "true"
+  become: false
+  run_once: true
+  delegate_to: localhost
 
 - name: Install Argo CD
   kubernetes.core.helm:

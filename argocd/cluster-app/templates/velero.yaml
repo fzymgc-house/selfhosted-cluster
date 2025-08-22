@@ -18,7 +18,7 @@ spec:
           image:
             repository: velero/velero
             tag: v1.16.2
-          snapshotsEnabled: true
+          snapshotsEnabled: false
           deployNodeAgent: true
           configuration:
             features: EnableCSI

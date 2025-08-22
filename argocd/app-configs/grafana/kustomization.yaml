@@ -10,7 +10,7 @@ resources:
   - grafana-tf-secrets.yaml
   - tf-runner-sa.yaml
   - terraform.yaml
-  - datasources/kustomization.yaml
-  - dashboards/kustomization.yaml
+  - datasources
+  - dashboards
 
 

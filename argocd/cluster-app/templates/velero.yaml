@@ -78,5 +78,10 @@ spec:
     syncOptions:
       - ServerSideApply=true
       - CreateNamespace=true
-
-
+  ignoreDifferences:
+    - kind: ExternalSecret
+      group: external-secrets.io
+      jqPathExpressions:
+        - .spec.data[].remoteRef.conversionStrategy
+        - .spec.data[].remoteRef.decodingStrategy
+        - .spec.data[].remoteRef.metadataPolicy

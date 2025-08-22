@@ -6,7 +6,7 @@ metadata:
   namespace: postgres
 spec:
   refreshPolicy: Periodic
-  refreshInterval: 1h
+  refreshInterval: 1m
   secretStoreRef:
     name: vault
     kind: ClusterSecretStore
@@ -22,6 +22,7 @@ spec:
       data:
         username: "{{ .username }}"
         password: "{{ .password }}"
+        url: "postgres://{{ .username }}:{{ .password }}@main-rw.postgres.svc.cluster.local:5432/grafana"
   data:
     - secretKey: username
       remoteRef:

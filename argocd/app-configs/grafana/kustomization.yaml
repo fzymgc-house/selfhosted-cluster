@@ -6,7 +6,6 @@ resources:
   - grafana-certificate.yaml
   - grafana-admin-external-secret.yaml
   - grafana-oidc-creds.yaml
-  - grafana-db-creds.yaml
   - grafana-tf-secrets.yaml
   - tf-runner-sa.yaml
   - terraform.yaml

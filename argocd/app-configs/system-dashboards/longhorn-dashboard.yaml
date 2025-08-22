@@ -1,0 +1,51 @@
+---
+# This is a certificate for the lldap service.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: longhorn-tls
+  namespace: longhorn-system
+spec:
+  secretName: longhorn-tls
+  issuerRef:
+    name: vault-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - longhorn.tpi-beta.fzymgc.house
+  usages:
+    - server auth
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: modern-auth
+  namespace: longhorn-system
+spec:
+  forwardAuth:
+    address: http://authentik-server.authentik.svc/outpost.goauthentik.io/auth/traefik
+    trustForwardHeader: true
+    authResponseHeaders:
+      - Remote-User
+      - Remote-Groups
+      - Remote-Email
+      - Remote-Name
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: longhorn-dashboard
+  namespace: longhorn-system
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`longhorn.fzymgc.house`)
+      kind: Rule
+      middlewares:
+        - name: modern-auth
+          namespace: longhorn-system
+      services:
+        - name: longhorn-frontend
+          port: 80
+  tls:
+    secretName: longhorn-tls

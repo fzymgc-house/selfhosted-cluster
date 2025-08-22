@@ -1,19 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: shared-resources
+  name: dashboards-and-entrypoints
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-3"
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   sources:
     - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
       targetRevision: HEAD
-      path: argocd/app-configs/shared-resources      
+      path: argocd/app-configs/system-dashboards
   destination:
     server: https://kubernetes.default.svc
-    namespace: shared-resources
+    namespace: default
   syncPolicy:
     automated:
       prune: true

@@ -3,5 +3,4 @@ kind: Kustomization
 
 resources:
   - ./vault-tf
-  - ./system-dashboards
   - ./monitoring

@@ -9,7 +9,7 @@ spec:
   project: default
   sources:
     - chart: valkey
-      repoURL: oci://registry-1.docker.io/bitnamicharts
+      repoURL: registry-1.docker.io/bitnamicharts
       path: valkey
       targetRevision: 3.0.3
       helm:

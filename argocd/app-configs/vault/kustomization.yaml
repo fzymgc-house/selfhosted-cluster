@@ -7,5 +7,6 @@ resources:
   - lb-service.yaml
   - ingress-route.yaml
   - rbac.yaml
+  - vault-certmanager-issuer.yaml
 
 

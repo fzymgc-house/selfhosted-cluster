@@ -60,7 +60,7 @@ Prometheus ──(scrape + rules disabled for notif)──▶ Grafana (Unified A
 1) Create a Secret for the Discord webhook URL via External Secrets (Vault → Kubernetes Secret):
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: grafana-discord-webhook

@@ -11,7 +11,7 @@ resources:
   - ./external-secrets.yaml
   - ./cnpg.yaml
   - ./authentik.yaml
-  - ./grafana-operator.yaml
+  
   - ./grafana.yaml
   - ./prometheus-community.yaml
   

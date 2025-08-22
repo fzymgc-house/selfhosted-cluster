@@ -8,6 +8,11 @@ metadata:
 spec:
   project: default
   sources:
+    - chart: pulumi-kubernetes-operator
+      repoURL: https://helm.pulumi.com
+      targetRevision: 2.0.0
+      helm:
+        releaseName: pulumi-operator
     - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
       targetRevision: HEAD
       path: argocd/app-configs/pulumi-operator

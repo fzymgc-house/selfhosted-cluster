@@ -1,0 +1,26 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: pulumi-cloud-creds
+  namespace: pulumi-operator
+spec:
+  refreshPolicy: Periodic
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: pulumi-cloud-creds
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      type: Opaque
+      data:
+        accessToken: "{{ .token }}"
+  data:
+    - secretKey: token
+      remoteRef:
+        key: fzymgc-house/cluster/argocd
+        property: pulumi-cloud-token
+
+

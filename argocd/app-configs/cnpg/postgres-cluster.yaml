@@ -34,6 +34,7 @@ spec:
 
   plugins:
     - name: barman-cloud.cloudnative-pg.io
+      enabled: true
       isWALArchiver: true
       parameters:
         barmanObjectName: barman-object-store-main
@@ -58,11 +59,15 @@ spec:
           name: main-authentik-credentials
         superuser: false
         login: true
+        connectionLimit: -1
+        inherit: true
       - name: grafana
         ensure: present
         passwordSecret:
           name: main-grafana-credentials
         superuser: false
         login: true
+        connectionLimit: -1
+        inherit: true
 
 

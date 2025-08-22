@@ -5,5 +5,4 @@ resources:
   - ./vault
   - ./vault-tf
   - ./system-dashboards
-  - ./grafana
   - ./monitoring

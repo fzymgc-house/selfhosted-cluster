@@ -37,6 +37,20 @@ spec:
               name: "argo-workflow"
             rbac:
               create: true
+          controller:
+            logging:
+              format: json
+          server:
+            logging:
+              format: json
+            ingress:
+              enabled: true
+              annotations:
+                cert-manager.io/cluster-issuer: vault-issuer
+              extraTls:
+                - hosts:
+                    - argo-workflows.fzymgc.house
+              secretName: argo-workflows-tls
   destination:
     server: https://kubernetes.default.svc
     namespace: argo-workflows

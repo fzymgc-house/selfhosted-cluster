@@ -6,6 +6,7 @@ namespace: argo-workflows
 resources:
   - authentik-creds.yaml
   - ingress.yaml
+  - rbac.yaml
 
 
 

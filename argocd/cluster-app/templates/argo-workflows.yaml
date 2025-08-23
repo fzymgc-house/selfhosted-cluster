@@ -47,6 +47,8 @@ spec:
                 - openid
                 - profile
                 - groups
+              rbac:
+                enabled: true
             volumes:
               - name: ssl
                 hostPath:

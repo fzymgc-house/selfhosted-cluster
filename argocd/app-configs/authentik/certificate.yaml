@@ -39,5 +39,22 @@ spec:
   additionalOutputFormats:
     - type: CombinedPEM
     - type: DER
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: authentik-public-tls
+  namespace: authentik
+spec:
+  secretName: authentik-public-tls
+  issuerRef:
+    name: cloudflare-acme-issuer
+    kind: ClusterIssuer
+  additionalOutputFormats:
+    - type: CombinedPEM
+  dnsNames:
+    - auth.fzymgc.house
+  usages:
+    - server auth
 
 

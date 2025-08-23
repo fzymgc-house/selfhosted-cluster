@@ -47,7 +47,7 @@
         name: cloudflare-api-token
         namespace: cert-manager
       spec:
-        refreshInterval: 5m
+        refreshInterval: 15m
         secretStoreRef:
           name: onepassword-sdk
           kind: ClusterSecretStore
@@ -89,7 +89,7 @@
         name: fzymgc-house-ica1-key
         namespace: cert-manager
       spec:
-        refreshInterval: 5m
+        refreshInterval: 15m
         secretStoreRef:
           name: onepassword-sdk
           kind: ClusterSecretStore

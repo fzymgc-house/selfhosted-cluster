@@ -12,7 +12,7 @@ metadata:
     # If you want an account to be the default to use, this rule can be "true".
     # Details of the expression language are available in
     # https://expr-lang.org/docs/language-definition.
-    workflows.argoproj.io/rbac-rule: "'argo-admin' in groups"
+    workflows.argoproj.io/rbac-rule: "'argocd-admin' in groups"
     # The precedence is used to determine which service account to use when
     # Precedence is an integer. It may be negative. If omitted, it defaults to "0".
     # Numerically higher values have higher precedence (not lower, which maybe

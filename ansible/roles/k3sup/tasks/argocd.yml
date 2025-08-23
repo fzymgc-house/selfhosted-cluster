@@ -116,7 +116,7 @@
         ingress:
           enabled: true
           annotations:
-            cert-manager.io/cluster-issuer: cert-manager
+            cert-manager.io/cluster-issuer: fzymgc-house-issuer
           extraTls:
             - hosts:
                 - argocd.fzymgc.house

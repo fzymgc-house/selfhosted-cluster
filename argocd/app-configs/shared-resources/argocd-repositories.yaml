@@ -26,17 +26,3 @@ stringData:
   name: ghcr-grafana-charts
   type: helm
   enableOCI: "true"
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ghcr-pulumi-helm-oci
-  namespace: argocd
-  labels:
-    argocd.argoproj.io/secret-type: repository
-type: Opaque
-stringData:
-  url: ghcr.io/pulumi/helm-charts
-  name: pulumi-charts
-  type: helm
-  enableOCI: "true"

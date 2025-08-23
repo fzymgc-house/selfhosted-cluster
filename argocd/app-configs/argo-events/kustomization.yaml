@@ -4,7 +4,9 @@ kind: Kustomization
 namespace: argo-events
 
 resources:
+  - github-app-fzymgc-house-creds.yaml
   - event-bus.yaml
+  - github-event-source.yaml
 
 
 

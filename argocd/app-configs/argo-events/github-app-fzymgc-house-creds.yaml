@@ -1,0 +1,28 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: github-app-fzymgc-house-creds
+  namespace: argo-events
+spec:
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: github-app-fzymgc-house-creds
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      type: Opaque
+      data:
+        private_key: "{{ .private_key }}"
+        github_webhook_secret: "{{ .github_webhook_secret }}"
+  
+  data:
+    - secretKey: private_key
+      remoteRef:
+        key: fzymgc-house/cluster/argo-events
+        property: github_app.private_key
+    - secretKey: github_webhook_secret
+      remoteRef:
+        key: fzymgc-house/cluster/argo-events
+        property: github_webhook_secret

@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-workflows
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
+      path: argocd/app-configs/argo-workflows
+      targetRevision: main
+    - chart: argo-workflows
+      repoURL: https://argoproj.github.io/argo-helm
+      targetRevision: "0.45.22"
+      helm:
+        valuesObject:
+          sso:
+            enabled: true
+            issuer: https://auth.fzymgc.house/application/o/argo-workflow/
+            clientId:
+              name: authentik-creds
+              key: client_id
+            clientSecret:
+              name: authentik-creds
+              key: client_secret
+            redirectUrl: https://argo-workflows.fzymgc.house/oauth2/callback
+            scopes:
+              - email
+              - openid
+              - profile
+              - groups
+          workflow:
+            serviceAccount:
+              create: true
+              name: "argo-workflow"
+            rbac:
+              create: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo-workflows
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - kind: ExternalSecret
+      group: external-secrets.io
+      jqPathExpressions:
+        - .spec.data[].remoteRef.conversionStrategy
+        - .spec.data[].remoteRef.decodingStrategy
+        - .spec.data[].remoteRef.metadataPolicy
+
+

@@ -59,6 +59,7 @@
   run_once: true
   delegate_to: localhost
 
+
 - name: Install Argo CD
   kubernetes.core.helm:
     kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
@@ -68,7 +69,7 @@
     chart_ref: argo-cd
     chart_repo_url: https://argoproj.github.io/argo-helm
     wait: false
-    chart_version: 8.2.7
+    chart_version: 8.3.0
     values:
       global:
         domain: argocd.fzymgc.house

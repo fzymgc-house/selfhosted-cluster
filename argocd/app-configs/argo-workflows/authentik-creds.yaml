@@ -1,0 +1,28 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: authentik-creds
+  namespace: argo-workflows
+spec:
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: authentik-creds
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      type: Opaque
+      data:
+        client_id: "{{ .client_id }}"
+        client_secret: "{{ .client_secret }}"
+  
+  data:
+    - secretKey: client_id
+      remoteRef:
+        key: fzymgc-house/cluster/argo-workflows
+        property: authentik_client_id
+    - secretKey: client_secret
+      remoteRef:
+        key: fzymgc-house/cluster/argo-workflows
+        property: authentik_client_secret

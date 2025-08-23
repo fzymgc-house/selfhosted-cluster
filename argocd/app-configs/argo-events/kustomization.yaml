@@ -3,7 +3,8 @@ kind: Kustomization
 
 namespace: argo-events
 
-
+resources:
+  - event-bus.yaml
 
 
 

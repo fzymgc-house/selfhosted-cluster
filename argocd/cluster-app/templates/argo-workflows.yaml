@@ -44,18 +44,6 @@ spec:
               - sso
             logging:
               format: json
-            ingress:
-              enabled: true
-              annotations:
-                cert-manager.io/cluster-issuer: fzymgc-house-issuer
-              hosts:
-                - argo-workflows.fzymgc.house
-                - argoworkflows.fzymgc.house
-              tls:
-                - secretName: argo-workflows-tls
-                  hosts:
-                    - argo-workflows.fzymgc.house
-                    - argoworkflows.fzymgc.house
   destination:
     server: https://kubernetes.default.svc
     namespace: argo-workflows

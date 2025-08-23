@@ -19,7 +19,7 @@ spec:
         privateKey:
           name: github-app-fzymgc-house-creds
           key: private_key
-        appID: 1833086
+        appID: "1833086"
         installationID: "Iv23liMnF2s6f2zBHhzv"
       webhook:
         endpoint: /push

@@ -28,10 +28,12 @@ spec:
       kind: Rule
       services:
         - name: argo-workflows-server
+          port: 2746
     - match: Host(`argoworkflows.fzymgc.house`)
       kind: Rule
       services:
         - name: argo-workflows-server
+          port: 2746
   tls:
     secretName: argo-workflows-tls
 

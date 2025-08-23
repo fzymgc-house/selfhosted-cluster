@@ -47,10 +47,12 @@ spec:
               enabled: true
               annotations:
                 cert-manager.io/cluster-issuer: vault-issuer
-              extraTls:
-                - hosts:
+              hosts:
+                - argo-workflows.fzymgc.house
+              tls:
+                - secretName: argo-workflows-tls
+                  hosts:
                     - argo-workflows.fzymgc.house
-              secretName: argo-workflows-tls
   destination:
     server: https://kubernetes.default.svc
     namespace: argo-workflows

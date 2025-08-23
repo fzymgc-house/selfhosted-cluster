@@ -14,10 +14,10 @@ spec:
     - chart: argo-events
       repoURL: https://argoproj.github.io/argo-helm
       targetRevision: "2.4.16"
-      helm:
-        valuesObject:
-          webhook:
-            enabled: true
+      # helm:
+      #   valuesObject:
+      #     webhook:
+      #       enabled: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argo-events

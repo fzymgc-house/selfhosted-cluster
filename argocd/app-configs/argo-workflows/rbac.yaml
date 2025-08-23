@@ -10,7 +10,7 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: read-only-token.service-account.token
+  name: read-only-token.service-account-token
   annotations:
     kubernetes.io/service-account.name: read-only
 type: kubernetes.io/service-account-token
@@ -26,7 +26,7 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: admin-user.service-account.token
+  name: admin-user.service-account-token
   annotations:
     kubernetes.io/service-account.name: admin-user
 type: kubernetes.io/service-account-token

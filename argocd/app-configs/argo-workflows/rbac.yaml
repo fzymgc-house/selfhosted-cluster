@@ -76,3 +76,42 @@ rules:
       - get
       - list
       - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: argo-admin
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/log
+  - events
+  verbs:
+  - "*"
+- apiGroups:
+  - argoproj.io
+  resources:
+  - workflows
+  - workfloweventbindings
+  - workflowtemplates
+  - cronworkflows
+  - cronworkflows/finalizers
+  - clusterworkflowtemplates
+  verbs:
+  - "*"
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: argo-admin-access
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: argo-admin 
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: argo-workflows
+

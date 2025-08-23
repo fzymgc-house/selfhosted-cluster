@@ -28,6 +28,9 @@ spec:
           server:
             authModes:
               - sso
+            extraEnv:
+              - name: SSL_CERT_FILE
+                value: /ssl/ca-certificates.crt
             logging:
               format: json
             sso:
@@ -44,6 +47,15 @@ spec:
                 - openid
                 - profile
                 - groups
+            volumes:
+              - name: ssl
+                hostPath:
+                  path: /etc/ssl/certs
+                  type: Directory
+            volumeMounts:
+              - name: ssl
+                mountPath: /ssl
+                readOnly: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argo-workflows

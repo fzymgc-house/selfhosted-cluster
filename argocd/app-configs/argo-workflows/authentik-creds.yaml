@@ -20,9 +20,9 @@ spec:
   data:
     - secretKey: client_id
       remoteRef:
-        key: fzymgc-house/cluster/argo-workflows
+        key: fzymgc-house/cluster/argo-workflow
         property: authentik_client_id
     - secretKey: client_secret
       remoteRef:
-        key: fzymgc-house/cluster/argo-workflows
+        key: fzymgc-house/cluster/argo-workflow
         property: authentik_client_secret

@@ -16,20 +16,6 @@ spec:
       targetRevision: "0.45.22"
       helm:
         valuesObject:
-          sso:
-            enabled: true
-            issuer: https://auth.fzymgc.house/application/o/argo-workflow/
-            clientId:
-              name: authentik-creds
-              key: client_id
-            clientSecret:
-              name: authentik-creds
-              key: client_secret
-            scopes:
-              - email
-              - openid
-              - profile
-              - groups
           workflow:
             serviceAccount:
               create: true
@@ -44,6 +30,20 @@ spec:
               - sso
             logging:
               format: json
+            sso:
+              enabled: true
+              issuer: https://auth.fzymgc.house/application/o/argo-workflow/
+              clientId:
+                name: authentik-creds
+                key: client_id
+              clientSecret:
+                name: authentik-creds
+                key: client_secret
+              scopes:
+                - email
+                - openid
+                - profile
+                - groups
   destination:
     server: https://kubernetes.default.svc
     namespace: argo-workflows

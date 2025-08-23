@@ -7,7 +7,7 @@ metadata:
 spec:
   secretName: authentik-tls
   issuerRef:
-    name: cloudflare-acme-issuer
+    name: vault-issuer
     kind: ClusterIssuer
   additionalOutputFormats:
     - type: CombinedPEM
@@ -27,7 +27,7 @@ metadata:
 spec:
   secretName: authentik-oidc-tls
   issuerRef:
-    name: cloudflare-acme-issuer
+    name: vault-issuer
     kind: ClusterIssuer
   commonName: authentik-oidc
   privateKey:

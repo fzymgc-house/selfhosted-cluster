@@ -5,9 +5,9 @@ metadata:
   namespace: cert-manager
 spec:
   refreshPolicy: Periodic
-  refreshInterval: 15m
+  refreshInterval: 5m
   secretStoreRef:
-    name: onepassword-sdk
+    name: vault
     kind: ClusterSecretStore
   target:
     name: cloudflare-api-token
@@ -20,4 +20,5 @@ spec:
   data:
     - secretKey: api_token
       remoteRef:
-        key: cloudflare-api-token/password
+        key: fzymgc-house/cluster/cert-manager
+        property: cloudflare_api_token

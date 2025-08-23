@@ -25,7 +25,6 @@ spec:
             clientSecret:
               name: authentik-creds
               key: client_secret
-            redirectUrl: https://argo-workflows.fzymgc.house/oauth2/callback
             scopes:
               - email
               - openid
@@ -41,6 +40,8 @@ spec:
             logging:
               format: json
           server:
+            authModes:
+              - sso
             logging:
               format: json
             ingress:

@@ -177,7 +177,7 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: tf-workflow-secrets
-                key: vault_token
+                key: vault_config_token
           - name: VAULT_CACERT
             value: /mnt/vault-certs/fullchain.crt
         volumeMounts:
@@ -223,7 +223,7 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: tf-workflow-secrets
-                key: vault_token_vault_config_admin
+                key: vault_config_token
           - name: VAULT_CACERT
             value: /mnt/vault-certs/fullchain.crt
         volumeMounts:

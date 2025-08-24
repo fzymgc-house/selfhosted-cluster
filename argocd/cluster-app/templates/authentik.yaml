@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
-  project: default
+  project: auth
   sources:
     - chart: authentik
       repoURL: https://charts.goauthentik.io

@@ -4,11 +4,11 @@ kind: EventSource
 metadata:
   name: github
 spec:
-  # service:
-  #   ports:
-  #     - name: github-webhook
-  #       port: 12000
-  #       targetPort: 12000
+  service:
+    ports:
+      - name: github-webhook
+        port: 12000
+        targetPort: 12000
   github:
     fzymgc-house:
       repositories:
@@ -22,7 +22,7 @@ spec:
         appID: 1833086
         installationID: 82462871
       webhook:
-        endpoint: /push
+        endpoint: /github-event
         port: "12000"
         method: POST
         url: https://wh-events.fzymgc.house

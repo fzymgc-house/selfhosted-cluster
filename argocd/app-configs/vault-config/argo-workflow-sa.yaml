@@ -2,11 +2,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: argo-workflow-sa
+  namespace: vault
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: argo-workflow-role
+  namespace: vault
 rules:
   - apiGroups:
       - argoproj.io
@@ -22,6 +24,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: argo-workflow-role-binding
+  namespace: vault
 roleRef:
   kind: Role
   name: argo-workflow-role

@@ -7,6 +7,10 @@ metadata:
 spec:
   entrypoint: terraform-deployment
   serviceAccountName: argo-workflow-sa
+  volumes:
+    - name: vault-certs
+      configMap:
+        name: fzymgc-ica1-ca
   volumeClaimTemplates:
     - metadata:
         name: working-dir-vol
@@ -181,10 +185,6 @@ spec:
             mountPath: /mnt/working-dir
           - name: vault-certs
             mountPath: /mnt/vault-certs
-        volumes:
-          - name: vault-certs
-            configMap:
-              name: fzymgc-ica1-ca
 
     - name: approval
       suspend: {}
@@ -231,7 +231,3 @@ spec:
             mountPath: /mnt/working-dir
           - name: vault-certs
             mountPath: /mnt/vault-certs
-        volumes:
-          - name: vault-certs
-            configMap:
-              name: fzymgc-ica1-ca

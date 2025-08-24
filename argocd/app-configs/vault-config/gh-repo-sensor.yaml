@@ -2,6 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Sensor
 metadata:
   name: vault-config-gh-repo-sensor
+  namespace: argo-workflows
 spec:
   template:
     serviceAccountName: argo-workflow-sa
@@ -31,6 +32,7 @@ spec:
               kind: Workflow
               metadata:
                 generateName: github-vault-config-tf-
+                namespace: vault
               spec:
                 entrypoint: terraform-deployment
                 workflowTemplateRef:

@@ -167,9 +167,24 @@ spec:
         env:
           - name: TF_CLI_CONFIG_FILE
             value: /mnt/working-dir/.terraformrc
+          - name: VAULT_ADDR
+            value: https://vault.vault.svc.cluster.local:8200
+          - name: VAULT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: tf-workflow-secrets
+                key: vault_token
+          - name: VAULT_CACERT
+            value: /mnt/vault-certs/fullchain.crt
         volumeMounts:
           - name: working-dir-vol
             mountPath: /mnt/working-dir
+          - name: vault-certs
+            mountPath: /mnt/vault-certs
+        volumes:
+          - name: vault-certs
+            configMap:
+              name: fzymgc-ica1-ca
 
     - name: approval
       suspend: {}
@@ -202,6 +217,21 @@ spec:
         env:
           - name: TF_CLI_CONFIG_FILE
             value: /mnt/working-dir/.terraformrc
+          - name: VAULT_ADDR
+            value: https://vault.vault.svc.cluster.local:8200
+          - name: VAULT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: tf-workflow-secrets
+                key: vault_token
+          - name: VAULT_CACERT
+            value: /mnt/vault-certs/fullchain.crt
         volumeMounts:
           - name: working-dir-vol
             mountPath: /mnt/working-dir
+          - name: vault-certs
+            mountPath: /mnt/vault-certs
+        volumes:
+          - name: vault-certs
+            configMap:
+              name: fzymgc-ica1-ca

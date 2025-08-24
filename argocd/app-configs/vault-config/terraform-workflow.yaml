@@ -28,6 +28,8 @@ spec:
             template: git-clone
         - - name: check-file-structure
             template: check-file-structure
+        - - name: configure-terraform-cli
+            template: configure-terraform-cli
         - - name: terraform-init
             template: terraform-init
         - - name: terraform-workspace-select
@@ -91,7 +93,7 @@ spec:
           - name: working-dir-pvc
             mountPath: /mnt/working-dir
 
-    - namee: terraform login
+    - name: configure-terraform-cli
       container:
         image: hashicorp/terraform:latest
         command: ["/bin/sh", "-c"]

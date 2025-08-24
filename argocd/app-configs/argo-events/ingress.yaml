@@ -25,17 +25,17 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`wh-events.fzymgc.house`) && PathPrefix(`/push-event-github`)
+    - match: Host(`wh-events.fzymgc.house`) && PathPrefix(`/github-event`)
       kind: Rule
       services:
         - name: github-eventsource-svc
           port: 12000
-    - match: Host(`argo-events.fzymgc.house`) && PathPrefix(`/push-event-github`)
+    - match: Host(`argo-events.fzymgc.house`) && PathPrefix(`/github-event`)
       kind: Rule
       services:
         - name: github-eventsource-svc
           port: 12000
-    - match: Host(`argoevents.fzymgc.house`) && PathPrefix(`/push-event-github`)
+    - match: Host(`argoevents.fzymgc.house`) && PathPrefix(`/github-event`)
       kind: Rule
       services:
         - name: github-eventsource-svc

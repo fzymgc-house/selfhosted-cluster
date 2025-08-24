@@ -6,4 +6,4 @@ namespace: vault
 resources: 
   - argo-workflow-sa.yaml
   - tf-workflow-secrets.yaml
-  - terraform-wf.yaml
+  - vault-config-tf-wf-template-wf.yaml

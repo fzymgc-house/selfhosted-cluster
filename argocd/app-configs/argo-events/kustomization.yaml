@@ -8,6 +8,7 @@ resources:
   - event-bus.yaml
   - github-event-source.yaml
   - ingress.yaml
+  - rbac.yaml
 
 
 

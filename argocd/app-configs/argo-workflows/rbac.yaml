@@ -99,6 +99,8 @@ rules:
   - cronworkflows
   - cronworkflows/finalizers
   - clusterworkflowtemplates
+  - eventsources
+  - sensors
   verbs:
   - "*"
 ---

@@ -9,7 +9,7 @@ spec:
   dependencies:
     - name: github-event-source
       eventSourceName: github
-      eventName: github-change-event
+      eventName: fzymgc-house
       filters:
         data:
           - path: headers.X-Github-Event
@@ -17,10 +17,14 @@ spec:
             value:
               - push
               - create
-          - path: body.base_ref
+          - path: body.ref
             type: string
             value:
-              - main
+              - refs/heads/main
+          - path: body.repository.name
+            type: string
+            value:
+              - selfhosted-cluster
   triggers:
     - template:
         name: vault-config-trigger

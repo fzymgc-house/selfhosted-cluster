@@ -64,14 +64,14 @@ rules:
   - apiGroups:
       - argoproj.io
     resources:
-      - eventsources
-      - sensors
-      - workflows
-      - workfloweventbindings
-      - workflowtemplates
       - clusterworkflowtemplates
       - cronworkflows
+      - eventsources
+      - sensors
+      - workfloweventbindings
+      - workflows
       - workflowtaskresults
+      - workflowtemplates
     verbs:
       - get
       - list
@@ -93,14 +93,15 @@ rules:
 - apiGroups:
   - argoproj.io
   resources:
-  - workflows
-  - workfloweventbindings
-  - workflowtemplates
+  - clusterworkflowtemplates
   - cronworkflows
   - cronworkflows/finalizers
-  - clusterworkflowtemplates
   - eventsources
   - sensors
+  - workfloweventbindings
+  - workflows
+  - workflowtaskresults
+  - workflowtemplates
   verbs:
   - "*"
 ---

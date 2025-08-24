@@ -10,11 +10,13 @@ metadata:
 rules:
   - apiGroups:
       - argoproj.io
-    resources:
-      - workflowtaskresults
     verbs:
-      - create
-      - patch
+      - "*"
+    resources:
+      - workflows
+      - workflowtemplates
+      - cronworkflows
+      - clusterworkflowtemplates
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

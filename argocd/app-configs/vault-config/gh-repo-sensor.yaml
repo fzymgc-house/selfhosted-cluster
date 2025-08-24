@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: vault-config-gh-repo-sensor
+spec:
+  template:
+    serviceAccountName: argo-workflow-sa
+  dependencies:
+    - name: github-event-source
+      eventSourceName: github
+      eventName: github-change-event
+      filters:
+        data:
+          - path: headers.X-Github-Event
+            type: string
+            value:
+              - push
+              - create
+          - path: body.base_ref
+            type: string
+            value:
+              - main
+  triggers:
+    - template:
+        name: vault-config-trigger
+        k8s:
+          operation: create
+          source:
+            resources:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: github-vault-config-tf-
+              spec:
+                entrypoint: terraform-deployment
+                workflowTemplateRef:
+                  name: vault-config-tf-template
+                arguments:
+                  parameters:
+                    - name: branch
+                      value: "main"
+                    - name: workspace
+                      value: "main-cluster-vault"
+                    - name: tf_path
+                      value: "tf/vault"
+      

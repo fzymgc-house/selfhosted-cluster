@@ -12,6 +12,7 @@ spec:
   dnsNames:
     - argo-events.fzymgc.house
     - argoevents.fzymgc.house
+    - wh-events.fzymgc.house
   usages:
     - server auth
 ---
@@ -24,6 +25,11 @@ spec:
   entryPoints:
     - websecure
   routes:
+    - match: Host(`wh-events.fzymgc.house`) && PathPrefix(`/push-event-github`)
+      kind: Rule
+      services:
+        - name: github-eventsource-svc
+          port: 12000
     - match: Host(`argo-events.fzymgc.house`) && PathPrefix(`/push-event-github`)
       kind: Rule
       services:

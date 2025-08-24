@@ -58,6 +58,25 @@ spec:
               - name: ssl
                 mountPath: /ssl
                 readOnly: true
+          artifactRepository:
+            archiveLogs: false
+            s3: 
+              # Note the `key` attribute is not the actual secret, it's the PATH to
+              # the contents in the associated secret, as defined by the `name` attribute.
+              accessKeySecret:
+                name: artifact-storage-creds
+                key: access_key
+              secretKeySecret:
+                name: artifact-storage-creds
+                key: secret_key
+              insecure: false
+              bucket: argo-workflows
+              endpoint: https://gateway.storjshare.io
+              keyFormat: 'fzymgc-house/{{workflow.name}}'
+              useSDKCreds: false
+              encryptionOptions:
+                enableEncryption: true
+
   destination:
     server: https://kubernetes.default.svc
     namespace: argo-workflows

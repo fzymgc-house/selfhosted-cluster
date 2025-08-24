@@ -1,0 +1,28 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: artifact-storage-creds
+  namespace: argo-workflows
+spec:
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: artifact-storage-creds
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      type: Opaque
+      data:
+        access_key: "{{ .access_key | b64enc }}"
+        secret_key: "{{ .secret_key | b64enc }}"
+  
+  data:
+    - secretKey: access_key
+      remoteRef:
+        key: fzymgc-house/cluster/argo-workflow
+        property: artifact_storage_access_key
+    - secretKey: secret_key
+      remoteRef:
+        key: fzymgc-house/cluster/argo-workflow
+        property: artifact_storage_secret_key

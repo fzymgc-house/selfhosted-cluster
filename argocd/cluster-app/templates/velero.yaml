@@ -6,9 +6,9 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
-  project: default
+  project: core-services
   sources:
-    - chart: core-services
+    - chart: velero
       repoURL: https://vmware-tanzu.github.io/helm-charts
       targetRevision: 10.1.0
       helm:

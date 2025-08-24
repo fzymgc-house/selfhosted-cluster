@@ -7,7 +7,7 @@ spec:
   serviceAccountName: argo-workflow-sa
   volumeClaimTemplates:
     - metadata:
-        name: git-pvc
+        name: working-dir-pvc
       spec:
         accessModes: ["ReadWriteOnce"]
         resources:
@@ -58,27 +58,26 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
           - |
-            echo "Cleaning up /mnt/repo directory..."
-            rm -rf /mnt/repo/* /mnt/repo/.[!.]* /mnt/repo/..?*
+            echo "Cleaning up /mnt/working-dir directory..."
+            rm -rf /mnt/working-dir/* /mnt/working-dir/.[!.]* /mnt/working-dir/..?*
             echo "Directory cleaned. Cloning repository..."
-            GIT_TOKEN=$(cat /mnt/github/token)
-            git clone -b {{workflow.parameters.branch}} https://$GIT_TOKEN@github.com/fzymgc-house/selfhosted-cluster.git /mnt/repo
+            git clone -b {{workflow.parameters.branch}} https://$GIT_TOKEN@github.com/fzymgc-house/selfhosted-cluster.git /mnt/working-dir/repo
             if [ $? -eq 0 ]; then
-              echo "Clone completed successfully. Contents of /mnt/repo:"
-              ls -la /mnt/repo
+              echo "Clone completed successfully. Contents of /mnt/working-dir/repo:"
+              ls -la /mnt/working-dir/repo
             else
               echo "Failed to clone repository"
               exit 1
             fi
+        env:
+          - name: GIT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: tf-workflow-secrets
+                key: git_token
         volumeMounts:
-          - name: git-pvc
-            mountPath: /mnt/repo
-          - name: github-secret
-            mountPath: /mnt/github
-      volumes:
-        - name: github-secret
-          secret:
-            secretName: github-secret
+          - name: working-dir-pvc
+            mountPath: /mnt/working-dir
 
     - name: check-file-structure
       container:
@@ -86,11 +85,35 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
           - |
-            echo "Checking file structure in /mnt/repo:"
-            ls -al /mnt/repo
+            echo "Checking file structure in /mnt/working-dir/repo:"
+            ls -al /mnt/working-dir/repo
         volumeMounts:
-          - name: git-pvc
-            mountPath: /mnt/repo
+          - name: working-dir-pvc
+            mountPath: /mnt/working-dir
+
+    - namee: terraform login
+      container:
+        image: hashicorp/terraform:latest
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "Creating .terraformrc file..."
+            rm -f /mnt/working-dir/.terraformrc
+            echo "credentials \"app.terraform.io\" { token = \"${TERRAFORM_TOKEN}\" }" > /mnt/working-dir/.terraformrc
+            echo "plugin_cache_dir = \"/mnt/working-dir/.terraform.d/plugin-cache\"" >> /mnt/working-dir/.terraformrc
+            mkdir -p /mnt/working-dir/.terraform.d/plugin-cache
+            chmod 0600 /mnt/working-dir/.terraformrc
+        env:
+          - name: TF_CLI_CONFIG_FILE
+            value: /mnt/working-dir/.terraformrc
+          - name: TERRAFORM_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: tf-workflow-secrets
+                key: terraform_token
+        volumeMounts:
+          - name: working-dir-pvc
+            mountPath: /mnt/working-dir
 
     - name: terraform-init
       container:
@@ -98,11 +121,14 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
           - |
-            cd /mnt/repo/{{workflow.parameters.tf_path}}
+            cd /mnt/working-dir/repo/{{workflow.parameters.tf_path}}
             terraform init
+        env:
+          - name: TF_CLI_CONFIG_FILE
+            value: /mnt/working-dir/.terraformrc
         volumeMounts:
-          - name: git-pvc
-            mountPath: /mnt/repo
+          - name: working-dir-pvc
+            mountPath: /mnt/working-dir
 
     - name: terraform-workspace-select
       inputs:
@@ -113,11 +139,14 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
           - |
-            cd /mnt/repo/{{workflow.parameters.tf_path}}
+            cd /mnt/working-dir/repo/{{workflow.parameters.tf_path}}
             terraform workspace select {{inputs.parameters.selected-workspace}} || terraform workspace new {{inputs.parameters.selected-workspace}}
+        env:
+          - name: TF_CLI_CONFIG_FILE
+            value: /mnt/working-dir/.terraformrc
         volumeMounts:
-          - name: git-pvc
-            mountPath: /mnt/repo
+          - name: working-dir-pvc
+            mountPath: /mnt/working-dir
 
     - name: terraform-plan
       inputs:
@@ -128,11 +157,14 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
           - |
-            cd /mnt/repo/{{workflow.parameters.tf_path}}
+            cd /mnt/working-dir/repo/{{workflow.parameters.tf_path}}
             terraform plan -out=tfplan-{{inputs.parameters.selected-workspace}}
+        env:
+          - name: TF_CLI_CONFIG_FILE
+            value: /mnt/working-dir/.terraformrc
         volumeMounts:
-          - name: git-pvc
-            mountPath: /mnt/repo
+          - name: working-dir-pvc
+            mountPath: /mnt/working-dir
 
     - name: approval
       suspend: {}
@@ -160,8 +192,11 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
           - |
-            cd /mnt/repo/{{workflow.parameters.tf_path}}
+            cd /mnt/working-dir/repo/{{workflow.parameters.tf_path}}
             terraform apply -input=false tfplan-{{inputs.parameters.selected-workspace}}
+        env:
+          - name: TF_CLI_CONFIG_FILE
+            value: /mnt/working-dir/.terraformrc
         volumeMounts:
-          - name: git-pvc
-            mountPath: /mnt/repo
+          - name: working-dir-pvc
+            mountPath: /mnt/working-dir

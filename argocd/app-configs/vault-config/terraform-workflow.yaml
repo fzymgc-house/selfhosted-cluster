@@ -3,14 +3,15 @@ kind: Workflow
 metadata:
   name: vault-config-terraform-deployment
   annotations:
-    argocd.argoproj.io/sync-options: Replace=true
+    argocd.argoproj.io/sync-options: Replace=true ServerSideApply=false
 spec:
   entrypoint: terraform-deployment
   serviceAccountName: argo-workflow-sa
   volumeClaimTemplates:
     - metadata:
-        name: working-dir-pvc
+        name: working-dir-vol
       spec:
+        storageClassName: longhorn
         accessModes: ["ReadWriteOnce"]
         resources:
           requests:
@@ -80,7 +81,7 @@ spec:
                 name: tf-workflow-secrets
                 key: git_token
         volumeMounts:
-          - name: working-dir-pvc
+          - name: working-dir-vol
             mountPath: /mnt/working-dir
 
     - name: check-file-structure
@@ -92,7 +93,7 @@ spec:
             echo "Checking file structure in /mnt/working-dir/repo:"
             ls -al /mnt/working-dir/repo
         volumeMounts:
-          - name: working-dir-pvc
+          - name: working-dir-vol
             mountPath: /mnt/working-dir
 
     - name: configure-terraform-cli
@@ -116,7 +117,7 @@ spec:
                 name: tf-workflow-secrets
                 key: terraform_token
         volumeMounts:
-          - name: working-dir-pvc
+          - name: working-dir-vol
             mountPath: /mnt/working-dir
 
     - name: terraform-init
@@ -131,7 +132,7 @@ spec:
           - name: TF_CLI_CONFIG_FILE
             value: /mnt/working-dir/.terraformrc
         volumeMounts:
-          - name: working-dir-pvc
+          - name: working-dir-vol
             mountPath: /mnt/working-dir
 
     - name: terraform-workspace-select
@@ -149,7 +150,7 @@ spec:
           - name: TF_CLI_CONFIG_FILE
             value: /mnt/working-dir/.terraformrc
         volumeMounts:
-          - name: working-dir-pvc
+          - name: working-dir-vol
             mountPath: /mnt/working-dir
 
     - name: terraform-plan
@@ -167,7 +168,7 @@ spec:
           - name: TF_CLI_CONFIG_FILE
             value: /mnt/working-dir/.terraformrc
         volumeMounts:
-          - name: working-dir-pvc
+          - name: working-dir-vol
             mountPath: /mnt/working-dir
 
     - name: approval
@@ -202,5 +203,5 @@ spec:
           - name: TF_CLI_CONFIG_FILE
             value: /mnt/working-dir/.terraformrc
         volumeMounts:
-          - name: working-dir-pvc
+          - name: working-dir-vol
             mountPath: /mnt/working-dir

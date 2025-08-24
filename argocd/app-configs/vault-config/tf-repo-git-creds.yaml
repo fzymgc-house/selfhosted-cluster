@@ -1,0 +1,23 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: tf-repo-git-creds
+  namespace: argo-workflows
+spec:
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: tf-repo-git-creds  
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      type: Opaque
+      data:
+        git_token: "{{ .git_token }}"
+  
+  data:
+    - secretKey: git_token
+      remoteRef:
+        key: fzymgc-house/cluster/argo-workflow
+        property: github_pat_fzymgc_house

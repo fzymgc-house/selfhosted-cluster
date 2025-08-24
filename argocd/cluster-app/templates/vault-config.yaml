@@ -19,8 +19,7 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - Replace=true
-      - ServerSideApply=false
+      - ServerSideApply=true
       - RespectIgnoreDifferences=true
   ignoreDifferences:
   - kind: ExternalSecret

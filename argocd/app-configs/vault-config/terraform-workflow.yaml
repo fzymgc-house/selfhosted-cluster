@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  generateName: vault-config-terraform-deployment-
+  name: vault-config-terraform-deployment
 spec:
   entrypoint: terraform-deployment
   serviceAccountName: argo-workflow-sa

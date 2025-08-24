@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-10"
 spec:
-  project: default
+  project: core-services
   sources:
     - chart: prometheus-operator-crds
       repoURL: https://prometheus-community.github.io/helm-charts

@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-5"
 spec:
-  project: default
+  project: core-services
   sources:
     - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
       targetRevision: HEAD

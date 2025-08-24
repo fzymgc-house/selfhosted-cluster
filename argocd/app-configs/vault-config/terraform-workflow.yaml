@@ -1,7 +1,9 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  generateName: terraform-deployment-
+  generateName: vault-config-terraform-deployment-
+  annotations:
+    argocd.argoproj.io/sync-options: Replace=true
 spec:
   entrypoint: terraform-deployment
   serviceAccountName: argo-workflow-sa

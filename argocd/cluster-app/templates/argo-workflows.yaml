@@ -72,7 +72,6 @@ spec:
               insecure: false
               bucket: argo-workflows
               endpoint: https://gateway.storjshare.io
-              keyFormat: 'fzymgc-house/{{workflow.name}}'
               useSDKCreds: false
               encryptionOptions:
                 enableEncryption: true

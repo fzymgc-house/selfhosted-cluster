@@ -95,7 +95,6 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - ServerSideApply=true
       - CreateNamespace=true
       - RespectIgnoreDifferences=true
   ignoreDifferences:
@@ -104,4 +103,10 @@ spec:
       jqPathExpressions:
         - ".spec.volumeClaimTemplates[].apiVersion"
         - ".spec.volumeClaimTemplates[].kind"
-
+    - kind: Workflow
+      group: argoproj.io
+      jqPathExpressions:
+        - ".spec.templates[].inputs"
+        - ".spec.templates[].outputs"
+        - ".volumeClaimTemplates[].status"
+        - ".metadata.creationTimestamp"

@@ -97,6 +97,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - RespectIgnoreDifferences=true
+      - ServerSideApply=false
   ignoreDifferences:
     - group: "apps"
       kind: "StatefulSet"
@@ -111,6 +112,5 @@ spec:
         - ".volumeClaimTemplates[].status"
         - ".metadata.creationTimestamp"
     - kind: MutatingWebhookConfiguration
-      group: admissionregistration.k8s.io
       jqPathExpressions:
         - ".webhooks[].clientConfig.caBundle"

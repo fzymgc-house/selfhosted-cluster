@@ -1,2 +1,3 @@
 provider "vault" {
+    // empty
 }

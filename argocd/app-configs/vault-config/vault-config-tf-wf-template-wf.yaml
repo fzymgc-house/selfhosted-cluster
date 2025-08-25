@@ -23,8 +23,6 @@ spec:
     parameters:
       - name: branch
         value: "main"
-      - name: workspace
-        value: "main-cluster-vault"
       - name: tf_path
         value: "tf/vault"
   templates:
@@ -40,25 +38,13 @@ spec:
             template: terraform-init
         - - name: terraform-workspace-select
             template: terraform-workspace-select
-            arguments:
-              parameters:
-                - name: selected-workspace
-                  value: "{{workflow.parameters.workspace}}"
         - - name: terraform-plan
             template: terraform-plan
-            arguments:
-              parameters:
-                - name: selected-workspace
-                  value: "{{workflow.parameters.workspace}}"
         - - name: approval
             template: approval
         - - name: terraform-apply
             template: terraform-apply
             when: "{{steps.approval.outputs.parameters.approve}} == 'YES'"
-            arguments:
-              parameters:
-                - name: selected-workspace
-                  value: "{{workflow.parameters.workspace}}"
 
     - name: git-clone
       container:
@@ -138,35 +124,14 @@ spec:
           - name: working-dir-vol
             mountPath: /mnt/working-dir
 
-    - name: terraform-workspace-select
-      inputs:
-        parameters:
-          - name: selected-workspace
-      container:
-        image: hashicorp/terraform:1.13
-        command: ["/bin/sh", "-c"]
-        args:
-          - |
-            cd /mnt/working-dir/repo/{{workflow.parameters.tf_path}}
-            terraform workspace select {{inputs.parameters.selected-workspace}} || terraform workspace new {{inputs.parameters.selected-workspace}}
-        env:
-          - name: TF_CLI_CONFIG_FILE
-            value: /mnt/working-dir/.terraformrc
-        volumeMounts:
-          - name: working-dir-vol
-            mountPath: /mnt/working-dir
-
     - name: terraform-plan
-      inputs:
-        parameters:
-          - name: selected-workspace
       container:
         image: hashicorp/terraform:1.13
         command: ["/bin/sh", "-c"]
         args:
           - |
             cd /mnt/working-dir/repo/{{workflow.parameters.tf_path}}
-            terraform plan -out=tfplan-{{inputs.parameters.selected-workspace}}
+            terraform plan -out=tfplan.out
         env:
           - name: TF_CLI_CONFIG_FILE
             value: /mnt/working-dir/.terraformrc
@@ -203,16 +168,13 @@ spec:
               supplied: {}
 
     - name: terraform-apply
-      inputs:
-        parameters:
-          - name: selected-workspace
       container:
         image: hashicorp/terraform:1.13
         command: ["/bin/sh", "-c"]
         args:
           - |
             cd /mnt/working-dir/repo/{{workflow.parameters.tf_path}}
-            terraform apply -input=false tfplan-{{inputs.parameters.selected-workspace}}
+            terraform apply -input=false tfplan.out
         env:
           - name: TF_CLI_CONFIG_FILE
             value: /mnt/working-dir/.terraformrc

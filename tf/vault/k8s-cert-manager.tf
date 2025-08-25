@@ -8,6 +8,5 @@ resource "vault_kubernetes_auth_backend_role" "cert-manager" {
   role_name = "cert-manager"
   bound_service_account_namespaces = ["cert-manager"]
   bound_service_account_names = ["cert-manager","vault-issuer"]
-  audience = "vault://vault-issuer"
   token_policies = ["default", "cert-manager"]
 }

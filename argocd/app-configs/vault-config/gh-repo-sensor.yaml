@@ -15,20 +15,6 @@ spec:
       eventSourceName: github
       eventName: fzymgc-house
       filters:
-        # data:
-          # - path: headers.X-Github-Event
-          #   type: string
-          #   value:
-          #     - push
-          #     - create
-          # - path: body.ref
-          #   type: string
-          #   value:
-          #     - refs/heads/main
-          # - path: body.repository.name
-          #   type: string
-          #   value:
-          #     - selfhosted-cluster
         script: |-
           -- Configuration
           local TARGET_PATH_PREFIX = "tf/vault/"
@@ -36,18 +22,13 @@ spec:
           local TARGET_REF = "refs/heads/main"
           local TARGET_REPOSITORY = "selfhosted-cluster"
 
-          local function prettyPrint(t, indent)
-              indent = indent or 0
-              local spacing = string.rep("  ", indent)
-              
-              for key, value in pairs(t) do
-                  if type(value) == "table" then
-                      print(spacing .. key .. ":")
-                      prettyPrint(value, indent + 1)
-                  else
-                      print(spacing .. key .. ": " .. tostring(value))
-                  end
-              end
+          -- Debug logging (toggle to true to enable)
+          local DEBUG = false
+          local dbg
+          if DEBUG then
+            dbg = function(...) print(...) end
+          else
+            dbg = function(...) end
           end
 
           local function starts_with(str, prefix)
@@ -59,21 +40,25 @@ spec:
 
           local function has_matching_files(commit)
             if type(commit) ~= "table" then
-              print("Commit is not a table; type=", type(commit))
+              dbg("Commit is not a table; type=", type(commit))
               return false
             end
 
-            local file_sets = { commit.added, commit.removed, commit.modified }
-            for _, files in ipairs(file_sets) do
-              if type(files) == "table" then
-                for _, file in ipairs(files) do
-                  if starts_with(file, TARGET_PATH_PREFIX) then
-                    print("Matched changed file with prefix:", file)
-                    return true
-                  end
+            local function any_file_matches(files)
+              if type(files) ~= "table" then return false end
+              for i = 1, #files do
+                local file = files[i]
+                if starts_with(file, TARGET_PATH_PREFIX) then
+                  dbg("Matched changed file with prefix:", file)
+                  return true
                 end
               end
+              return false
             end
+
+            if any_file_matches(commit.added) then return true end
+            if any_file_matches(commit.removed) then return true end
+            if any_file_matches(commit.modified) then return true end
 
             return false
           end
@@ -81,57 +66,63 @@ spec:
           local function get_event_type(evt)
             local headers = evt and (evt.headers or evt.header) or nil
             if type(headers) == "table" then
-              print("Headers present; attempting to resolve X-GitHub-Event")
+              dbg("Headers present; attempting to resolve X-GitHub-Event")
             else
-              print("Headers missing or not a table; type=", type(headers))
+              dbg("Headers missing or not a table; type=", type(headers))
             end
             if type(headers) ~= "table" then
               return nil
             end
-
-            -- Helper to get first string value from map[string][]string
-            local function first_value(h, key)
-              if type(h) ~= "table" or type(key) ~= "string" then return nil end
-              local desired = string.lower(key)
-              for k, v in pairs(h) do
-                if type(k) == "string" and string.lower(k) == desired then
-                  if type(v) == "table" then
-                    for i = 1, #v do
-                      if type(v[i]) == "string" then return v[i] end
-                    end
-                  elseif type(v) == "string" then
-                    return v
-                  end
+            -- Helper: normalize header value (string or first element of string array)
+            local function first_string(v)
+              if type(v) == "string" then return v end
+              if type(v) == "table" then
+                for i = 1, #v do
+                  if type(v[i]) == "string" then return v[i] end
                 end
               end
               return nil
             end
 
-            -- Try common casings; case-insensitive matching handled in helper
-            local ev = first_value(headers, "X-GitHub-Event")
-                or first_value(headers, "x-github-event")
-                or first_value(headers, "X-Github-Event")
+            -- Fast path for common header casings
+            local ev = first_string(headers["X-GitHub-Event"]) or
+                      first_string(headers["x-github-event"]) or
+                      first_string(headers["X-Github-Event"]) or
+                      first_string(headers["X-GITHUB-EVENT"]) or
+                      first_string(headers["x-GitHub-Event"]) or
+                      nil
+
+            -- Fallback: case-insensitive scan
             if ev == nil then
-              print("GitHub event header not found in headers")
+              for k, v in pairs(headers) do
+                if type(k) == "string" and string.lower(k) == "x-github-event" then
+                  ev = first_string(v)
+                  break
+                end
+              end
+            end
+
+            if ev == nil then
+              dbg("GitHub event header not found in headers")
             else
-              print("GitHub event header:", ev)
+              dbg("GitHub event header:", ev)
             end
             return ev
           end
 
           local function filter(evt)
-            print("Lua filter started")
+            dbg("Lua filter started")
             -- Extract and validate event type first
             local event_type = get_event_type(evt)
             if not (event_type and ALLOWED_EVENT_TYPES[event_type]) then
-              print("Event type not allowed or missing; event_type=", tostring(event_type))
+              dbg("Event type not allowed or missing; event_type=", tostring(event_type))
               return false
             end
 
             -- Body is expected to be a decoded table by Argo Events
             local payload = evt and evt.body or nil
             if type(payload) ~= "table" then
-              print("Payload is not a table; type=", type(payload))
+              dbg("Payload is not a table; type=", type(payload))
               return false
             end
 
@@ -139,20 +130,20 @@ spec:
             local repo = payload.repository
             if type(repo) ~= "table" or repo.name ~= TARGET_REPOSITORY then
               local actual = (type(repo) == "table" and repo.name) or tostring(repo)
-              print("Repository mismatch; actual=", tostring(actual), "expected=", TARGET_REPOSITORY)
+              dbg("Repository mismatch; actual=", tostring(actual), "expected=", TARGET_REPOSITORY)
               return false
             end
 
             if payload.ref ~= TARGET_REF then
-              print("Ref mismatch; actual=", tostring(payload.ref), "expected=", TARGET_REF)
+              dbg("Ref mismatch; actual=", tostring(payload.ref), "expected=", TARGET_REF)
               return false
             end
 
-            print("Event accepted prelim checks; type=", event_type, "repo=", repo.name, "ref=", payload.ref)
+            dbg("Event accepted prelim checks; type=", event_type, "repo=", repo.name, "ref=", payload.ref)
 
             -- Create events are accepted once repo/ref match
             if event_type == "create" then
-              print("Create event accepted")
+              dbg("Create event accepted")
               return true
             end
 
@@ -160,28 +151,27 @@ spec:
             if event_type == "push" then
               local commits = payload.commits
               if type(commits) ~= "table" then
-                print("Commits missing or not a table; type=", type(commits))
+                dbg("Commits missing or not a table; type=", type(commits))
                 return false
               end
 
-              print("Scanning commits; count=", #commits, "prefix=", TARGET_PATH_PREFIX)
+              dbg("Scanning commits; count=", #commits, "prefix=", TARGET_PATH_PREFIX)
               for _, commit in ipairs(commits) do
                 if has_matching_files(commit) then
-                  print("Push event accepted due to matching file path prefix")
+                  dbg("Push event accepted due to matching file path prefix")
                   return true
                 end
               end
 
-              print("No matching files found in push commits; rejecting")
+              dbg("No matching files found in push commits; rejecting")
               return false
             end
 
-            print("Unhandled event type; rejecting: ", tostring(event_type))
+            dbg("Unhandled event type; rejecting: ", tostring(event_type))
             return false
           end
 
           return filter(event)
-
   triggers:
     - template:
         name: log-trigger

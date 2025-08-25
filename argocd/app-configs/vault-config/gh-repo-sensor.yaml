@@ -79,18 +79,38 @@ spec:
           end
 
           local function get_event_type(evt)
-            local headers = evt and evt.headers or nil
-            prettyPrint(headers)
-            if type(headers) ~= "table" then
+            local headers = evt and (evt.headers or evt.header) or nil
+            if type(headers) == "table" then
+              print("Headers present; attempting to resolve X-GitHub-Event")
+            else
               print("Headers missing or not a table; type=", type(headers))
+            end
+            if type(headers) ~= "table" then
               return nil
             end
 
-            -- Try common header casings sent by GitHub
-            local ev = headers["X-GitHub-Event"]
-                or headers["x-github-event"]
-                or headers["X-Github-Event"]
-                or headers["x-github-event"]
+            -- Helper to get first string value from map[string][]string
+            local function first_value(h, key)
+              if type(h) ~= "table" or type(key) ~= "string" then return nil end
+              local desired = string.lower(key)
+              for k, v in pairs(h) do
+                if type(k) == "string" and string.lower(k) == desired then
+                  if type(v) == "table" then
+                    for i = 1, #v do
+                      if type(v[i]) == "string" then return v[i] end
+                    end
+                  elseif type(v) == "string" then
+                    return v
+                  end
+                end
+              end
+              return nil
+            end
+
+            -- Try common casings; case-insensitive matching handled in helper
+            local ev = first_value(headers, "X-GitHub-Event")
+                or first_value(headers, "x-github-event")
+                or first_value(headers, "X-Github-Event")
             if ev == nil then
               print("GitHub event header not found in headers")
             else
@@ -161,7 +181,6 @@ spec:
           end
 
           return filter(event)
-
 
   triggers:
     - template:

@@ -5,7 +5,7 @@ metadata:
   name: fzymgc-root-ca
   namespace: default
   annotations:
-    replicator.v1.mittwald.de/replicate-to: "vault,external-secrets,cert-manager"
+    replicator.v1.mittwald.de/replicate-to: "*"
 data:
   ca.crt: |
     -----BEGIN CERTIFICATE-----
@@ -28,7 +28,7 @@ metadata:
   name: fzymgc-ica1-ca
   namespace: default
   annotations:
-    replicator.v1.mittwald.de/replicate-to: "vault,external-secrets,cert-manager"
+    replicator.v1.mittwald.de/replicate-to: "*"
 data:
   ca.crt: |
     -----BEGIN CERTIFICATE-----
@@ -80,7 +80,7 @@ metadata:
   name: fzymgc-root-ca
   namespace: default
   annotations:
-    replicator.v1.mittwald.de/replicate-to: "vault,external-secrets,cert-manager"
+    replicator.v1.mittwald.de/replicate-to: "*"
 stringData:
   ca.crt: |
     -----BEGIN CERTIFICATE-----
@@ -103,7 +103,7 @@ metadata:
   name: fzymgc-ica1-ca
   namespace: default
   annotations:
-    replicator.v1.mittwald.de/replicate-to: "vault,external-secrets,cert-manager,authentik"
+    replicator.v1.mittwald.de/replicate-to: "*"
 stringData:
   ca.crt: |
     -----BEGIN CERTIFICATE-----

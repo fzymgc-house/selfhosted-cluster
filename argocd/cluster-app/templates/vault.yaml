@@ -110,3 +110,7 @@ spec:
         - ".spec.templates[].outputs"
         - ".volumeClaimTemplates[].status"
         - ".metadata.creationTimestamp"
+    - kind: MutatingWebhookConfiguration
+      group: admissionregistration.k8s.io
+      jqPathExpressions:
+        - ".webhooks[].clientConfig.caBundle"

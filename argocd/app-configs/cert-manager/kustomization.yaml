@@ -5,3 +5,4 @@ resources:
   - ./rbac.yaml
   - ./cloudflare-api-token.yaml
   - ./cloudflare-acme-issuer.yaml
+  - ./vault-certmanager-issuer.yaml

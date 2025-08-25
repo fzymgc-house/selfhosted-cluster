@@ -1,3 +1,3 @@
 provider "vault" {
-    // provider config
+    // empty
 }

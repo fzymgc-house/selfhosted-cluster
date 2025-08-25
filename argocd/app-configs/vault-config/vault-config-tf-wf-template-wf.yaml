@@ -36,8 +36,6 @@ spec:
             template: configure-terraform-cli
         - - name: terraform-init
             template: terraform-init
-        - - name: terraform-workspace-select
-            template: terraform-workspace-select
         - - name: terraform-plan
             template: terraform-plan
         - - name: approval

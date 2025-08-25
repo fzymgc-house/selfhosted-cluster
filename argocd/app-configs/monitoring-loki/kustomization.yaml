@@ -4,8 +4,7 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
-  - ./namespace.yaml
-  - ./loki/external-secret-s3.yaml
-  - ./loki/networkpolicies.yaml
-
+  - ./external-secret-s3.yaml
+  - ./networkpolicies.yaml
+  
 

@@ -5,6 +5,6 @@ namespace: monitoring
 
 resources:
   - ./namespace.yaml
-  - ./kube-prometheus-stack/ingressroutes.yaml
+  - ./ingressroutes.yaml
 
 

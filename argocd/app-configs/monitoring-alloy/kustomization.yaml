@@ -4,7 +4,6 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
-  - ./namespace.yaml
-  - ./alloy/networkpolicies.yaml
+  - ./networkpolicies.yaml
 
 

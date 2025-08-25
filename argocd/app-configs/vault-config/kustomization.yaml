@@ -6,3 +6,4 @@ resources:
   - tf-workflow-secrets.yaml
   - vault-config-tf-wf-template-wf.yaml
   - gh-repo-sensor.yaml
+  - vault-certmanager-issuer.yaml

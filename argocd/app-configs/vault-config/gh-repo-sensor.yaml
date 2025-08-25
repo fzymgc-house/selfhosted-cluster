@@ -36,6 +36,20 @@ spec:
           local TARGET_REF = "refs/heads/main"
           local TARGET_REPOSITORY = "selfhosted-cluster"
 
+          local function prettyPrint(t, indent)
+              indent = indent or 0
+              local spacing = string.rep("  ", indent)
+              
+              for key, value in pairs(t) do
+                  if type(value) == "table" then
+                      print(spacing .. key .. ":")
+                      prettyPrint(value, indent + 1)
+                  else
+                      print(spacing .. key .. ": " .. tostring(value))
+                  end
+              end
+          end
+
           local function starts_with(str, prefix)
             if type(str) ~= "string" or type(prefix) ~= "string" then
               return false
@@ -66,6 +80,7 @@ spec:
 
           local function get_event_type(evt)
             local headers = evt and evt.headers or nil
+            prettyPrint(headers)
             if type(headers) ~= "table" then
               print("Headers missing or not a table; type=", type(headers))
               return nil
@@ -146,6 +161,7 @@ spec:
           end
 
           return filter(event)
+
 
   triggers:
     - template:

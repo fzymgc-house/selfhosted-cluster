@@ -30,8 +30,11 @@ spec:
           #   value:
           #     - selfhosted-cluster
         script: |-
-          // Define your path prefix here
+          // Configuration
           const TARGET_PATH_PREFIX = "tf/vault/";
+          const ALLOWED_EVENT_TYPES = ["push", "create"];
+          const TARGET_REF = "refs/heads/main";
+          const TARGET_REPOSITORY = "selfhosted-cluster";
           
           // Function to check if any file in a commit matches the path prefix
           function hasMatchingFiles(commit) {
@@ -44,25 +47,74 @@ spec:
             return allFiles.some(file => file.startsWith(TARGET_PATH_PREFIX));
           }
           
+          // Function to get event type from headers
+          function getEventType(event) {
+            // GitHub sends event type in X-GitHub-Event header
+            const headers = event.header || {};
+            const githubEvent = headers['X-GitHub-Event'] || headers['x-github-event'];
+            return githubEvent;
+          }
+          
           // Main filter logic
           function filter(event) {
             try {
-              // Parse the event data
-              const payload = JSON.parse(event.data);
+              // Get event type from headers
+              const eventType = getEventType(event);
+              console.log("GitHub event type from headers:", eventType);
               
-              // Check if this is a push event with commits
-              if (!payload.commits || !Array.isArray(payload.commits)) {
+              // Check event type first
+              if (!eventType || !ALLOWED_EVENT_TYPES.includes(eventType)) {
+                console.log(`Event type ${eventType} not in allowed types: ${ALLOWED_EVENT_TYPES.join(', ')}`);
                 return false;
               }
               
-              // Return true if any commit has files matching the path prefix
-              return payload.commits.some(commit => hasMatchingFiles(commit));
+              // Parse the event body
+              const payload = JSON.parse(event.body);
+              
+              console.log("Processing event for repository:", payload.repository?.name);
+              console.log("Event ref:", payload.ref);
+              
+              // Check repository name
+              if (!payload.repository || payload.repository.name !== TARGET_REPOSITORY) {
+                console.log(`Repository ${payload.repository?.name} does not match target ${TARGET_REPOSITORY}`);
+                return false;
+              }
+              
+              // Check ref (branch)
+              if (payload.ref !== TARGET_REF) {
+                console.log(`Ref ${payload.ref} does not match target ${TARGET_REF}`);
+                return false;
+              }
+              
+              console.log(`Event type: ${eventType}, Repository: ${payload.repository.name}, Ref: ${payload.ref}`);
+              
+              // For create events (new branch/tag), we don't need to check commits
+              if (eventType === "create") {
+                console.log("Create event detected - accepting");
+                return true;
+              }
+              
+              // For push events, check commits for path prefix
+              if (eventType === "push") {
+                if (!payload.commits || !Array.isArray(payload.commits)) {
+                  console.log("No commits found in push event");
+                  return false;
+                }
+                
+                const hasMatching = payload.commits.some(commit => hasMatchingFiles(commit));
+                console.log(`Push event - commits with matching path prefix: ${hasMatching}`);
+                return hasMatching;
+              }
+              
+              return false;
               
             } catch (error) {
               console.error("Error parsing event:", error);
               return false;
             }
           }
+
+          console.log("Event:", event);
           
           // Execute the filter
           filter(event);

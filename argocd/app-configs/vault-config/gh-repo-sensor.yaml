@@ -25,6 +25,43 @@ spec:
             type: string
             value:
               - selfhosted-cluster
+        script: |
+          // Define your path prefix here
+          const TARGET_PATH_PREFIX = "tf/vault/";
+          
+          // Function to check if any file in a commit matches the path prefix
+          function hasMatchingFiles(commit) {
+            const allFiles = [
+              ...(commit.added || []),
+              ...(commit.removed || []),
+              ...(commit.modified || [])
+            ];
+            
+            return allFiles.some(file => file.startsWith(TARGET_PATH_PREFIX));
+          }
+          
+          // Main filter logic
+          function filter(event) {
+            try {
+              // Parse the event data
+              const payload = JSON.parse(event.data);
+              
+              // Check if this is a push event with commits
+              if (!payload.commits || !Array.isArray(payload.commits)) {
+                return false;
+              }
+              
+              // Return true if any commit has files matching the path prefix
+              return payload.commits.some(commit => hasMatchingFiles(commit));
+              
+            } catch (error) {
+              console.error("Error parsing event:", error);
+              return false;
+            }
+          }
+          
+          // Execute the filter
+          filter(event);
   triggers:
     - template:
         name: vault-config-trigger

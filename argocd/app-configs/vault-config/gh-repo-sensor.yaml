@@ -6,26 +6,30 @@ metadata:
 spec:
   template:
     serviceAccountName: operate-workflow-sa
+    container:
+      env:
+        - name: LOG_LEVEL
+          value: debug    
   dependencies:
     - name: github-event-source
       eventSourceName: github
       eventName: fzymgc-house
       filters:
-        data:
-          - path: headers.X-Github-Event
-            type: string
-            value:
-              - push
-              - create
-          - path: body.ref
-            type: string
-            value:
-              - refs/heads/main
-          - path: body.repository.name
-            type: string
-            value:
-              - selfhosted-cluster
-        script: |
+        # data:
+          # - path: headers.X-Github-Event
+          #   type: string
+          #   value:
+          #     - push
+          #     - create
+          # - path: body.ref
+          #   type: string
+          #   value:
+          #     - refs/heads/main
+          # - path: body.repository.name
+          #   type: string
+          #   value:
+          #     - selfhosted-cluster
+        script: |-
           // Define your path prefix here
           const TARGET_PATH_PREFIX = "tf/vault/";
           
@@ -63,6 +67,10 @@ spec:
           // Execute the filter
           filter(event);
   triggers:
+    - template:
+        name: log-trigger
+        log:
+          intervalSeconds: 1
     - template:
         name: vault-config-trigger
         k8s:

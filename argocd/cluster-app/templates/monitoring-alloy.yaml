@@ -1,0 +1,79 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-alloy
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: observability
+  sources:
+    - chart: alloy
+      repoURL: https://grafana.github.io/helm-charts
+      targetRevision: 1.2.1
+      helm:
+        releaseName: alloy
+        valuesObject:
+          alloy:
+            configMap:
+              create: true
+              content: |
+                discovery.kubernetes "nodes" {}
+                discovery.kubernetes "pods" { selectors { role = "pod" } }
+
+                // Discover and tail container logs with Kubernetes metadata
+                loki.source.kubernetes "pods" {
+                  targets    = discovery.kubernetes.pods.targets
+                  forward_to = [loki.write.default.receiver]
+                  // Basic drop of very noisy logs
+                  relabel_rules = <<-EOT
+                    # Drop kube-probe and health endpoints
+                    - action: drop
+                      source_labels: ['__path__']
+                      regex: '.*/kube-probe/.*'
+                    # Example: drop very verbose namespaces
+                    - action: drop
+                      source_labels: ['namespace']
+                      regex: 'kube-system'
+                  EOT
+                }
+
+                loki.write "default" {
+                  endpoint { url = "http://loki-distributed-gateway.monitoring.svc.cluster.local/loki/api/v1/push" }
+                }
+          daemonset:
+            enabled: true
+            extraVolumeMounts:
+              - name: varlog
+                mountPath: /var/log
+            extraVolumes:
+              - name: varlog
+                hostPath:
+                  path: /var/log
+            tolerations:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+                effect: NoSchedule
+            resources:
+              requests:
+                cpu: 100m
+                memory: 200Mi
+              limits:
+                cpu: 500m
+                memory: 400Mi
+    - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
+      targetRevision: HEAD
+      path: argocd/app-configs/monitoring-alloy
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+
+

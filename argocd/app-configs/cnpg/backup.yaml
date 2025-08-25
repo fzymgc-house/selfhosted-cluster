@@ -37,6 +37,7 @@ metadata:
   name: barman-object-store-main
   namespace: postgres
 spec:
+  retentionPolicy: 30d
   configuration:
     destinationPath: "s3://fzymgc-cluster-storage/postgres/barman/main"
     endpointURL: "https://40753dbbbbd1540f02bd0707935ddb3f.r2.cloudflarestorage.com"

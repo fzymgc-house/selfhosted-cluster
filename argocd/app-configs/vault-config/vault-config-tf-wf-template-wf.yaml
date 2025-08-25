@@ -67,7 +67,7 @@ spec:
         args:
           - |
             echo "Cleaning up /mnt/working-dir directory..."
-            rm -rf /mnt/working-dir/* /mnt/working-dir/.[!.]* /mnt/working-dir/..?*
+            rm -rf /mnt/working-dir/repo
             echo "Directory cleaned. Cloning repository..."
             git clone -b {{workflow.parameters.branch}} https://$GIT_TOKEN@github.com/fzymgc-house/selfhosted-cluster.git /mnt/working-dir/repo
             if [ $? -eq 0 ]; then

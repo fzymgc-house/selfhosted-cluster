@@ -5,8 +5,10 @@ namespace: argo-workflows
 
 resources:
   - authentik-creds.yaml
+  - artifact-storage-creds.yaml
   - ingress.yaml
   - rbac.yaml
+  
 
 
 

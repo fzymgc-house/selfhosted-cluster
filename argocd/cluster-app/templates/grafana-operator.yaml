@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
-  project: default
+  project: observability
   sources:
     - chart: grafana-operator
       repoURL: ghcr.io/grafana/helm-charts

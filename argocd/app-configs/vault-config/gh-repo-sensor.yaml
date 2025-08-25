@@ -9,7 +9,7 @@ spec:
     container:
       env:
         - name: LOG_LEVEL
-          value: debug    
+          value: info    
   dependencies:
     - name: github-event-source
       eventSourceName: github
@@ -173,10 +173,6 @@ spec:
 
           return filter(event)
   triggers:
-    - template:
-        name: log-trigger
-        log:
-          intervalSeconds: 1
     - template:
         name: vault-config-trigger
         k8s:

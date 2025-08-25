@@ -10,7 +10,7 @@ spec:
   sources:
     - chart: cloudnative-pg
       repoURL: https://cloudnative-pg.github.io/charts
-      targetRevision: 0.26.0
+      targetRevision: "0.26.0"
       helm:
         releaseName: cnpg
     - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
@@ -24,7 +24,7 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - ServerSideApply=true
+      - ServerSideApply=false
       - CreateNamespace=true
       - RespectIgnoreDifferences=true
   ignoreDifferences:

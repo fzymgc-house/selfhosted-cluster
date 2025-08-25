@@ -65,7 +65,7 @@ spec:
           end
 
           local function get_event_type(evt)
-            local headers = evt and evt.header or nil
+            local headers = evt and evt.headers or nil
             if type(headers) ~= "table" then
               print("Headers missing or not a table; type=", type(headers))
               return nil

@@ -140,11 +140,6 @@
   tags:
     - k8s-cert-manager
 
-- name: Install Flux Operator
-  ansible.builtin.import_tasks: flux-operator.yml
-  tags:
-    - k8s-flux-operator
-
 - name: Install Argo CD
   ansible.builtin.import_tasks: argocd.yml
   tags:

@@ -25,25 +25,3 @@ resource "vault_identity_group_member_entity_ids" "admin" {
   member_entity_ids = [vault_identity_entity.sean.id]
 }
 
-import {
-  to = vault_identity_group.tofu-runner
-  id = "df234798-81e1-df81-468f-b251cc5a24dd"
-}
-
-resource "vault_identity_group" "tofu-runner" {
-  name = "tofu-runner"
-  type = "internal"
-  policies = [
-    vault_policy.policy-admin.name,
-    vault_policy.token-create.name,
-    vault_policy.kubernetes-config-admin.name,
-    vault_policy.ldap-config-admin.name,
-    vault_policy.identity-admin.name,
-    vault_policy.oidc-config-admin.name,
-  ]
-}
-
-resource "vault_identity_group_member_entity_ids" "tofu-runner" {
-  group_id = vault_identity_group.tofu-runner.id
-  member_entity_ids = [vault_identity_entity.tofu-runner.id]
-}

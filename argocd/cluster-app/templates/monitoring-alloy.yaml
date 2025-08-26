@@ -29,17 +29,17 @@ spec:
                   relabel_rules = <<-EOT
                     # Drop kube-probe and health endpoints
                     - action: drop
-                      source_labels: ['__path__']
+                      source_labels: ["__path__"]
                       regex: '.*/kube-probe/.*'
                     # Example: drop very verbose namespaces
                     - action: drop
-                      source_labels: ['namespace']
-                      regex: 'kube-system'
+                      source_labels: ["namespace"]
+                      regex: "kube-system"
                   EOT
                 }
 
                 loki.write "default" {
-                  endpoint { url = "http://loki-distributed-gateway.monitoring.svc.cluster.local/loki/api/v1/push" }
+                  endpoint { url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push" }
                 }
           daemonset:
             enabled: true

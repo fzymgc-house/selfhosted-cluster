@@ -90,7 +90,7 @@ spec:
                     name: loki-s3
                     key: S3_REGION
           querier:
-            replicas: 3
+            replicas: 1
             resources:
               requests:
                 cpu: 200m

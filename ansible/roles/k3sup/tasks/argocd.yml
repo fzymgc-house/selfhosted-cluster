@@ -120,6 +120,9 @@
       global:
         domain: argocd.fzymgc.house
       configs:
+        global: 
+          image:
+            tag: v3.1.1
         cm:
           url: https://argocd.fzymgc.house
           dex.config: |

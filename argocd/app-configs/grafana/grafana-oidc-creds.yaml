@@ -6,7 +6,7 @@ metadata:
   namespace: grafana
 spec:
   refreshPolicy: Periodic
-  refreshInterval: 1m
+  refreshInterval: 5m
   secretStoreRef:
     name: vault
     kind: ClusterSecretStore

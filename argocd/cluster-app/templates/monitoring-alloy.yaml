@@ -20,6 +20,9 @@ spec:
               - apiGroups: [""]
                 resources: ["events"]
                 verbs: ["get", "list", "watch"]
+          controller:
+            extraAnnotations:
+              "reloader.stakater.com/auto": "true"
           alloy:
             configMap:
               create: true

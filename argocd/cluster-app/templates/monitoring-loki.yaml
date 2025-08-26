@@ -90,7 +90,8 @@ spec:
                     name: loki-s3
                     key: S3_REGION
           querier:
-            replicas: 1
+            replicas: 3
+            maxUnavailable: 1
             resources:
               requests:
                 cpu: 200m
@@ -166,6 +167,7 @@ spec:
                     key: S3_REGION
           distributor:
             replicas: 3
+            maxUnavailable: 1
             resources:
               requests:
                 cpu: 100m
@@ -220,6 +222,7 @@ spec:
           gateway:
             enabled: true
             replicas: 2
+            maxUnavailable: 1
             resources:
               requests:
                 cpu: 50m

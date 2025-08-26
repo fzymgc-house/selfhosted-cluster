@@ -20,9 +20,6 @@ spec:
               - apiGroups: [""]
                 resources: ["events"]
                 verbs: ["get", "list", "watch"]
-          controller:
-            extraAnnotations:
-              "reloader.stakater.com/auto": "true"
           alloy:
             configMap:
               create: true
@@ -82,6 +79,8 @@ spec:
                 }
           controller:
             type: daemonset
+            extraAnnotations:
+              "reloader.stakater.com/auto": "true"
             tolerations:
               - key: node-role.kubernetes.io/control-plane
                 operator: Exists

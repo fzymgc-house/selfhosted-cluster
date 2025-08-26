@@ -183,7 +183,7 @@ spec:
       path: argocd/app-configs/monitoring-loki
   destination:
     server: https://kubernetes.default.svc
-    namespace: monitoring
+    namespace: loki
   syncPolicy:
     automated:
       prune: true

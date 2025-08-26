@@ -12,7 +12,7 @@ spec:
       repoURL: https://prometheus-community.github.io/helm-charts
       targetRevision: 77.0.1
       helm:
-        releaseName: kube-prometheus-stack
+        releaseName: kps
         valuesObject:
           defaultRules:
             create: false
@@ -20,8 +20,6 @@ spec:
             enabled: false
           alertmanager:
             enabled: false
-            podDisruptionBudget: null
-            configSecret: null
           prometheus:
             podDisruptionBudget:
               enabled: true
@@ -40,7 +38,7 @@ spec:
                     resources:
                       requests:
                         storage: 50Gi
-              enableAdminAPI: false
+              enableAdminAPI: true
               walCompression: true
               resources:
                 requests:
@@ -54,7 +52,7 @@ spec:
       path: argocd/app-configs/monitoring-prometheus
   destination:
     server: https://kubernetes.default.svc
-    namespace: monitoring
+    namespace: prometheus
   syncPolicy:
     automated:
       prune: true

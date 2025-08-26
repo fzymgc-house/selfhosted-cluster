@@ -2,7 +2,7 @@ apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: modern-auth
-  namespace: monitoring
+  namespace: prometheus
 spec:
   forwardAuth:
     address: http://authentik-server.authentik.svc/outpost.goauthentik.io/auth/traefik
@@ -29,16 +29,16 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: prometheus
-  namespace: monitoring
+  namespace: prometheus
 spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`prometheus.k8s.fzymgc.house`)
+    - match: Host(`prometheus.k8s.fzymgc.house`) || Host(`prometheus.fzymgc.house`)
       kind: Rule
       middlewares:
         - name: modern-auth
-          namespace: monitoring
+          namespace: prometheus
       services:
         - name: kube-prometheus-stack-prometheus
           port: 9090

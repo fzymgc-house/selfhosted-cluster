@@ -49,8 +49,8 @@ spec:
                 loki.process "pods" {
                   stage.static_labels {
                     values = {
-                      cluster = "main"
-                      job     = "kubernetes-pods"
+                      cluster = "main",
+                      job     = "kubernetes-pods",
                     }
                   }
                   // Example noise reduction (tune to your needs)
@@ -64,8 +64,8 @@ spec:
                 loki.process "events" {
                   stage.static_labels {
                     values = {
-                      cluster = "main"
-                      job     = "kubernetes-events"
+                      cluster = "main",
+                      job     = "kubernetes-events",
                     }
                   }
                   forward_to = [loki.write.default.receiver]

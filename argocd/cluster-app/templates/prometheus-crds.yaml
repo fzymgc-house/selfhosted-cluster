@@ -10,7 +10,7 @@ spec:
   sources:
     - chart: prometheus-operator-crds
       repoURL: https://prometheus-community.github.io/helm-charts
-      targetRevision: 22.0.2
+      targetRevision: 23.0.0
       helm:
         releaseName: prometheus-operator-crds
   destination:
@@ -18,8 +18,7 @@ spec:
     namespace: kube-system
   syncPolicy:
     automated:
-      prune: true
-      selfHeal: true
+      prune: false
+      selfHeal: false
     syncOptions:
       - ServerSideApply=true
-      - CreateNamespace=true

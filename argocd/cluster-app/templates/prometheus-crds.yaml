@@ -15,10 +15,11 @@ spec:
         releaseName: prometheus-operator-crds
   destination:
     server: https://kubernetes.default.svc
-    namespace: kube-system
+    namespace: prometheus
   syncPolicy:
     automated:
       prune: false
       selfHeal: false
     syncOptions:
       - ServerSideApply=true
+      - CreateNamespace=true

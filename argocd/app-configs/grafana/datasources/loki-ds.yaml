@@ -13,7 +13,7 @@ spec:
     name: Loki
     type: loki
     access: proxy
-    url: http://loki-distributed-gateway.monitoring.svc.cluster.local
+    url: http://loki-gateway.loki.svc.cluster.local
     jsonData:
       tlsSkipVerify: true
 

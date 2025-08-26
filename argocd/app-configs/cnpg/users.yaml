@@ -57,11 +57,11 @@ spec:
   data:
     - secretKey: username
       remoteRef:
-        key: fzymgc-house/cluster/postgres/users/main-main-admin
+        key: fzymgc-house/cluster/postgres/users/main-admin
         property: username
     - secretKey: password
       remoteRef:
-        key: fzymgc-house/cluster/postgres/users/main-main-admin
+        key: fzymgc-house/cluster/postgres/users/main-admin
         property: password
 
 

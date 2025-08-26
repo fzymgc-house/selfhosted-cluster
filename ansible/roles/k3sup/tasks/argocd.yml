@@ -109,9 +109,9 @@
 - name: Install Argo CD
   kubernetes.core.helm:
     kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
-    state: present
     namespace: argocd
     name: argocd
+    state: present
     chart_ref: argo-cd
     chart_repo_url: https://argoproj.github.io/argo-helm
     wait: false
@@ -119,10 +119,9 @@
     values:
       global:
         domain: argocd.fzymgc.house
+        image:
+          tag: v3.1.1
       configs:
-        global: 
-          image:
-            tag: v3.1.1
         cm:
           url: https://argocd.fzymgc.house
           dex.config: |

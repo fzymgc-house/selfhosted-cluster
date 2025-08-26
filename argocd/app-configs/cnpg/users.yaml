@@ -38,7 +38,7 @@ metadata:
   namespace: postgres
 spec:
   refreshPolicy: Periodic
-  refreshInterval: 1h
+  refreshInterval: 10m
   secretStoreRef:
     name: vault
     kind: ClusterSecretStore

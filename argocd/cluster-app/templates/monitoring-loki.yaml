@@ -89,15 +89,6 @@ spec:
                   secretKeyRef:
                     name: loki-s3
                     key: S3_REGION
-            affinity:
-              podAntiAffinity:
-                requiredDuringSchedulingIgnoredDuringExecution:
-                  - labelSelector:
-                      matchExpressions:
-                        - key: app.kubernetes.io/component
-                          operator: In
-                          values: ["ingester"]
-                    topologyKey: kubernetes.io/hostname
           querier:
             replicas: 3
             resources:
@@ -107,15 +98,6 @@ spec:
               limits:
                 cpu: 1
                 memory: 1Gi
-            affinity:
-              podAntiAffinity:
-                requiredDuringSchedulingIgnoredDuringExecution:
-                  - labelSelector:
-                      matchExpressions:
-                        - key: app.kubernetes.io/component
-                          operator: In
-                          values: ["querier"]
-                    topologyKey: kubernetes.io/hostname
             extraArgs:
               - -config.expand-env=true
             extraEnv:
@@ -191,15 +173,6 @@ spec:
               limits:
                 cpu: 500m
                 memory: 512Mi
-            affinity:
-              podAntiAffinity:
-                requiredDuringSchedulingIgnoredDuringExecution:
-                  - labelSelector:
-                      matchExpressions:
-                        - key: app.kubernetes.io/component
-                          operator: In
-                          values: ["distributor"]
-                    topologyKey: kubernetes.io/hostname
             extraArgs:
               - -config.expand-env=true
             extraEnv:
@@ -241,32 +214,9 @@ spec:
                 memory: 512Mi
             extraArgs:
               - -config.expand-env=true
-            extraEnv:
-              - name: AWS_ACCESS_KEY_ID
-                valueFrom:
-                  secretKeyRef:
-                    name: loki-s3
-                    key: S3_ACCESS_KEY
-              - name: AWS_SECRET_ACCESS_KEY
-                valueFrom:
-                  secretKeyRef:
-                    name: loki-s3
-                    key: S3_SECRET_KEY
-              - name: S3_BUCKET
-                valueFrom:
-                  secretKeyRef:
-                    name: loki-s3
-                    key: S3_BUCKET
-              - name: S3_ENDPOINT
-                valueFrom:
-                  secretKeyRef:
-                    name: loki-s3
-                    key: S3_ENDPOINT
-              - name: S3_REGION
-                valueFrom:
-                  secretKeyRef:
-                    name: loki-s3
-                    key: S3_REGION
+            extraEnvFrom:
+              - secretRef:
+                  name: loki-s3
           gateway:
             enabled: true
             replicas: 2

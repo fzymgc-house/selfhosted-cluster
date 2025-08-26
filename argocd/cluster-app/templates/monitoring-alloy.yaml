@@ -14,42 +14,71 @@ spec:
       helm:
         releaseName: alloy
         valuesObject:
+          rbac:
+            create: true
+            extraRules:
+              - apiGroups: [""]
+                resources: ["events"]
+                verbs: ["get", "list", "watch"]
           alloy:
             configMap:
               create: true
               content: |
-                discovery.kubernetes "nodes" {}
-                discovery.kubernetes "pods" { selectors { role = "pod" } }
+                // Kubernetes discovery targets
+                discovery.kubernetes "nodes" {
+                  role = "node"
+                }
+                discovery.kubernetes "pods" {
+                  role = "pod"
+                }
 
-                // Discover and tail container logs with Kubernetes metadata
+                // Stream pod logs using the Kubernetes API
                 loki.source.kubernetes "pods" {
                   targets    = discovery.kubernetes.pods.targets
-                  forward_to = [loki.write.default.receiver]
-                  // Basic drop of very noisy logs
-                  relabel_rules = <<-EOT
-                    # Drop kube-probe and health endpoints
-                    - action: drop
-                      source_labels: ["__path__"]
-                      regex: '.*/kube-probe/.*'
-                    # Example: drop very verbose namespaces
-                    - action: drop
-                      source_labels: ["namespace"]
-                      regex: "kube-system"
-                  EOT
+                  forward_to = [loki.process.pods.receiver]
                 }
 
-                loki.write "default" {
-                  endpoint { url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push" }
+                // Optional: collect Kubernetes events
+                loki.source.kubernetes_events "events" {
+                  job_name   = "kubernetes-events"
+                  log_format = "json"
+                  forward_to = [loki.process.events.receiver]
                 }
-          daemonset:
-            enabled: true
-            extraVolumeMounts:
-              - name: varlog
-                mountPath: /var/log
-            extraVolumes:
-              - name: varlog
-                hostPath:
-                  path: /var/log
+
+                // Normalize, drop noise, and enrich labels for pod logs
+                loki.process "pods" {
+                  stage.static_labels {
+                    values = {
+                      cluster = "main"
+                      job     = "kubernetes-pods"
+                    }
+                  }
+                  // Example noise reduction (tune to your needs)
+                  stage.drop {
+                    expression = "namespace == 'kube-system' and (container == 'kube-proxy' or container == 'kube-scheduler' or container == 'kube-controller-manager')"
+                  }
+                  forward_to = [loki.write.default.receiver]
+                }
+
+                // Normalize and enrich labels for events
+                loki.process "events" {
+                  stage.static_labels {
+                    values = {
+                      cluster = "main"
+                      job     = "kubernetes-events"
+                    }
+                  }
+                  forward_to = [loki.write.default.receiver]
+                }
+
+                // Ship to Loki
+                loki.write "default" {
+                  endpoint {
+                    url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
+                  }
+                }
+          controller:
+            type: daemonset
             tolerations:
               - key: node-role.kubernetes.io/control-plane
                 operator: Exists

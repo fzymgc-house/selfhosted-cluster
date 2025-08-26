@@ -17,6 +17,7 @@ spec:
           reloader:
             reloadStrategy: annotations
             logFormat: json
+            enableHA: true
             deployment:
               replicas: 2
   destination:

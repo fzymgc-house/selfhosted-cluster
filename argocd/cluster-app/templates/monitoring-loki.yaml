@@ -227,15 +227,6 @@ spec:
               limits:
                 cpu: 200m
                 memory: 256Mi
-            affinity:
-              podAntiAffinity:
-                requiredDuringSchedulingIgnoredDuringExecution:
-                  - labelSelector:
-                      matchExpressions:
-                        - key: app.kubernetes.io/component
-                          operator: In
-                          values: ["gateway"]
-                    topologyKey: kubernetes.io/hostname
           pdb:
             create: true
             minAvailable: 1

@@ -8,4 +8,3 @@ resources:
   - ./longhorn-storage-classes.yaml
   - ./longhorn-volumesnapshots.yaml
   - ./argocd-repositories.yaml
-  - https://github.com/stakater/Reloader/deployments/kubernetes

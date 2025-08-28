@@ -118,6 +118,7 @@
     chart_version: 8.3.0
     values:
       global:
+        addPrometheusAnnotations: true
         domain: argocd.fzymgc.house
         image:
           tag: v3.1.1
@@ -157,12 +158,28 @@
           create: false
       certificate:
         enabled: true
+      dex:
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
       redis-ha:
-        enabled: true
+        exporter:
+          enabled: true
+          serviceMonitor:
+            enabled: true
       controller:
         replicas: 1
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
       server:
         replicas: 2
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
         ingress:
           enabled: true
           annotations:
@@ -173,8 +190,16 @@
               secretName: argocd-tls
       repoServer:
         replicas: 2
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
       applicationSet:
         replicas: 2
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
   become: false
   run_once: true
   delegate_to: localhost

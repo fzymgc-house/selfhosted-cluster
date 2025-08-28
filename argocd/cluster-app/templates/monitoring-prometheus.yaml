@@ -58,6 +58,12 @@ spec:
               - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs|erofs)$
               - --collector.systemd
               - --collector.processes
+            extraHostVolumeMounts:
+              - name: systemd-dbus
+                mountPath: /var/run/dbus/system_bus_socket
+                hostPath: /var/run/dbus/system_bus_socket
+                readOnly: true
+                mountPropagation: None
     - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
       targetRevision: HEAD
       path: argocd/app-configs/monitoring-prometheus

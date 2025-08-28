@@ -125,6 +125,12 @@
   tags:
     - k8s-csi-snapshot-controller
 
+# Install Prometheus Operator CRDs early so subsequent charts can create ServiceMonitors, etc.
+- name: Install Prometheus Operator CRDs
+  ansible.builtin.import_tasks: prometheus-crds.yml
+  tags:
+    - k8s-prometheus-crds
+
 - name: Install Longhorn
   ansible.builtin.import_tasks: longhorn.yml
   tags:

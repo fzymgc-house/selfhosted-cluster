@@ -18,6 +18,19 @@
       replicaCount: 2
       dns01RecursiveNameservers: "https://1.1.1.1/dns-query"
       dns01RecursiveNameserversOnly: true
+      podDisruptionBudget:
+        enabled: true
+      prometheus:
+        servicemonitor:
+          enabled: true
+      webhook:
+        replicaCount: 2
+        podDisruptionBudget:
+          enabled: true
+      cainjector:
+        replicaCount: 2
+        podDisruptionBudget:
+          enabled: true
       config:
         apiVersion: controller.config.cert-manager.io/v1alpha1
         kind: ControllerConfiguration

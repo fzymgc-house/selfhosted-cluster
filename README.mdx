@@ -1,6 +1,6 @@
 # Self-Hosted Kubernetes Cluster
 
-A comprehensive GitOps-managed Kubernetes cluster setup for home infrastructure using k3s, FluxCD, and Terraform. This repository provides Infrastructure as Code (IaC) for a complete self-hosted platform including identity management, monitoring, databases, and application deployment.
+A comprehensive Kubernetes cluster setup for home infrastructure using k3s and Terraform. This repository provides Infrastructure as Code (IaC) for a complete self-hosted platform including identity management, monitoring, databases, and application deployment.
 
 ## 🏗️ Architecture Overview
 
@@ -9,7 +9,6 @@ This repository implements a production-ready home cluster with the following ar
 - **Hardware**: TuringPi 2 cluster boards with RK1 and Jetson Orin NX compute modules
 - **OS**: Armbian 25.08 (Ubuntu Noble) with systemd-networkd
 - **Kubernetes**: k3s lightweight distribution
-- **GitOps**: FluxCD v2.6.x for declarative cluster management
 - **Infrastructure**: Terraform for external service configuration
 - **Networking**: Calico CNI with MetalLB load balancing
 - **Storage**: Longhorn distributed storage
@@ -30,18 +29,11 @@ selfhosted-cluster/
 │   ├── k3s-playbook.yml        # Main cluster deployment playbook
 │   ├── bootstrap-nodes-playbook.yml # Node preparation playbook
 │   └── reboot-nodes-playbook.yml     # Cluster maintenance playbook
-├── fluxcd/                     # GitOps manifests and configurations
-│   ├── clusters/main/          # Cluster-level FluxCD resources
-│   ├── infrastructure/         # Infrastructure controllers and configs
-│   │   ├── controllers/        # Core infrastructure components
-│   │   └── configs/            # Cluster-wide configurations
-│   └── apps/main/              # Application deployments
 ├── tf/                         # Terraform modules for external services
 │   ├── vault/                  # Vault configuration and policies
 │   ├── authentik/              # Identity provider setup
 │   └── core-services/          # Additional service configurations
 └── containers/                 # Custom container images
-    └── fluxcd-tofu-runner/     # Custom Terraform runner for FluxCD
 ```
 
 ## 🖥️ Hardware Configuration
@@ -95,7 +87,6 @@ kubectl --context fzymgc-house get pods -A
 ## 📦 Deployed Applications
 
 ### Core Infrastructure
-- **🔄 FluxCD**: GitOps continuous delivery
 - **🌐 Traefik**: Ingress controller with automatic TLS
 - **🔒 cert-manager**: TLS certificate automation
 - **⚖️ MetalLB**: Bare-metal load balancer
@@ -111,7 +102,7 @@ kubectl --context fzymgc-house get pods -A
 - **📈 Grafana**: Observability and dashboards
 
 ### Infrastructure as Code
-- **🏗️ Terraform (via FluxCD)**: External service configuration
+- **🏗️ Terraform**: External service configuration
 - **📝 SOPS**: Encrypted secrets in Git
 - **🎯 Kustomize**: Kubernetes manifest management
 
@@ -125,10 +116,10 @@ The `ansible/` directory contains all automation for cluster lifecycle:
 - **Infrastructure Setup**: Core services installation
 - **Maintenance Operations**: Updates, reboots, scaling
 
-### GitOps with FluxCD
-The `fluxcd/` directory implements GitOps workflows:
+### Application Management
+The repository contains Kubernetes manifests for application deployment:
 
-- **Infrastructure Controllers**: Deploy core Kubernetes controllers
+- **Infrastructure Controllers**: Core Kubernetes controllers
 - **Infrastructure Configs**: Cluster-wide configurations and policies  
 - **Applications**: User-facing services and dashboards
 
@@ -172,19 +163,19 @@ The `tf/` directory provides Infrastructure as Code for external services:
 - **Centralized Collection**: Cluster-wide log aggregation
 - **Retention Policies**: Automated log lifecycle management
 
-## 🔄 GitOps Workflow
+## 🔄 Application Deployment
 
-### Continuous Delivery
+### Manual Deployment
 1. **Source Control**: All infrastructure defined in Git
-2. **Automated Sync**: FluxCD monitors repository changes
-3. **Declarative Updates**: Kubernetes resources reconciled automatically
-4. **Rollback Capability**: Git-based change history
+2. **Manual Application**: Kubernetes resources applied manually or via CI/CD
+3. **Declarative Updates**: Kubernetes resources managed through manifests
+4. **Version Control**: Git-based change history
 
 ### Development Process
 1. Make changes to manifests in feature branches
 2. Create pull request for review
-3. Merge to main branch triggers deployment
-4. FluxCD applies changes to cluster automatically
+3. Merge to main branch
+4. Apply changes to cluster manually or via automation
 
 ## 🏠 Domain & Services
 
@@ -214,12 +205,14 @@ ansible-playbook -i ansible/inventory/hosts.yml ansible/k3s-playbook.yml --tags 
 
 ### Application Management
 ```bash
-# Force FluxCD sync
-flux reconcile kustomization apps --with-source
+# Apply application changes
+kubectl apply -k path/to/application
 
-# Suspend/resume applications  
-flux suspend helmrelease grafana -n grafana
-flux resume helmrelease grafana -n grafana
+# Check application status
+kubectl get all -n application-namespace
+
+# View application logs
+kubectl logs -n application-namespace -l app=application-name
 ```
 
 ### Backup & Recovery
@@ -231,15 +224,14 @@ flux resume helmrelease grafana -n grafana
 ## 📚 Additional Resources
 
 ### Documentation
-- [FluxCD Documentation](https://fluxcd.io/flux/)
 - [Traefik Ingress](https://doc.traefik.io/traefik/)
 - [Longhorn Storage](https://longhorn.io/docs/)
 - [HashiCorp Vault](https://developer.hashicorp.com/vault)
 
 ### Troubleshooting
-- Check FluxCD status: `flux get all`
-- View logs: `kubectl logs -n flux-system -l app=source-controller`
-- Validate manifests: `kubectl apply --dry-run=client -k fluxcd/clusters/main/`
+- Check application status: `kubectl get all -A`
+- View logs: `kubectl logs -n namespace -l app=app-name`
+- Validate manifests: `kubectl apply --dry-run=client -k path/to/manifests`
 
 ## 📄 License
 

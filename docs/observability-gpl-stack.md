@@ -2,7 +2,7 @@
 
 ### Goals
 - Stand up Prometheus, Alertmanager, Loki, and Grafana Alloy with Grafana as the UI
-- GitOps-first via FluxCD; HA, secure by default; Vault-backed secrets; TLS via Traefik
+- GitOps-first; HA, secure by default; Vault-backed secrets; TLS via Traefik
 
 ### Architecture
 - **metrics**: `kube-prometheus-stack` (Prometheus Operator)
@@ -10,19 +10,19 @@
 - **dashboards**: existing Grafana via Operator with `GrafanaDatasource`/`GrafanaDashboard` CRs
 
 ### Repo layout (proposed)
-- **helm repos**: `fluxcd/infrastructure/controllers/helm-repositories/grafana.yaml`
+- **helm repos**: `infrastructure/controllers/helm-repositories/grafana.yaml`
 - **apps**:
-  - `fluxcd/apps/main/monitoring/namespace.yaml`
-  - `fluxcd/apps/main/monitoring/kube-prometheus-stack/helm-install.yaml`
-  - `fluxcd/apps/main/monitoring/kube-prometheus-stack/kustomization.yaml`
-  - `fluxcd/apps/main/monitoring/loki/helm-install.yaml`
-  - `fluxcd/apps/main/monitoring/loki/external-secret-s3.yaml`
-  - `fluxcd/apps/main/monitoring/loki/kustomization.yaml`
-  - `fluxcd/apps/main/monitoring/alloy/helm-install.yaml`
-  - `fluxcd/apps/main/monitoring/alloy/kustomization.yaml`
-  - `fluxcd/apps/main/grafana/datasources/prometheus-ds.yaml`
-  - `fluxcd/apps/main/grafana/datasources/loki-ds.yaml`
-  - `fluxcd/apps/main/grafana/dashboards/*.yaml`
+  - `monitoring/namespace.yaml`
+  - `monitoring/kube-prometheus-stack/helm-install.yaml`
+  - `monitoring/kube-prometheus-stack/kustomization.yaml`
+  - `monitoring/loki/helm-install.yaml`
+  - `monitoring/loki/external-secret-s3.yaml`
+  - `monitoring/loki/kustomization.yaml`
+  - `monitoring/alloy/helm-install.yaml`
+  - `monitoring/alloy/kustomization.yaml`
+  - `grafana/datasources/prometheus-ds.yaml`
+  - `grafana/datasources/loki-ds.yaml`
+  - `grafana/dashboards/*.yaml`
 
 ### Decisions to confirm
 - **hostnames**: `prometheus.k8s.fzymgc.house`, `alerts.k8s.fzymgc.house` (via Traefik + `modern-auth`)
@@ -34,7 +34,7 @@
   - Discord relay webhook: `fzymgc-house/cluster/alertmanager` with key `alertmanager-discord-webhook-url`
 
 ### Task checklist
-- [x] Helm repo for Grafana charts added under `flux-system`
+- [x] Helm repo for Grafana charts added
 - [x] `monitoring` (and `loki` if separate) namespaces created
 - [ ] `kube-prometheus-stack` HelmRelease
   - [x] Disable bundled Grafana
@@ -60,8 +60,8 @@
   - [x] `GrafanaDatasource` for Prometheus
   - [x] `GrafanaDatasource` for Loki
   - [x] Curated `GrafanaDashboard` CRs added
-- [ ] Flux wiring
-  - [x] `fluxcd/apps/main/kustomization.yaml` includes `./monitoring`
+- [ ] Application wiring
+  - [x] `apps/main/kustomization.yaml` includes `./monitoring`
   - [ ] Reconciliation order validated (secrets -> releases)
 - [ ] Validation
   - [ ] Grafana datasources green
@@ -76,7 +76,7 @@
 - [x] Alloy config improvements: enable Kubernetes metadata enrichment, multiline parsing, and filtering for noisy logs (e.g., `kube-system` churn) using Alloy modules (`loki.source.kubernetes`, relabel rules).
 - [x] Set explicit resource requests/limits for Prometheus and Alertmanager as well.
 - [x] Add per-component PDBs and anti-affinity settings for Loki where supported by the chart.
-- [ ] Add curated Kubernetes and Loki dashboards under `fluxcd/apps/main/grafana/dashboards/` and organize into folders.
+- [ ] Add curated Kubernetes and Loki dashboards under `grafana/dashboards/` and organize into folders.
  - [x] Add Discord alert relay Deployment/Service and ExternalSecret; wire into monitoring kustomization.
 
 ### Rollout order

@@ -1,8 +1,3 @@
----
-description: Terraform infrastructure patterns for external services and Vault configuration
-globs: ["tf/**/*.tf", "tf/**/*.tfvars", "**/*.tf", "**/*.tfvars"]
-alwaysApply: false
----
 
 # Terraform Rules
 
@@ -83,9 +78,9 @@ Every Terraform module should have:
 ## Best Practices
 
 ### State Management
-- State is managed by FluxCD's Terraform controller
-- Never commit state files to Git
 - Use remote state with encryption
+- Never commit state files to Git
+- Use appropriate backend configuration
 
 ### Resource Dependencies
 - Use explicit dependencies with `depends_on`
@@ -153,13 +148,18 @@ Every Terraform module should have:
 - Use OIDC/JWT for cloud providers
 - Rotate credentials regularly
 
-## Integration with FluxCD
+## Integration with Kubernetes
 
-### Terraform Controller Resources
-- Use `apiVersion: infra.contrib.fluxcd.io/v1alpha2`
+### Terraform in Kubernetes
+- Use appropriate Terraform operator if needed
 - Configure proper intervals and retries
-- Use custom runner image
+- Use custom runner image when required
 - Mount Vault certificates
+
+### Variable Injection
+- Use Kubernetes secrets for variables
+- Reference External Secrets
+- Use SOPS for encrypted values
 
 ### Variable Injection
 - Use Kubernetes secrets for variables

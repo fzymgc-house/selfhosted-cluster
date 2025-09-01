@@ -45,11 +45,6 @@
       "groupSlug": "security-components"
     },
     {
-      "matchPackagePatterns": ["^fluxcd", "^flux-iac"],
-      "groupName": "fluxcd components",
-      "groupSlug": "fluxcd-components"
-    },
-    {
       "matchPackagePatterns": ["^hashicorp/terraform$"],
       "groupName": "terraform core",
       "groupSlug": "terraform-core"
@@ -82,9 +77,6 @@
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 4am on monday"]
-  },
-  "flux": {
-    "managerFilePatterns": ["/fluxcd/.+\\.ya?ml$/"]
   },
   "argocd": {
     "managerFilePatterns": ["/argocd/.+\\.yaml$/"]

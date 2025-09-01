@@ -1,6 +1,6 @@
 ### Migrate Alerting from Alertmanager to Grafana Unified Alerting (with Discord Notifications)
 
-This document describes how to replace Prometheus Alertmanager with Grafana Unified Alerting managed by Grafana Operator, while sending notifications to Discord using Grafana's native Discord integration. The plan follows GitOps-first principles with FluxCD and keeps secrets in Vault via External Secrets.
+This document describes how to replace Prometheus Alertmanager with Grafana Unified Alerting managed by Grafana Operator, while sending notifications to Discord using Grafana's native Discord integration. The plan follows GitOps-first principles and keeps secrets in Vault via External Secrets.
 
 ---
 
@@ -16,17 +16,17 @@ This document describes how to replace Prometheus Alertmanager with Grafana Unif
 - Alerting stack:
   - `kube-prometheus-stack` installs Prometheus and Alertmanager
     - Alertmanager configured via Vault
-      - `fluxcd/apps/main/monitoring/kube-prometheus-stack/alertmanager-external-secret.yaml`
-      - `fluxcd/apps/main/monitoring/kube-prometheus-stack/helm-install.yaml` (values.alertmanager)
+      - `monitoring/kube-prometheus-stack/alertmanager-external-secret.yaml`
+      - `monitoring/kube-prometheus-stack/helm-install.yaml` (values.alertmanager)
     - Public route to Alertmanager
-      - `fluxcd/apps/main/monitoring/kube-prometheus-stack/ingressroutes.yaml` (host `alerts.k8s.fzymgc.house`)
+      - `monitoring/kube-prometheus-stack/ingressroutes.yaml` (host `alerts.k8s.fzymgc.house`)
   - Discord notifications today are handled via a bridge:
-    - `fluxcd/apps/main/monitoring/alertmanager-discord/*` (Deployment + Service + ExternalSecret)
+    - `monitoring/alertmanager-discord/*` (Deployment + Service + ExternalSecret)
     - Alertmanager sends webhooks to this bridge, which posts into Discord
 - Grafana stack:
-  - Grafana Operator installed (`fluxcd/apps/main/grafana-operator/*`)
-  - Grafana instance managed (`fluxcd/apps/main/grafana/grafana.yaml`)
-  - Prometheus datasource present (`fluxcd/apps/main/grafana/datasources/prometheus-ds.yaml`)
+  - Grafana Operator installed (`grafana-operator/*`)
+  - Grafana instance managed (`grafana/grafana.yaml`)
+  - Prometheus datasource present (`grafana/datasources/prometheus-ds.yaml`)
 
 ## Target Architecture
 
@@ -98,20 +98,6 @@ spec:
     - name: discord
       receivers:
         - uid: discord-native
-          type: discord
-          # Option A: Inline (not recommended). Use only for testing.
-          # settings:
-          #   url: https://discord.com/api/webhooks/...
-          # Option B: Secret-backed (recommended). Exact fields may vary by operator version.
-          # The operator supports secret references for sensitive fields; consult your installed CRD docs.
-          settings:
-            url: ${DISCORD_WEBHOOK_URL}
-          secureFields:
-            - name: DISCORD_WEBHOOK_URL
-              valueFrom:
-                secretKeyRef:
-                  name: grafana-discord-webhook
-                  key: WEBHOOK_URL
 ```
 
 3) Create a default Notification Policy that routes everything to the Discord contact point. Adjust grouping as desired.
@@ -219,7 +205,7 @@ Notes:
 
 ### Phase 2 – Disable Alertmanager and Alertmanager-specific bits
 
-In `fluxcd/apps/main/monitoring/kube-prometheus-stack/helm-install.yaml`:
+In `monitoring/kube-prometheus-stack/helm-install.yaml`:
 - Set `values.alertmanager.enabled: false` (add if missing)
 - Remove or ignore `values.alertmanager.configSecret`
 - Keep Prometheus running
@@ -238,9 +224,9 @@ spec:
 ```
 
 Remove Alertmanager-specific resources from Kustomization:
-- Delete `fluxcd/apps/main/monitoring/kube-prometheus-stack/alertmanager-external-secret.yaml`
-- Remove Alertmanager IngressRoute from `fluxcd/apps/main/monitoring/kube-prometheus-stack/ingressroutes.yaml` (the `alertmanager` block)
-- Remove the `alertmanager-discord` Deployment/Service and its ExternalSecret in `fluxcd/apps/main/monitoring/alertmanager-discord/*` (no longer needed)
+- Delete `monitoring/kube-prometheus-stack/alertmanager-external-secret.yaml`
+- Remove Alertmanager IngressRoute from `monitoring/kube-prometheus-stack/ingressroutes.yaml` (the `alertmanager` block)
+- Remove the `alertmanager-discord` Deployment/Service and its ExternalSecret in `monitoring/alertmanager-discord/*` (no longer needed)
 
 ### Phase 3 – Address PrometheusRules overlap
 
@@ -262,7 +248,7 @@ or selectively disable groups under `defaultRules.rules.*` if you want to keep a
 
 ### Phase 4 – Validate
 
-- Reconcile Flux and verify CRDs applied:
+- Apply changes and verify CRDs applied:
   - Contact Point exists and reachable (Grafana UI → Alerting → Contact points)
   - Notification Policy routes to `discord`
   - Rule Group evaluates successfully
@@ -304,11 +290,11 @@ or selectively disable groups under `defaultRules.rules.*` if you want to keep a
 ---
 
 References
-- `fluxcd/apps/main/monitoring/kube-prometheus-stack/helm-install.yaml`
-- `fluxcd/apps/main/monitoring/kube-prometheus-stack/alertmanager-external-secret.yaml`
-- `fluxcd/apps/main/monitoring/kube-prometheus-stack/ingressroutes.yaml`
-- `fluxcd/apps/main/monitoring/alertmanager-discord/*`
-- `fluxcd/apps/main/grafana-operator/*`
-- `fluxcd/apps/main/grafana/*`
+- `monitoring/kube-prometheus-stack/helm-install.yaml`
+- `monitoring/kube-prometheus-stack/alertmanager-external-secret.yaml`
+- `monitoring/kube-prometheus-stack/ingressroutes.yaml`
+- `monitoring/alertmanager-discord/*`
+- `grafana-operator/*`
+- `grafana/*`
 
 

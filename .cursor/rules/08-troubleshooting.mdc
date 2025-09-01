@@ -1,25 +1,20 @@
----
-description: Common issues, debugging commands, and recovery procedures
-globs: ["**/*.yaml", "**/*.yml", "**/*.tf", "ansible/**/*.yml"]
-alwaysApply: false
----
 
 # Troubleshooting Guide
 
 ## Common Issues & Solutions
 
-### FluxCD Issues
+### Application Deployment Issues
 
-#### Kustomization Not Syncing
-- Check Kustomization status with `flux get kustomizations`
-- Check source status with `flux get sources oci`
-- View events with `kubectl describe kustomization`
-- Check logs with `flux logs --level=error --since=10m`
-- Force reconciliation with `flux reconcile kustomization`
+#### Kustomization Not Applying
+- Check Kustomization with `kubectl apply --dry-run=client -k path/to/kustomization`
+- Validate YAML syntax with `yamllint`
+- Check resource dependencies and ordering
+- View events with `kubectl get events -n namespace`
+- Force application with `kubectl apply -k path/to/kustomization`
 
-#### HelmRelease Failures
-- Check HelmRelease status with `flux get helmreleases -A`
-- View detailed status with `kubectl describe helmrelease`
+#### Helm Chart Failures
+- Check Helm release status with `helm list -n namespace`
+- View detailed status with `helm status release-name -n namespace`
 - Check Helm history with `helm history release-name -n namespace`
 - View Helm values with `helm get values release-name -n namespace`
 - Verify chart version and dependencies
@@ -172,7 +167,7 @@ alwaysApply: false
 - Pod restart frequency: `rate(kube_pod_container_status_restarts_total[15m]) > 0`
 - Memory pressure: `container_memory_working_set_bytes / container_spec_memory_limit_bytes > 0.9`
 - CPU throttling: `rate(container_cpu_cfs_throttled_periods_total[5m]) > 0.1`
-- Failed reconciliations: `flux_reconcile_duration_seconds_count{success="false"}`
+- Failed deployments: Monitor application deployment metrics
 - Disk space prediction: `predict_linear(node_filesystem_free_bytes[4h], 3600 * 24) < 0`
 
 ## Emergency Procedures
@@ -210,8 +205,13 @@ alias k8s-top='kubectl top nodes; echo "---"; kubectl top pods -A --sort-by=cpu 
 # Recent events
 alias k8s-events='kubectl get events -A --sort-by=.lastTimestamp | tail -20'
 
-# Flux status
-alias flux-status='flux get all -A | grep -v "True\|Ready"'
+# Application status
+alias k8s-status='kubectl get all -A | grep -v "Running\|Completed"'
+
+# Pod issues
+alias k8s-issues='kubectl get pods -A | grep -v "Running\|Completed"'
+```
+
 
 # Pod issues
 alias k8s-issues='kubectl get pods -A | grep -v "Running\|Completed"'

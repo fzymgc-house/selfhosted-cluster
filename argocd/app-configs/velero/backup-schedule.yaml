@@ -15,7 +15,6 @@ spec:
       - metrics
     excludedNamespaces:
       - kube-system
-      - flux-system
       - cert-manager
       - traefik
       - metallb-system
@@ -49,7 +48,6 @@ spec:
       - metrics
     excludedNamespaces:
       - kube-system
-      - flux-system
       - cert-manager
       - traefik
       - metallb-system

@@ -1,8 +1,3 @@
----
-description: Security best practices for secrets management, RBAC, and network policies
-globs: ["fluxcd/**/*.yaml", "fluxcd/**/*.yml", "tf/**/*.tf"]
-alwaysApply: false
----
 
 # Security Rules
 
@@ -174,6 +169,11 @@ alwaysApply: false
 - [ ] RBAC with least privilege
 - [ ] Pod security standards enforced
 - [ ] Security contexts configured
+- [ ] Image scanning enabled
+- [ ] Audit logging configured
+- [ ] Backup encryption enabled
+- [ ] Regular security updates applied
+
 - [ ] Image scanning enabled
 - [ ] Audit logging configured
 - [ ] Backup encryption enabled

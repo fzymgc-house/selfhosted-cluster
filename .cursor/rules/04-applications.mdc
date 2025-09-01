@@ -1,16 +1,11 @@
----
-description: Application deployment patterns and templates for core services
-globs: ["fluxcd/apps/**/*.yaml", "fluxcd/apps/**/*.yml"]
-alwaysApply: false
----
 
 # Application Deployment Rules
 
 ## Application Structure
-Each application in `fluxcd/apps/main/` should follow this structure:
+Each application in `apps/main/` should follow this structure:
 - `namespace.yaml` - Namespace definition
 - `kustomization.yaml` - Kustomize configuration
-- `helm-install.yaml` - HelmRelease (if Helm-based)
+- `helm-install.yaml` - Helm chart values (if Helm-based)
 - `secrets.yaml` - ExternalSecret definitions
 - `certificate.yaml` - TLS certificates
 - `ingress-route.yaml` - Traefik IngressRoute
@@ -194,6 +189,11 @@ Each application in `fluxcd/apps/main/` should follow this structure:
 - Include rollback procedures
 
 ### Feature Flags
+- Use ConfigMaps for feature toggles
+- Implement in application code
+- Change without redeployment
+- Monitor feature usage
+
 - Use ConfigMaps for feature toggles
 - Implement in application code
 - Change without redeployment

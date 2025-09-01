@@ -15,12 +15,6 @@ k3sup_packages:
   - scsitools
   - nvme-cli
 
-k3sup_fluxcd_ghcr_username: seanb4t
-k3sup_fluxcd_ghcr_password: "{{ lookup('community.general.onepassword', 'fluxcd-ghcr-PAT', vault='fzymgc-house', field='token') }}"
-k3sup_fluxcd_ghcr_auth: "{{ k3sup_fluxcd_ghcr_username }}:{{ k3sup_fluxcd_ghcr_password }}"
-# yamllint disable rule:line-length
-k3sup_fluxcd_ghcr_dockerconfigjson: "{{ lookup('community.general.onepassword', 'fluxcd-ghcr-PAT', vault='fzymgc-house', field='dockerconfigjson') }}"
-
 k3sup_onepassword_sdk_token: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           61636334616662396463376664383461636530663164353861626139316334366661376433356265
@@ -68,4 +62,3 @@ k3sup_onepassword_sdk_token: !vault |
           31393465393231666166623466316139303531376236663832333332316562373761646361643965
           66643834353734376262643538373964326532623033373363396666306463313837373637633565
           61343338613636633837653336623832636233393539613465393633346236303435
-          

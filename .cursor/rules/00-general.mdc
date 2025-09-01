@@ -1,8 +1,3 @@
----
-description: General project rules and principles for the self-hosted Kubernetes cluster
-globs: ["**/*"]
-alwaysApply: true
----
 
 # Self-Hosted Kubernetes Cluster - General Rules
 
@@ -31,7 +26,7 @@ alwaysApply: true
 2. Pull requests required for main branch
 3. Descriptive commit messages following conventional commits
 4. Test changes in development before production
-5. FluxCD automatically deploys merged changes
+5. Apply changes to cluster manually or via automation
 
 ## Documentation
 - Update README when adding new components
@@ -43,9 +38,14 @@ alwaysApply: true
 - Validate YAML syntax before committing
 - Test Ansible playbooks with `--check` flag first
 - Verify Terraform plans before applying
-- Check FluxCD reconciliation after deployments
+- Validate Kubernetes manifests with `--dry-run=client`
 
 ## Dependencies
+- Use Renovate for automated dependency updates
+- Group related dependencies in renovate.json
+- Disable major version updates by default
+- Auto-merge minor and patch updates after testing
+
 - Use Renovate for automated dependency updates
 - Group related dependencies in renovate.json
 - Disable major version updates by default

@@ -1,30 +1,33 @@
----
-description: Kubernetes manifests and FluxCD GitOps patterns for the cluster
-globs: ["fluxcd/**/*.yaml", "fluxcd/**/*.yml", "**/*.yaml", "**/*.yml"]
-alwaysApply: false
----
 
-# Kubernetes & FluxCD Rules
+# Kubernetes Rules
 
-## FluxCD Resources
+## Application Structure
 
-### Kustomization Resources
-- Use `apiVersion: kustomize.toolkit.fluxcd.io/v1`
-- Include proper dependencies with `dependsOn`
-- Set appropriate intervals (1h for stable, 1m for active development)
-- Always enable pruning: `prune: true`
-- Use SOPS for secret decryption when needed
+### Directory Organization
+- Organize applications in logical groups under `apps/`
+- Each application should have its own directory with a `kustomization.yaml`
+- Use consistent naming: `apps/{category}/{application-name}/`
 
-### HelmRelease Resources
-- Use `apiVersion: helm.toolkit.fluxcd.io/v2` (or v2beta1/v2beta2 as appropriate)
+### Kustomization Files
+- Every directory with Kubernetes resources needs a `kustomization.yaml`
+- List resources in logical order (namespace first, then configs, then deployments)
+- Use standard format with `apiVersion: kustomize.config.k8s.io/v1beta1`
+
+## Kubernetes Resources
+
+### Namespaces
+- Create namespace.yaml as first resource in each app directory
+- Keep it simple with just name and optional labels
+
+### Helm Charts
+- Use standard Helm charts with `helm install` or `kubectl apply`
 - Always specify chart version explicitly
-- Include remediation strategies with retries
-- Set drift detection mode
-- Define proper dependencies
+- Include proper values files for customization
+- Use Helm repositories for chart sources
 
 ### HelmRepository Resources
 - Place in `infrastructure/controllers/helm-repositories/`
-- Use `apiVersion: source.toolkit.fluxcd.io/v1`
+- Use standard Helm repository configuration
 - Set appropriate intervals (usually 1h)
 
 ## Kubernetes Resources
@@ -74,11 +77,17 @@ alwaysApply: false
   - `longhorn-encrypted`: Encrypted storage for sensitive data
   - `postgres-storage`: Optimized for PostgreSQL workloads
 
-## FluxCD Terraform Resources
-- Use the custom tofu-runner image
-- Mount Vault certificates
-- Provide Vault token via secret
-- Set appropriate intervals and retry strategies
+## Application Deployment
+
+### Manual Deployment
+- Use `kubectl apply -k` for Kustomization-based deployments
+- Use `helm install/upgrade` for Helm chart deployments
+- Always validate manifests with `--dry-run=client` first
+
+### State Management
+- Use appropriate controllers for different workload types
+- Implement proper backup strategies for stateful services
+- Use ConfigMaps and Secrets for configuration
 
 ## Best Practices
 1. Always use explicit API versions (no shortcuts)
@@ -88,6 +97,8 @@ alwaysApply: false
 5. Use NetworkPolicies for service isolation
 6. Set PodDisruptionBudgets for critical services
 7. Use topologySpreadConstraints for even distribution
+8. Implement proper backup strategies for stateful services
+
 8. Implement proper backup strategies for stateful services
 
 7. Use topologySpreadConstraints for even distribution

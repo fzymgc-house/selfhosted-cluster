@@ -128,6 +128,23 @@
     - Vacuum systemd-journald
   tags: journald
 
+- name: Disable armbian zlog
+  ansible.builtin.lineinfile:
+    path: /etc/default/armbian-zram-config
+    search_string: "ENABLED="
+    line: "ENABLED=false"
+    state: present
+  tags: zlog
+
+- name: Disable armbian ramlog
+  ansible.builtin.lineinfile:
+    path: /etc/default/armbian-ramlog
+    search_string: "ENABLED="
+    line: "ENABLED=false"
+    state: present
+  tags: ramlog
+
+
 - name: Install mail handling
   ansible.builtin.import_tasks:
     file: mail.yml

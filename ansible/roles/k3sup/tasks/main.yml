@@ -14,3 +14,35 @@
   tags:
     - k8s-worker
   when: inventory_hostname in groups['tp_cluster_workers']
+
+- name: Configure multipath
+  ansible.builtin.copy:
+    content: |
+      defaults {
+        user_friendly_names yes
+        find_multipaths yes
+      }
+    dest: /etc/multipath.conf
+    mode: '0644'
+    owner: root
+    group: root
+  tags:
+    - multipath
+  notify:
+    - Restart multipathd
+
+- name: Enable multipath-tools
+  ansible.builtin.systemd:
+    name: multipathd
+    state: started
+    enabled: true
+  tags:
+    - multipath
+
+- name: Enable iscsid
+  ansible.builtin.systemd:
+    name: open-iscsi
+    state: started
+    enabled: true
+  tags:
+    - iscsid

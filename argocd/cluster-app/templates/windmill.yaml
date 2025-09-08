@@ -1,0 +1,96 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: windmill
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: core-services
+  sources:
+    - chart: windmill
+      repoURL: https://windmill-labs.github.io/windmill-helm-charts/
+      targetRevision: "2.0.470"
+      helm:
+        releaseName: windmill
+        valuesObject:
+          windmill:
+            appReplicas: 2
+            workerReplicas: 3
+            lspReplicas: 1
+            multiplayer: 1
+            baseUrl: "https://windmill.fzymgc.house"
+            cookieDomain: "fzymgc.house"
+            databaseUrl:
+              secretRef:
+                name: windmill-secrets
+                key: database_url
+            rustLog: "info"
+          postgresql:
+            enabled: false
+          redis:
+            enabled: false
+          minio:
+            enabled: false
+          app:
+            annotations:
+              reloader.stakater.com/auto: "true"
+            # Resource estimates - not based on official recommendations
+            # Chart defaults: ~128Mi memory, 100m CPU
+            # These are conservative estimates for frontend workload
+            resources:
+              requests:
+                memory: "500Mi"  # Estimate: 4x chart default for UI responsiveness
+                cpu: "200m"      # Estimate: 2x chart default for multiple users
+              limits:
+                memory: "2Gi"    # Estimate: headroom for memory spikes
+                cpu: "1000m"     # Estimate: burst capacity for UI operations
+          workers:
+            annotations:
+              reloader.stakater.com/auto: "true"
+            # Resource estimates - workers handle job execution
+            # Chart defaults: ~256Mi memory, 200m CPU  
+            # These are estimates based on assumption workers need more resources
+            resources:
+              requests:
+                memory: "1Gi"    # Estimate: 4x chart default for job processing
+                cpu: "500m"      # Estimate: 2.5x chart default for compute tasks
+              limits:
+                memory: "4Gi"    # Estimate: headroom for large job processing
+                cpu: "2000m"     # Estimate: burst capacity for CPU-intensive jobs
+          lsp:
+            annotations:
+              reloader.stakater.com/auto: "true"
+            # Resource estimates - Language Server Protocol for code completion
+            # Chart defaults: ~128Mi memory, 100m CPU
+            # These are conservative estimates for LSP functionality
+            resources:
+              requests:
+                memory: "200Mi"  # Estimate: 1.5x chart default for language parsing
+                cpu: "100m"      # Estimate: same as chart default
+              limits:
+                memory: "1Gi"    # Estimate: headroom for large codebases
+                cpu: "500m"      # Estimate: burst capacity for intensive parsing
+          ingress:
+            enabled: false
+    - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
+      targetRevision: HEAD
+      path: argocd/app-configs/windmill
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: windmill
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - kind: ExternalSecret
+      group: external-secrets.io
+      jqPathExpressions:
+        - .spec.data[].remoteRef.conversionStrategy
+        - .spec.data[].remoteRef.decodingStrategy
+        - .spec.data[].remoteRef.metadataPolicy

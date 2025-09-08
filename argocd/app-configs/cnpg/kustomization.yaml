@@ -9,6 +9,8 @@ resources:
   - backup.yaml
   - db-authentik.yaml
   - db-grafana.yaml
+  - db-windmill-user.yaml
+  - ../windmill/db-windmill.yaml
   - https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.6.0/manifest.yaml
 
 

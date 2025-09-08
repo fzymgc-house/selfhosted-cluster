@@ -1,0 +1,16 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: windmill-tls
+  namespace: windmill
+spec:
+  secretName: windmill-tls
+  issuerRef:
+    name: vault-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - windmill.fzymgc.house
+    - windmill.k8s.fzymgc.house
+  usages:
+    - server auth

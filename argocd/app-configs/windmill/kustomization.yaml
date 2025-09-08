@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: windmill
+
+resources:
+  - namespace.yaml
+  - secrets.yaml
+  - certificate.yaml
+  - ingress.yaml
+  - db-windmill.yaml

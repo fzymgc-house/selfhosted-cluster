@@ -1,9 +1,0 @@
-{
-    "flux-operator-mcp":{
-      "command":"flux-operator-mcp",
-      "args":["serve"],
-      "env":{
-        "KUBECONFIG":"/Users/sean/.kube/configs/fzymgc-house-admin.yml"
-      }
-    }
-  }

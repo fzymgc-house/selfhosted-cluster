@@ -113,7 +113,7 @@ metadata:
 spec:
   cluster:
     name: main
-  instances: 3
+  instances: 2
   type: rw
   pgbouncer:
     poolMode: session

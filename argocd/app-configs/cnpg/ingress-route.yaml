@@ -5,8 +5,7 @@ metadata:
   namespace: postgres
 spec:
   entryPoints:
-    - websecure
-    - web
+    - postgres
   routes:
     - match: HostSNI(`pg-main.fzymgc.house`)
       services:

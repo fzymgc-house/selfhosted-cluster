@@ -99,3 +99,40 @@ spec:
           - windmill_user
 
 
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: pooler-main-rw
+spec:
+  cluster:
+    name: main
+  instances: 3
+  type: rw
+  pgbouncer:
+    poolMode: session
+    parameters:
+      max_client_conn: "1000"
+      default_pool_size: "10"
+  serviceTemplate:
+    metadata:
+      labels:
+        app: pooler
+    spec:
+      type: LoadBalancer      
+  template:
+    metadata:
+      labels:
+        app: pooler
+    spec:
+      containers: []
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - pooler
+            topologyKey: "kubernetes.io/hostname"      

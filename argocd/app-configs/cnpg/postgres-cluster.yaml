@@ -104,6 +104,7 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Pooler
 metadata:
   name: pooler-main-rw
+  namespace: postgres
 spec:
   cluster:
     name: main

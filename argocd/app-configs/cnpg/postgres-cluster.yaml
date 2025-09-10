@@ -102,24 +102,3 @@ spec:
         disablePassword: true
         inRoles:
           - windmill_user
-
-
----
-apiVersion: postgresql.cnpg.io/v1
-kind: Pooler
-metadata:
-  name: pooler-main-rw
-  namespace: postgres
-spec:
-  cluster:
-    name: main
-  instances: 2
-  type: rw
-  pgbouncer:
-    poolMode: session
-    parameters:
-      max_client_conn: "100"
-      default_pool_size: "2"
-  serviceTemplate:
-    spec:
-      type: LoadBalancer      

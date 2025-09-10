@@ -21,10 +21,9 @@ spec:
             multiplayer: 1
             baseUrl: "https://windmill.fzymgc.house"
             cookieDomain: "fzymgc.house"
-            databaseUrl:
-              secretRef:
-                name: windmill-secrets
-                key: database_url
+            databaseUrlSecretName: windmill-secrets
+            databaseUrlSecretKey: database_url
+            exposeHostDocker: true
             rustLog: "info"
           postgresql:
             enabled: false

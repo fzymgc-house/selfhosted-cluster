@@ -80,7 +80,7 @@ spec:
       - name: windmill_admin
         ensure: present
         passwordSecret:
-          name: main-windmill_admin-credentials
+          name: main-windmill-admin-credentials
         superuser: false
         login: true
         connectionLimit: -1

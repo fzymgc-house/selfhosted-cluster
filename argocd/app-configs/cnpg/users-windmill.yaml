@@ -35,7 +35,7 @@ spec:
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: main-windmill_admin-credentials
+  name: main-windmill-admin-credentials
   namespace: postgres
 spec:
   refreshPolicy: Periodic
@@ -44,7 +44,7 @@ spec:
     name: vault
     kind: ClusterSecretStore
   target:
-    name: main-windmill_admin-credentials
+    name: main-windmill-admin-credentials
     creationPolicy: Owner
     deletionPolicy: Delete
     template:

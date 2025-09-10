@@ -11,6 +11,7 @@ resources:
   - db-authentik.yaml
   - db-grafana.yaml
   - db-windmill.yaml
+  - ingress-route.yaml
   - https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.6.0/manifest.yaml
 
 

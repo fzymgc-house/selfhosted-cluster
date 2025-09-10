@@ -123,9 +123,6 @@ spec:
       max_client_conn: "1000"
       default_pool_size: "10"
   serviceTemplate:
-    metadata:
-      labels:
-        app: pooler
     spec:
       type: LoadBalancer      
   template:
@@ -133,7 +130,6 @@ spec:
       labels:
         app: pooler
     spec:
-      containers: []
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

@@ -15,6 +15,7 @@ spec:
     kind: ClusterIssuer
   dnsNames:
     - "pg-main.tpi-beta.fzymgc.house"
+    - "pg-main.fzymgc.house"
     - "main-r"
     - "main-ro"
     - "main-rw"

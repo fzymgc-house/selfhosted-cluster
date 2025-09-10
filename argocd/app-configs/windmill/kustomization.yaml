@@ -8,4 +8,3 @@ resources:
   - secrets.yaml
   - certificate.yaml
   - ingress.yaml
-  - db-windmill.yaml

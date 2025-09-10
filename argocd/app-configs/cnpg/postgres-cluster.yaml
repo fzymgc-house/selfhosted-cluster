@@ -71,14 +71,6 @@ spec:
         inherit: true
       - name: windmill
         ensure: present
-        passwordSecret:
-          name: main-windmill-credentials
-        superuser: false
-        login: true
-        connectionLimit: -1
-        inherit: true
-      - name: windmill
-        ensure: present
         superuser: false
         login: true
         connectionLimit: -1

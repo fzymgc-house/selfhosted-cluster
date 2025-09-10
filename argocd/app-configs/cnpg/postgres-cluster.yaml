@@ -125,18 +125,3 @@ spec:
   serviceTemplate:
     spec:
       type: LoadBalancer      
-  template:
-    metadata:
-      labels:
-        app: pooler
-    spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - pooler
-            topologyKey: "kubernetes.io/hostname"      

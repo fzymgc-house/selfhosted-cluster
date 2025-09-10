@@ -1,3 +1,4 @@
+---
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -30,3 +31,36 @@ spec:
       remoteRef:
         key: fzymgc-house/cluster/postgres/users/main-windmill
         property: password
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: main-windmill_admin-credentials
+  namespace: postgres
+spec:
+  refreshPolicy: Periodic
+  refreshInterval: 5m
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: main-windmill_admin-credentials
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      metadata:
+        labels:
+          cnpg.io/reload: "true"
+      type: kubernetes.io/basic-auth
+      data:
+        username: "{{ .admin_username }}"
+        password: "{{ .admin_password }}"
+  data:
+    - secretKey: admin_username
+      remoteRef:
+        key: fzymgc-house/cluster/postgres/users/main-windmill
+        property: admin_username
+    - secretKey: admin_password
+      remoteRef:
+        key: fzymgc-house/cluster/postgres/users/main-windmill
+        property: admin_password

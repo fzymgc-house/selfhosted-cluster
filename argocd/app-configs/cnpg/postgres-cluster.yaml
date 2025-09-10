@@ -77,5 +77,13 @@ spec:
         login: true
         connectionLimit: -1
         inherit: true
+      - name: windmill_admin
+        ensure: present
+        passwordSecret:
+          name: main-windmill_admin-credentials
+        superuser: false
+        login: true
+        connectionLimit: -1
+        inherit: true
 
 

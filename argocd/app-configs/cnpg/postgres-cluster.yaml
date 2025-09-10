@@ -26,6 +26,13 @@ spec:
       secret:
         name: main-main-admin-credentials
 
+  postgresql:
+    parameters:
+      wal_level: logical
+      max_wal_senders: 10
+      max_replication_slots: 10
+      
+
   backup:
     target: prefer-standby
     volumeSnapshot:

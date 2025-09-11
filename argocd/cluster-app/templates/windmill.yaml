@@ -31,6 +31,188 @@ spec:
             enabled: false
           minio:
             enabled: false
+          workerGroups:
+            # workers configuration
+            # The default worker group
+            - name: "default"
+              # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
+              controller: "Deployment"
+
+              replicas: 3
+              # -- Annotations to apply to the pods
+              annotations: {}
+
+              # -- If a job is being ran, the container will wait for it to finish before terminating until this grace period
+              terminationGracePeriodSeconds: 604800
+
+              # -- Labels to apply to the pods
+              labels: {}
+
+              # -- Node selector to use for scheduling the pods
+              nodeSelector: {}
+
+              # -- Tolerations to apply to the pods
+              tolerations: []
+
+              # -- Host aliases to apply to the pods (overrides global hostAliases if set)
+              hostAliases: []
+
+              # -- Security context to apply to the container
+              podSecurityContext:
+                # -- run as user. The default is 0 for root user
+                runAsUser: 0
+                # -- run explicitly as a non-root user. The default is false.
+                runAsNonRoot: false
+              # -- Security context to apply to the pod
+              containerSecurityContext: {}
+
+              # -- Affinity rules to apply to the pods
+              affinity: {}
+
+              # -- Resource limits and requests for the pods
+              resources:
+                limits:
+                  memory: "2Gi"
+
+              # -- Extra environment variables to apply to the pods
+              extraEnv:
+                - name: INIT_SCRIPT
+                  value: |
+                    wget -O - https://apt.releases.hashicorp.com/gpg | \
+                      sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+                      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list \
+                      sudo apt update && sudo apt install -y vault
+              # -- Extra sidecar containers
+              extraContainers: []
+              mode: "worker"
+
+              # -- Init containers
+              initContainers: []
+              volumes: []
+              volumeMounts: []
+
+              # -- Volume claim templates. Only applies when controller is "StatefulSet"
+              volumeClaimTemplates: []
+
+              # -- command override
+              command: []
+
+              # -- mount the docker socket inside the container to be able to run docker command as docker client to the host docker daemon
+              exposeHostDocker: false
+
+            - name: "native"
+              # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
+              controller: "Deployment"
+
+              replicas: 1
+              # -- Annotations to apply to the pods
+              annotations: {}
+
+              # -- Labels to apply to the pods
+              labels: {}
+
+              # -- Node selector to use for scheduling the pods
+              nodeSelector: {}
+
+              # -- Tolerations to apply to the pods
+              tolerations: []
+
+              # -- Host aliases to apply to the pods (overrides global hostAliases if set)
+              hostAliases: []
+
+              # -- Security context to apply to the container
+              podSecurityContext:
+                # -- run as user. The default is 0 for root user
+                runAsUser: 0
+                # -- run explicitly as a non-root user. The default is false.
+                runAsNonRoot: false
+              # -- Security context to apply to the pod
+              containerSecurityContext: {}
+
+              # -- Affinity rules to apply to the pods
+              affinity: {}
+
+              # -- Resource limits and requests for the pods
+              resources:
+                limits:
+                  memory: "2Gi"
+
+              # -- Extra environment variables to apply to the pods
+              extraEnv:
+                - name: "NUM_WORKERS"
+                  value: "8"
+                - name: "SLEEP_QUEUE"
+                  value: "200"
+              # -- Extra sidecar containers
+              extraContainers: []
+
+              mode: "worker"
+
+              volumes: []
+              volumeMounts: []
+
+              # -- mount the docker socket inside the container to be able to run docker command as docker client to the host docker daemon
+              exposeHostDocker: false
+
+              # -- Volume claim templates. Only applies when controller is "StatefulSet"
+              volumeClaimTemplates: []
+
+            - name: "gpu"
+              # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
+              controller: "Deployment"
+
+              replicas: 0
+              # -- Annotations to apply to the pods
+              annotations: {}
+
+              # -- Labels to apply to the pods
+              labels: {}
+
+              # -- Node selector to use for scheduling the pods
+              nodeSelector: {}
+
+              # -- Tolerations to apply to the pods
+              tolerations: []
+
+              # -- Host aliases to apply to the pods (overrides global hostAliases if set)
+              hostAliases: []
+
+              # -- Security context to apply to the container
+              podSecurityContext:
+                # -- run as user. The default is 0 for root user
+                runAsUser: 0
+                # -- run explicitly as a non-root user. The default is false.
+                runAsNonRoot: false
+              # -- Security context to apply to the pod
+              containerSecurityContext: {}
+
+              # -- Affinity rules to apply to the pods
+              affinity: {}
+
+              # -- Resource limits and requests for the pods
+              resources:
+                limits:
+                  memory: "2Gi"
+
+              # -- Extra environment variables to apply to the pods
+              extraEnv: []
+              # -- Extra sidecar containers
+              extraContainers: []
+
+              mode: "worker"
+
+              volumes: []
+              volumeMounts: []
+
+              # -- command override
+              command: []
+
+              # -- mount the docker socket inside the container to be able to run docker command as docker client to the host docker daemon
+              exposeHostDocker: false
+
+              # -- Volume claim templates. Only applies when controller is "StatefulSet"
+              volumeClaimTemplates: []
+
           app:
             annotations:
               reloader.stakater.com/auto: "true"

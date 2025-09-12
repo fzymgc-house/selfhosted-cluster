@@ -11,7 +11,7 @@ spec:
     - chart: grafana-operator
       repoURL: ghcr.io/grafana/helm-charts
       path: grafana-operator
-      targetRevision: v5.18.0
+      targetRevision: v5.19.4
       helm:
         releaseName: grafana-operator
     - repoURL: https://github.com/fzymgc-house/selfhosted-cluster

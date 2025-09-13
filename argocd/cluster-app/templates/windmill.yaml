@@ -14,6 +14,13 @@ spec:
       helm:
         releaseName: windmill
         valuesObject:
+          # disable built-in database, redis, and minio from the chart
+          postgresql:
+            enabled: false
+          redis:
+            enabled: false
+          minio:
+            enabled: false
           windmill:
             cookieDomain: "fzymgc.house"
             baseDomain: windmill.fzymgc.house
@@ -22,209 +29,202 @@ spec:
             databaseUrlSecretKey: database_url
             exposeHostDocker: true
             rustLog: "info"
-          # disable built-in database, redis, and minio from the chart
-          postgresql:
-            enabled: false
-          redis:
-            enabled: false
-          minio:
-            enabled: false
-          workerGroups:
-            # workers configuration
-            # The default worker group
-            - name: "default"
-              # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
-              controller: "StatefulSet"
+            workerGroups:
+              # workers configuration
+              # The default worker group
+              - name: "default"
+                # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
+                controller: "StatefulSet"
 
-              replicas: 3
-              # -- Annotations to apply to the pods
-              annotations: {}
+                replicas: 3
+                # -- Annotations to apply to the pods
+                annotations: {}
 
-              # -- If a job is being ran, the container will wait for it to finish before terminating until this grace period
-              terminationGracePeriodSeconds: 604800
+                # -- If a job is being ran, the container will wait for it to finish before terminating until this grace period
+                terminationGracePeriodSeconds: 604800
 
-              # -- Labels to apply to the pods
-              labels: {}
+                # -- Labels to apply to the pods
+                labels: {}
 
-              # -- Node selector to use for scheduling the pods
-              nodeSelector: {}
+                # -- Node selector to use for scheduling the pods
+                nodeSelector: {}
 
-              # -- Tolerations to apply to the pods
-              tolerations: []
+                # -- Tolerations to apply to the pods
+                tolerations: []
 
-              # -- Host aliases to apply to the pods (overrides global hostAliases if set)
-              hostAliases: []
+                # -- Host aliases to apply to the pods (overrides global hostAliases if set)
+                hostAliases: []
 
-              # -- Security context to apply to the container
-              podSecurityContext:
-                # -- run as user. The default is 0 for root user
-                runAsUser: 0
-                # -- run explicitly as a non-root user. The default is false.
-                runAsNonRoot: false
-              # -- Security context to apply to the pod
-              containerSecurityContext: {}
+                # -- Security context to apply to the container
+                podSecurityContext:
+                  # -- run as user. The default is 0 for root user
+                  runAsUser: 0
+                  # -- run explicitly as a non-root user. The default is false.
+                  runAsNonRoot: false
+                # -- Security context to apply to the pod
+                containerSecurityContext: {}
 
-              # -- Affinity rules to apply to the pods
-              affinity: 
-                podAntiAffinity:
-                  preferredDuringSchedulingIgnoredDuringExecution:
-                    - weight: 100
-                      podAffinityTerm:
-                        labelSelector:
-                          matchLabels:
-                            app.kubernetes.io/name: windmill-workers
-                            workerGroup: default
-                        topologyKey: topology.kubernetes.io/zone
+                # -- Affinity rules to apply to the pods
+                affinity: 
+                  podAntiAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                      - weight: 100
+                        podAffinityTerm:
+                          labelSelector:
+                            matchLabels:
+                              app.kubernetes.io/name: windmill-workers
+                              workerGroup: default
+                          topologyKey: topology.kubernetes.io/zone
 
-              # -- Resource limits and requests for the pods
-              resources:
-                limits:
-                  memory: "2Gi"
+                # -- Resource limits and requests for the pods
+                resources:
+                  limits:
+                    memory: "2Gi"
 
-              # -- Extra environment variables to apply to the pods
-              extraEnv:
-                - name: INIT_SCRIPT
-                  value: |
-                    wget -O - https://apt.releases.hashicorp.com/gpg | \
-                      sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg \
-                      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list \
-                      sudo apt update && sudo apt install -y vault
-              # -- Extra sidecar containers
-              extraContainers: []
-              mode: "worker"
+                # -- Extra environment variables to apply to the pods
+                extraEnv:
+                  - name: INIT_SCRIPT
+                    value: |
+                      wget -O - https://apt.releases.hashicorp.com/gpg | \
+                        sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+                        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list \
+                        sudo apt update && sudo apt install -y vault
+                # -- Extra sidecar containers
+                extraContainers: []
+                mode: "worker"
 
-              # -- Init containers
-              initContainers: []
-              volumes: []
-              volumeMounts: []
+                # -- Init containers
+                initContainers: []
+                volumes: []
+                volumeMounts: []
 
-              # -- Volume claim templates. Only applies when controller is "StatefulSet"
-              volumeClaimTemplates: []
+                # -- Volume claim templates. Only applies when controller is "StatefulSet"
+                volumeClaimTemplates: []
 
-              # -- command override
-              command: []
+                # -- command override
+                command: []
 
-              # -- mount the docker socket inside the container to be able to run docker command as docker client to the host docker daemon
-              exposeHostDocker: true
+                # -- mount the docker socket inside the container to be able to run docker command as docker client to the host docker daemon
+                exposeHostDocker: true
 
-            - name: "native"
-              # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
-              controller: "Deployment"
+              - name: "native"
+                # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
+                controller: "Deployment"
 
-              replicas: 1
-              # -- Annotations to apply to the pods
-              annotations: {}
+                replicas: 1
+                # -- Annotations to apply to the pods
+                annotations: {}
 
-              # -- Labels to apply to the pods
-              labels: {}
+                # -- Labels to apply to the pods
+                labels: {}
 
-              # -- Node selector to use for scheduling the pods
-              nodeSelector: {}
+                # -- Node selector to use for scheduling the pods
+                nodeSelector: {}
 
-              # -- Tolerations to apply to the pods
-              tolerations: []
+                # -- Tolerations to apply to the pods
+                tolerations: []
 
-              # -- Host aliases to apply to the pods (overrides global hostAliases if set)
-              hostAliases: []
+                # -- Host aliases to apply to the pods (overrides global hostAliases if set)
+                hostAliases: []
 
-              # -- Security context to apply to the container
-              podSecurityContext:
-                # -- run as user. The default is 0 for root user
-                runAsUser: 0
-                # -- run explicitly as a non-root user. The default is false.
-                runAsNonRoot: false
-              # -- Security context to apply to the pod
-              containerSecurityContext: {}
+                # -- Security context to apply to the container
+                podSecurityContext:
+                  # -- run as user. The default is 0 for root user
+                  runAsUser: 0
+                  # -- run explicitly as a non-root user. The default is false.
+                  runAsNonRoot: false
+                # -- Security context to apply to the pod
+                containerSecurityContext: {}
 
-              # -- Affinity rules to apply to the pods
-              affinity: {}
+                # -- Affinity rules to apply to the pods
+                affinity: {}
 
-              # -- Resource limits and requests for the pods
-              resources:
-                limits:
-                  memory: "2Gi"
+                # -- Resource limits and requests for the pods
+                resources:
+                  limits:
+                    memory: "2Gi"
 
-              # -- Extra environment variables to apply to the pods
-              extraEnv:
-                - name: "NUM_WORKERS"
-                  value: "8"
-                - name: "SLEEP_QUEUE"
-                  value: "200"
-              # -- Extra sidecar containers
-              extraContainers: []
+                # -- Extra environment variables to apply to the pods
+                extraEnv:
+                  - name: "NUM_WORKERS"
+                    value: "8"
+                  - name: "SLEEP_QUEUE"
+                    value: "200"
+                # -- Extra sidecar containers
+                extraContainers: []
 
-              mode: "worker"
+                mode: "worker"
 
-              volumes: []
-              volumeMounts: []
+                volumes: []
+                volumeMounts: []
 
-              # -- mount the docker socket inside the container to be able to run docker command as docker client to the host docker daemon
-              exposeHostDocker: true
+                # -- mount the docker socket inside the container to be able to run docker command as docker client to the host docker daemon
+                exposeHostDocker: true
 
-              # -- Volume claim templates. Only applies when controller is "StatefulSet"
-              volumeClaimTemplates: []
+                # -- Volume claim templates. Only applies when controller is "StatefulSet"
+                volumeClaimTemplates: []
 
-            - name: "gpu"
-              # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
-              controller: "Deployment"
+              - name: "gpu"
+                # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
+                controller: "Deployment"
 
-              replicas: 0
-              # -- Annotations to apply to the pods
-              annotations: {}
+                replicas: 0
+                # -- Annotations to apply to the pods
+                annotations: {}
 
-              # -- Labels to apply to the pods
-              labels: {}
+                # -- Labels to apply to the pods
+                labels: {}
 
-              # -- Node selector to use for scheduling the pods
-              nodeSelector: {}
+                # -- Node selector to use for scheduling the pods
+                nodeSelector: {}
 
-              # -- Tolerations to apply to the pods
-              tolerations: []
+                # -- Tolerations to apply to the pods
+                tolerations: []
 
-              # -- Host aliases to apply to the pods (overrides global hostAliases if set)
-              hostAliases: []
+                # -- Host aliases to apply to the pods (overrides global hostAliases if set)
+                hostAliases: []
 
-              # -- Security context to apply to the container
-              podSecurityContext:
-                # -- run as user. The default is 0 for root user
-                runAsUser: 0
-                # -- run explicitly as a non-root user. The default is false.
-                runAsNonRoot: false
-              # -- Security context to apply to the pod
-              containerSecurityContext: {}
+                # -- Security context to apply to the container
+                podSecurityContext:
+                  # -- run as user. The default is 0 for root user
+                  runAsUser: 0
+                  # -- run explicitly as a non-root user. The default is false.
+                  runAsNonRoot: false
+                # -- Security context to apply to the pod
+                containerSecurityContext: {}
 
-              # -- Affinity rules to apply to the pods
-              affinity: {}
+                # -- Affinity rules to apply to the pods
+                affinity: {}
 
-              # -- Resource limits and requests for the pods
-              resources:
-                limits:
-                  memory: "2Gi"
+                # -- Resource limits and requests for the pods
+                resources:
+                  limits:
+                    memory: "2Gi"
 
-              # -- Extra environment variables to apply to the pods
-              extraEnv: []
-              # -- Extra sidecar containers
-              extraContainers: []
+                # -- Extra environment variables to apply to the pods
+                extraEnv: []
+                # -- Extra sidecar containers
+                extraContainers: []
 
-              mode: "worker"
+                mode: "worker"
 
-              volumes: []
-              volumeMounts: []
+                volumes: []
+                volumeMounts: []
 
-              # -- command override
-              command: []
+                # -- command override
+                command: []
 
-              # -- mount the docker socket inside the container to be able to run docker command as docker client to the host docker daemon
-              exposeHostDocker: true
+                # -- mount the docker socket inside the container to be able to run docker command as docker client to the host docker daemon
+                exposeHostDocker: true
 
-              # -- Volume claim templates. Only applies when controller is "StatefulSet"
-              volumeClaimTemplates: []
-          ingress:
-            enabled: false
-          enterprise:
-            enabled: false
-          hub:
-            enabled: false
+                # -- Volume claim templates. Only applies when controller is "StatefulSet"
+                volumeClaimTemplates: []
+            ingress:
+              enabled: false
+            enterprise:
+              enabled: false
+            hub:
+              enabled: false
     - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
       targetRevision: HEAD
       path: argocd/app-configs/windmill

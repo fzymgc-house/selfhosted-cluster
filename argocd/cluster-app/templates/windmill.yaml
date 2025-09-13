@@ -15,16 +15,14 @@ spec:
         releaseName: windmill
         valuesObject:
           windmill:
-            appReplicas: 2
-            workerReplicas: 3
-            lspReplicas: 1
-            multiplayer: 1
-            baseUrl: "https://windmill.fzymgc.house"
             cookieDomain: "fzymgc.house"
+            baseDomain: windmill.fzymgc.house
+            baseProtocol: https
             databaseUrlSecretName: windmill-secrets
             databaseUrlSecretKey: database_url
             exposeHostDocker: true
             rustLog: "info"
+          # disable built-in database, redis, and minio from the chart
           postgresql:
             enabled: false
           redis:
@@ -36,7 +34,7 @@ spec:
             # The default worker group
             - name: "default"
               # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
-              controller: "Deployment"
+              controller: "StatefulSet"
 
               replicas: 3
               # -- Annotations to apply to the pods
@@ -67,7 +65,16 @@ spec:
               containerSecurityContext: {}
 
               # -- Affinity rules to apply to the pods
-              affinity: {}
+              affinity: 
+                podAntiAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                    - weight: 100
+                      podAffinityTerm:
+                        labelSelector:
+                          matchLabels:
+                            app.kubernetes.io/name: windmill-workers
+                            workerGroup: default
+                        topologyKey: topology.kubernetes.io/zone
 
               # -- Resource limits and requests for the pods
               resources:
@@ -98,7 +105,7 @@ spec:
               command: []
 
               # -- mount the docker socket inside the container to be able to run docker command as docker client to the host docker daemon
-              exposeHostDocker: false
+              exposeHostDocker: true
 
             - name: "native"
               # -- Controller to use. Valid options are "Deployment" and "StatefulSet"
@@ -152,7 +159,7 @@ spec:
               volumeMounts: []
 
               # -- mount the docker socket inside the container to be able to run docker command as docker client to the host docker daemon
-              exposeHostDocker: false
+              exposeHostDocker: true
 
               # -- Volume claim templates. Only applies when controller is "StatefulSet"
               volumeClaimTemplates: []
@@ -208,51 +215,15 @@ spec:
               command: []
 
               # -- mount the docker socket inside the container to be able to run docker command as docker client to the host docker daemon
-              exposeHostDocker: false
+              exposeHostDocker: true
 
               # -- Volume claim templates. Only applies when controller is "StatefulSet"
               volumeClaimTemplates: []
-
-          app:
-            annotations:
-              reloader.stakater.com/auto: "true"
-            # Resource estimates - not based on official recommendations
-            # Chart defaults: ~128Mi memory, 100m CPU
-            # These are conservative estimates for frontend workload
-            resources:
-              requests:
-                memory: "500Mi"  # Estimate: 4x chart default for UI responsiveness
-                cpu: "200m"      # Estimate: 2x chart default for multiple users
-              limits:
-                memory: "2Gi"    # Estimate: headroom for memory spikes
-                cpu: "1000m"     # Estimate: burst capacity for UI operations
-          workers:
-            annotations:
-              reloader.stakater.com/auto: "true"
-            # Resource estimates - workers handle job execution
-            # Chart defaults: ~256Mi memory, 200m CPU  
-            # These are estimates based on assumption workers need more resources
-            resources:
-              requests:
-                memory: "1Gi"    # Estimate: 4x chart default for job processing
-                cpu: "500m"      # Estimate: 2.5x chart default for compute tasks
-              limits:
-                memory: "4Gi"    # Estimate: headroom for large job processing
-                cpu: "2000m"     # Estimate: burst capacity for CPU-intensive jobs
-          lsp:
-            annotations:
-              reloader.stakater.com/auto: "true"
-            # Resource estimates - Language Server Protocol for code completion
-            # Chart defaults: ~128Mi memory, 100m CPU
-            # These are conservative estimates for LSP functionality
-            resources:
-              requests:
-                memory: "200Mi"  # Estimate: 1.5x chart default for language parsing
-                cpu: "100m"      # Estimate: same as chart default
-              limits:
-                memory: "1Gi"    # Estimate: headroom for large codebases
-                cpu: "500m"      # Estimate: burst capacity for intensive parsing
           ingress:
+            enabled: false
+          enterprise:
+            enabled: false
+          hub:
             enabled: false
     - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
       targetRevision: HEAD

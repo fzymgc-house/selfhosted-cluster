@@ -18,12 +18,17 @@
   "packageRules": [
     {
       "description": "Disable major version updates by default for stability",
-      "matchUpdateTypes": ["major"],
+      "matchUpdateTypes": [
+        "major"
+      ],
       "enabled": false
     },
     {
       "description": "Auto-merge minor and patch updates for all dependencies",
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "groupName": "all non-major dependencies",
       "groupSlug": "all-minor-patch",
       "automerge": true,
@@ -33,76 +38,125 @@
     },
     {
       "description": "HashiCorp Terraform providers",
-      "matchPackagePatterns": ["^hashicorp/"],
-      "matchManagers": ["terraform"],
+      "matchManagers": [
+        "terraform"
+      ],
       "groupName": "hashicorp providers",
       "groupSlug": "hashicorp-providers",
       "automerge": true,
-      "minimumReleaseAge": "3 days"
+      "minimumReleaseAge": "3 days",
+      "matchPackageNames": [
+        "/^hashicorp//"
+      ]
     },
     {
       "description": "Kubernetes core components - handle with care",
-      "matchPackagePatterns": ["^kubernetes$", "^k3s$", "^kubectl$"],
       "groupName": "kubernetes components",
       "groupSlug": "kubernetes-components",
-      "schedule": ["before 4am on monday"],
+      "schedule": [
+        "before 4am on monday"
+      ],
       "automerge": false,
-      "minimumReleaseAge": "7 days"
+      "minimumReleaseAge": "7 days",
+      "matchPackageNames": [
+        "/^kubernetes$/",
+        "/^k3s$/",
+        "/^kubectl$/"
+      ]
     },
     {
       "description": "Core infrastructure components",
-      "matchPackagePatterns": ["^cert-manager$", "^traefik$", "^metallb$", "^calico$", "^longhorn$"],
       "groupName": "core infrastructure components",
       "groupSlug": "core-infrastructure",
       "automerge": true,
-      "minimumReleaseAge": "5 days"
+      "minimumReleaseAge": "5 days",
+      "matchPackageNames": [
+        "/^cert-manager$/",
+        "/^traefik$/",
+        "/^metallb$/",
+        "/^calico$/",
+        "/^longhorn$/"
+      ]
     },
     {
       "description": "Monitoring and observability stack",
-      "matchPackagePatterns": ["^grafana", "^victoriametrics", "^prometheus", "^loki$", "^alloy$"],
       "groupName": "monitoring stack",
       "groupSlug": "monitoring-stack",
       "automerge": true,
-      "minimumReleaseAge": "3 days"
+      "minimumReleaseAge": "3 days",
+      "matchPackageNames": [
+        "/^grafana/",
+        "/^victoriametrics/",
+        "/^prometheus/",
+        "/^loki$/",
+        "/^alloy$/"
+      ]
     },
     {
       "description": "Security and identity components",
-      "matchPackagePatterns": ["^vault$", "^authentik$", "^external-secrets$"],
       "groupName": "security components",
       "groupSlug": "security-components",
       "automerge": true,
-      "minimumReleaseAge": "5 days"
+      "minimumReleaseAge": "5 days",
+      "matchPackageNames": [
+        "/^vault$/",
+        "/^authentik$/",
+        "/^external-secrets$/"
+      ]
     },
     {
       "description": "Terraform core and CLI",
-      "matchPackagePatterns": ["^hashicorp/terraform$"],
-      "matchManagers": ["terraform"],
+      "matchManagers": [
+        "terraform"
+      ],
       "groupName": "terraform core",
       "groupSlug": "terraform-core",
       "automerge": false,
-      "minimumReleaseAge": "7 days"
+      "minimumReleaseAge": "7 days",
+      "matchPackageNames": [
+        "/^hashicorp/terraform$/"
+      ]
     },
     {
       "description": "Container images from GitHub Container Registry",
-      "matchPackagePatterns": ["^ghcr\\.io/"],
-      "matchManagers": ["kubernetes", "argocd", "kustomize"],
+      "matchManagers": [
+        "kubernetes",
+        "argocd",
+        "kustomize"
+      ],
       "groupName": "container images (ghcr)",
       "groupSlug": "container-images-ghcr",
       "automerge": true,
-      "minimumReleaseAge": "2 days"
+      "minimumReleaseAge": "2 days",
+      "matchPackageNames": [
+        "/^ghcr\\.io//"
+      ]
     },
     {
       "description": "Docker Hub container images",
-      "matchPackagePatterns": ["^docker\\.io/", "^library/", "^[^/]+$"],
-      "matchManagers": ["kubernetes", "argocd", "kustomize", "docker-compose"],
+      "matchManagers": [
+        "kubernetes",
+        "argocd",
+        "kustomize",
+        "docker-compose"
+      ],
       "groupName": "container images (docker hub)",
       "groupSlug": "container-images-docker",
       "automerge": true,
-      "minimumReleaseAge": "2 days"
+      "minimumReleaseAge": "2 days",
+      "matchPackageNames": [
+        "/^docker\\.io//",
+        "/^library//",
+        "/^[^/]+$/"
+      ]
     },
     {
       "description": "Helm charts",
-      "matchManagers": ["helm-values", "helmv3", "argocd"],
+      "matchManagers": [
+        "helm-values",
+        "helmv3",
+        "argocd"
+      ],
       "groupName": "helm charts",
       "groupSlug": "helm-charts",
       "automerge": true,
@@ -110,8 +164,13 @@
     },
     {
       "description": "ArgoCD applications and manifests",
-      "matchManagers": ["argocd", "kubernetes"],
-      "matchFileNames": ["argocd/**"],
+      "matchManagers": [
+        "argocd",
+        "kubernetes"
+      ],
+      "matchFileNames": [
+        "argocd/**"
+      ],
       "groupName": "argocd manifests",
       "groupSlug": "argocd-manifests",
       "automerge": true,
@@ -119,24 +178,36 @@
     },
     {
       "description": "Database and storage components",
-      "matchPackagePatterns": ["^postgres", "^postgresql", "^cnpg", "^valkey$", "^redis$"],
       "groupName": "database components",
       "groupSlug": "database-components",
       "automerge": true,
-      "minimumReleaseAge": "5 days"
+      "minimumReleaseAge": "5 days",
+      "matchPackageNames": [
+        "/^postgres/",
+        "/^postgresql/",
+        "/^cnpg/",
+        "/^valkey$/",
+        "/^redis$/"
+      ]
     },
     {
       "description": "CI/CD and workflow components",
-      "matchPackagePatterns": ["^argo-workflows$", "^argo-events$", "^renovate$"],
       "groupName": "ci/cd components",
       "groupSlug": "cicd-components",
       "automerge": true,
-      "minimumReleaseAge": "3 days"
+      "minimumReleaseAge": "3 days",
+      "matchPackageNames": [
+        "/^argo-workflows$/",
+        "/^argo-events$/",
+        "/^renovate$/"
+      ]
     }
   ],
   "vulnerabilityAlerts": {
     "enabled": true,
-    "schedule": ["at any time"],
+    "schedule": [
+      "at any time"
+    ],
     "automerge": true,
     "minimumReleaseAge": null,
     "commitMessageSuffix": "[SECURITY]"
@@ -149,7 +220,10 @@
   "dependencyDashboardFooter": "- [ ] <!-- rebase-check -->If you want to rebase/retry any PRs, tick the checkbox above",
   "prConcurrentLimit": 10,
   "prHourlyLimit": 4,
-  "labels": ["dependencies", "renovate"],
+  "labels": [
+    "dependencies",
+    "renovate"
+  ],
   "assignees": [],
   "reviewers": [],
   "automerge": true,
@@ -162,7 +236,9 @@
   "semanticCommitScope": "deps",
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["before 4am on monday"],
+    "schedule": [
+      "before 4am on monday"
+    ],
     "automerge": true,
     "platformAutomerge": true
   },
@@ -170,26 +246,40 @@
     {
       "customType": "regex",
       "description": "Update _VERSION variables in shell scripts and Makefiles",
-      "fileMatch": ["\\.sh$", "Makefile$", "\\.mk$"],
+      "managerFilePatterns": [
+        "/\\.sh$/",
+        "/Makefile$/",
+        "/\\.mk$/"
+      ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+\\w+_VERSION\\s*=\\s*[\"']?(?<currentValue>\\S+)[\"']?"
       ]
     }
   ],
   "argocd": {
-    "managerFilePatterns": ["argocd/.+\\.ya?ml$"]
+    "managerFilePatterns": [
+      "argocd/.+\\.ya?ml$"
+    ]
   },
   "helm-values": {
-    "managerFilePatterns": ["argocd/.+/values\\.ya?ml$"]
+    "managerFilePatterns": [
+      "argocd/.+/values\\.ya?ml$"
+    ]
   },
   "kustomize": {
-    "managerFilePatterns": ["kustomization\\.ya?ml$"]
+    "managerFilePatterns": [
+      "kustomization\\.ya?ml$"
+    ]
   },
   "terraform": {
-    "managerFilePatterns": ["\\.tf$"]
+    "managerFilePatterns": [
+      "\\.tf$"
+    ]
   },
   "kubernetes": {
-    "managerFilePatterns": ["\\.(yaml|yml)$"],
+    "managerFilePatterns": [
+      "\\.(yaml|yml)$"
+    ],
     "ignorePaths": [
       "**/templates/**",
       "**/*.gotmpl"
@@ -208,7 +298,7 @@
     "**/__tests__/**"
   ],
   "prBodyTemplate": "{{{header}}}{{{table}}}{{{notes}}}{{{changelogs}}}",
-  "prTitle": "{{semanticPrefix}}{{#if isPin}}pin{{else}}update{{/if}} {{depName}} to {{#if isMajor}}v{{newMajor}}{{else}}{{#if isSingleVersion}}v{{newVersion}}{{else}}{{newValue}}{{/if}}{{/if}}",
+  "prTitle": "{{#if semanticCommitType}}{{semanticCommitType}}{{#if semanticCommitScope}}({{semanticCommitScope}}){{/if}}: {{/if}}{{#if isPin}}pin{{else}}update{{/if}} {{depName}} to {{#if isMajor}}v{{newMajor}}{{else}}{{#if isSingleVersion}}v{{newVersion}}{{else}}{{newValue}}{{/if}}{{/if}}",
   "commitMessageTopic": "{{depName}}",
   "commitMessageExtra": "to {{#if isMajor}}v{{newMajor}}{{else}}{{#if isSingleVersion}}v{{newVersion}}{{else}}{{newValue}}{{/if}}{{/if}}",
   "commitMessageSuffix": ""

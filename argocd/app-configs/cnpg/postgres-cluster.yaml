@@ -1,104 +1,101 @@
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: main
-  namespace: postgres
+    name: main
+    namespace: postgres
 spec:
-  instances: 3
-  imageName: ghcr.io/cloudnative-pg/postgresql:17.5-standard-bullseye
-  primaryUpdateStrategy: unsupervised
+    instances: 3
+    imageName: ghcr.io/cloudnative-pg/postgresql:17.5-standard-bullseye
+    primaryUpdateStrategy: unsupervised
 
-  certificates:
-    serverTLSSecret: postgres-main-server-tls
-    serverCASecret: postgres-main-server-tls
-    clientCASecret: postgres-main-server-tls
-    replicationTLSSecret: postgres-main-streaming-replica-client-tls
+    certificates:
+        serverTLSSecret: postgres-main-server-tls
+        replicationTLSSecret: postgres-main-streaming-replica-client-tls
 
-  enableSuperuserAccess: true
+    enableSuperuserAccess: true
 
-  superuserSecret:
-    name: main-superuser-credentials
+    superuserSecret:
+        name: main-superuser-credentials
 
-  bootstrap:
-    initdb:
-      database: main
-      owner: main-admin
-      secret:
-        name: main-main-admin-credentials
+    bootstrap:
+        initdb:
+            database: main
+            owner: main-admin
+            secret:
+                name: main-main-admin-credentials
 
-  postgresql:
-    parameters:
-      wal_level: logical
-      
+    postgresql:
+        parameters:
+            wal_level: logical
 
-  backup:
-    target: prefer-standby
-    volumeSnapshot:
-      className: longhorn-snap
-    retentionPolicy: 30d
+    backup:
+        target: prefer-standby
+        volumeSnapshot:
+            className: longhorn-snap
+        retentionPolicy: 30d
 
-  plugins:
-    - name: barman-cloud.cloudnative-pg.io
-      enabled: true
-      isWALArchiver: true
-      parameters:
-        barmanObjectName: barman-object-store-main
+    plugins:
+        - name: barman-cloud.cloudnative-pg.io
+          enabled: true
+          isWALArchiver: true
+          parameters:
+              barmanObjectName: barman-object-store-main
 
-  storage:
-    size: 10Gi
-    storageClass: postgres-storage
+    storage:
+        size: 10Gi
+        storageClass: postgres-storage
 
-  resources:
-    requests:
-      cpu: 256m
-      memory: 384Mi
-    limits:
-      cpu: 1500m
-      memory: 1Gi
+    resources:
+        requests:
+            cpu: 256m
+            memory: 384Mi
+        limits:
+            cpu: 1500m
+            memory: 1Gi
 
-  managed:
-    roles:
-      - name: authentik
-        ensure: present
-        passwordSecret:
-          name: main-authentik-credentials
-        superuser: false
-        login: true
-        connectionLimit: -1
-        inherit: true
-      - name: grafana
-        ensure: present
-        passwordSecret:
-          name: main-grafana-credentials
-        superuser: false
-        login: true
-        connectionLimit: -1
-        inherit: true
-      - name: windmill
-        ensure: present
-        superuser: false
-        login: true
-        connectionLimit: -1
-        inherit: true
-        passwordSecret:
-          name: main-windmill-credentials
-        inRoles:
-          - windmill_user
-          - windmill_admin
-      - name: windmill_user
-        ensure: present
-        superuser: false
-        login: false
-        connectionLimit: -1
-        inherit: true
-        disablePassword: true
-      - name: windmill_admin
-        ensure: present
-        superuser: false
-        login: false
-        connectionLimit: -1
-        inherit: true
-        bypassrls: true
-        disablePassword: true
-        inRoles:
-          - windmill_user
+    managed:
+        roles:
+            - name: authentik
+              ensure: present
+              passwordSecret:
+                  name: main-authentik-credentials
+              superuser: false
+              login: true
+              connectionLimit: -1
+              inherit: true
+            - name: grafana
+              ensure: present
+              passwordSecret:
+                  name: main-grafana-credentials
+              superuser: false
+              login: true
+              connectionLimit: -1
+              inherit: true
+            - name: windmill
+              ensure: present
+              superuser: false
+              login: true
+              connectionLimit: -1
+              inherit: true
+              passwordSecret:
+                  name: main-windmill-credentials
+              inRoles:
+                  - windmill_user
+                  - windmill_admin
+            - name: windmill_user
+              ensure: present
+              superuser: false
+              login: false
+              connectionLimit: -1
+              inherit: true
+              disablePassword: true
+            - name: windmill_admin
+              ensure: present
+              superuser: false
+              login: false
+              connectionLimit: -1
+              inherit: true
+              bypassrls: true
+              disablePassword: true
+              inRoles:
+                  - windmill_user

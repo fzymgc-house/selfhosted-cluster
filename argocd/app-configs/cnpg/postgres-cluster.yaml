@@ -10,7 +10,7 @@ spec:
 
     certificates:
         serverTLSSecret: postgres-main-server-tls
-        replicationTLSSecret: postgres-main-streaming-replica-client-tls
+        serverCASecret: postgres-main-server-tls
 
     enableSuperuserAccess: true
 

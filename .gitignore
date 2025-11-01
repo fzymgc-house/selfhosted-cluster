@@ -160,3 +160,23 @@ terraform.rc
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/terraform,visualstudiocode,mac
+
+# Python virtual environments
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Ansible
+*.retry
+.ansible_facts_cache
+.ansible/
+ansible/.ansible_facts_cache

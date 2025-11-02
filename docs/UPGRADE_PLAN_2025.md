@@ -18,7 +18,7 @@ This document tracks the systematic upgrade of all infrastructure components acr
 
 ---
 
-## Phase 1: Foundation & Prerequisites ✅ CURRENT PHASE
+## Phase 1: Foundation & Prerequisites ✅ COMPLETED
 
 ### Pre-Flight Checklist
 - [ ] Full Velero backup created
@@ -62,8 +62,9 @@ ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --tags cert-manager
 **Target:** 0.20.4
 
 ### 1.4 MetalLB Update
-**Status:** 🔄 In Progress
+**Status:** ✅ Completed
 **Branch:** `upgrade/metallb-v0.15.2`
+**PR:** #37
 **Files:**
 - `ansible/roles/k3sup/tasks/metallb.yml`
 - `argocd/cluster-app/templates/metallb.yaml`
@@ -72,11 +73,12 @@ ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --tags cert-manager
 
 ---
 
-## Phase 2: Core Infrastructure (Week 2)
+## Phase 2: Core Infrastructure (Week 2) ✅ CURRENT PHASE
 
 ### 2.1 ArgoCD Update
-**Status:** ⏳ Not Started
+**Status:** 🔄 In Progress
 **Branch:** `upgrade/argocd-v9.0.5`
+**Files:** `ansible/roles/k3sup/tasks/argocd.yml`
 **Current:** 8.3.0
 **Target:** 9.0.5
 **Priority:** 🟡 Medium

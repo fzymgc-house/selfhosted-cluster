@@ -120,8 +120,6 @@
       global:
         addPrometheusAnnotations: true
         domain: argocd.fzymgc.house
-        image:
-          tag: v3.1.1
       configs:
         cm:
           url: https://argocd.fzymgc.house

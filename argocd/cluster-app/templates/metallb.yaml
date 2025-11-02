@@ -1,3 +1,4 @@
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -10,12 +11,12 @@ spec:
   sources:
     - chart: metallb
       repoURL: https://metallb.github.io/metallb
-      targetRevision: v0.14.9
+      targetRevision: v0.15.2
       helm:
         releaseName: metallb
     - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
       targetRevision: HEAD
-      path: argocd/app-configs/metallb      
+      path: argocd/app-configs/metallb
   destination:
     server: https://kubernetes.default.svc
     namespace: metallb

@@ -54,14 +54,15 @@ ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --tags cert-manager
 ```
 
 ### 1.3 External Secrets Operator Update
-**Status:** 🔄 In Progress
+**Status:** ✅ Completed
 **Branch:** `upgrade/external-secrets-v0.20.4`
+**PR:** #36
 **Files:** `ansible/roles/k3sup/tasks/external-secrets-operator.yml`
 **Current:** 0.19.2
 **Target:** 0.20.4
 
 ### 1.4 MetalLB Update
-**Status:** ⏳ Not Started
+**Status:** 🔄 In Progress
 **Branch:** `upgrade/metallb-v0.15.2`
 **Files:**
 - `ansible/roles/k3sup/tasks/metallb.yml`

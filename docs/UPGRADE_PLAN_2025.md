@@ -34,8 +34,9 @@ This document tracks the systematic upgrade of all infrastructure components acr
 **Target:** kubernetes.core >=6.2.0
 
 ### 1.2 cert-manager Update
-**Status:** 🔄 In Progress
+**Status:** ✅ Completed
 **Branch:** `upgrade/cert-manager-v1.19.1`
+**PR:** #34
 **Files:** `ansible/roles/k3sup/tasks/cert-manager.yml`
 **Current:** v1.18.2
 **Target:** v1.19.1
@@ -53,7 +54,7 @@ ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --tags cert-manager
 ```
 
 ### 1.3 External Secrets Operator Update
-**Status:** ⏳ Not Started
+**Status:** 🔄 In Progress
 **Branch:** `upgrade/external-secrets-v0.20.4`
 **Files:** `ansible/roles/k3sup/tasks/external-secrets-operator.yml`
 **Current:** 0.19.2

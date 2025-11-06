@@ -10,7 +10,7 @@
     create_namespace: true
     chart_ref: prometheus-operator-crds
     chart_repo_url: https://prometheus-community.github.io/helm-charts
-    chart_version: 23.0.0
+    chart_version: 79.1.0
     wait: true
   become: false
   run_once: true

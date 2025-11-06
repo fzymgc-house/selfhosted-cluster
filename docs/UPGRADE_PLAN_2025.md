@@ -93,8 +93,10 @@ ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --tags cert-manager
 **Notes:** MUST update before kube-prometheus-stack
 
 ### 2.3 Longhorn Update
-**Status:** ⏳ Not Started
+**Status:** 🔄 In Progress
 **Branch:** `upgrade/longhorn-v1.10.1`
+**PR:** (pending - waiting for backup verification)
+**Files:** `ansible/roles/k3sup/tasks/longhorn.yml`
 **Current:** 1.9.1
 **Target:** 1.10.1
 **Priority:** 🔴 High
@@ -103,6 +105,7 @@ ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --tags cert-manager
 - Skip v1.10.0 (critical bug)
 - Use hotfixed image if needed
 - Allow 30-60 minutes for completion
+- ✅ Pre-upgrade Velero backup: pre-longhorn-upgrade-20251106-134603
 **Warning:** ⚠️ Read upgrade guide: https://longhorn.io/docs/1.10.0/deploy/upgrade/
 
 ### 2.4 Core ArgoCD Apps

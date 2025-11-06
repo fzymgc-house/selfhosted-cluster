@@ -75,16 +75,18 @@ ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --tags cert-manager
 ## Phase 2: Core Infrastructure (Week 2)
 
 ### 2.1 ArgoCD Update
-**Status:** ⏳ Not Started
+**Status:** ✅ Completed
 **Branch:** `upgrade/argocd-v9.0.5`
+**PR:** #38
 **Current:** 8.3.0
 **Target:** 9.0.5
 **Priority:** 🟡 Medium
 **Notes:** Review breaking changes in 9.x release notes
 
 ### 2.2 Prometheus CRDs Update
-**Status:** ⏳ Not Started
+**Status:** 🔄 In Progress
 **Branch:** `upgrade/prometheus-crds-v79.1.0`
+**Files:** `ansible/roles/k3sup/tasks/prometheus-crds.yml`
 **Current:** 23.0.0
 **Target:** 79.1.0
 **Priority:** 🟡 Medium

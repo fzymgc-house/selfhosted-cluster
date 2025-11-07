@@ -32,7 +32,7 @@ spec:
         target: prefer-standby
         volumeSnapshot:
             className: longhorn-snap
-        retentionPolicy: 30d
+        retentionPolicy: 15d
 
     plugins:
         - name: barman-cloud.cloudnative-pg.io

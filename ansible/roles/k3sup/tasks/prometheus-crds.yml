@@ -3,15 +3,15 @@
 ---
 - name: Install Prometheus Operator CRDs via Helm
   kubernetes.core.helm:
-    kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
-    state: present
-    namespace: prometheus
-    name: prometheus-operator-crds
-    create_namespace: true
-    chart_ref: prometheus-operator-crds
-    chart_repo_url: https://prometheus-community.github.io/helm-charts
-    chart_version: 79.1.0
-    wait: true
+      kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
+      state: present
+      namespace: prometheus
+      name: prometheus-operator-crds
+      create_namespace: true
+      chart_ref: prometheus-operator-crds
+      chart_repo_url: https://prometheus-community.github.io/helm-charts
+      chart_version: 24.0.1
+      wait: true
   become: false
   run_once: true
   delegate_to: localhost

@@ -115,13 +115,11 @@
     chart_ref: argo-cd
     chart_repo_url: https://argoproj.github.io/argo-helm
     wait: false
-    chart_version: 8.3.0
+    chart_version: 9.0.5
     values:
       global:
         addPrometheusAnnotations: true
         domain: argocd.fzymgc.house
-        image:
-          tag: v3.1.1
       configs:
         cm:
           url: https://argocd.fzymgc.house

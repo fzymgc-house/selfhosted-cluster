@@ -114,4 +114,4 @@ spec:
         - kind: MutatingWebhookConfiguration
           group: admissionregistration.k8s.io
           jqPathExpressions:
-              - ".webhooks[].clientConfig.caBundle"
+              - ".webhooks[].clientConfig"

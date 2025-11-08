@@ -52,7 +52,7 @@ spec:
 apiVersion: postgresql.cnpg.io/v1
 kind: ScheduledBackup
 metadata:
-  name: main-backup-hourly
+  name: main-backup-4h
   namespace: postgres
 spec:
   method: plugin

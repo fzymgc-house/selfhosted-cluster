@@ -1,0 +1,6 @@
+{
+  "sandbox": {
+    "autoAllowBashIfSandboxed": true,
+    "enabled": true
+  }
+}

@@ -29,11 +29,14 @@ selfhosted-cluster/
 │   ├── k3s-playbook.yml        # Main cluster deployment playbook
 │   ├── bootstrap-nodes-playbook.yml # Node preparation playbook
 │   └── reboot-nodes-playbook.yml     # Cluster maintenance playbook
+├── argocd/                     # Kubernetes manifests and ArgoCD configurations
+│   ├── app-configs/            # Application-specific configurations
+│   └── cluster-app/            # Cluster-wide application set
 ├── tf/                         # Terraform modules for external services
 │   ├── vault/                  # Vault configuration and policies
 │   ├── authentik/              # Identity provider setup
+│   ├── grafana/                # Grafana dashboards and data sources
 │   └── core-services/          # Additional service configurations
-└── containers/                 # Custom container images
 ```
 
 ## 🖥️ Hardware Configuration
@@ -128,6 +131,7 @@ The `tf/` directory provides Infrastructure as Code for external services:
 
 - **Vault Management**: Policies, auth methods, PKI
 - **Authentik Configuration**: OIDC applications, user groups
+- **Grafana Configuration**: Dashboards, data sources, folders
 - **External Integrations**: Cloud services, DNS, monitoring
 
 ## 🛡️ Security Features

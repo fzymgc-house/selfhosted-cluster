@@ -68,11 +68,11 @@ spec:
               mountPath: /app/data
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "100m"
+              memory: "512Mi"
+              cpu: "500m"
             limits:
-              memory: "1000Mi"
-              cpu: "1000m"
+              memory: "2000Mi"
+              cpu: "5000m"
           livenessProbe:
             httpGet:
               path: /api/app/about

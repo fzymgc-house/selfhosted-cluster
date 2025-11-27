@@ -49,10 +49,10 @@ spec:
   resources:
     requests:
       cpu: 256m
-      memory: 384Mi
+      memory: 768Mi
     limits:
       cpu: 1500m
-      memory: 1Gi
+      memory: 2Gi
 
   managed:
     roles:

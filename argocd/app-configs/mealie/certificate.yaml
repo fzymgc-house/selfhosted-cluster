@@ -1,0 +1,19 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mealie-tls
+  namespace: mealie
+spec:
+  secretName: mealie-tls
+  issuerRef:
+    name: vault-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - mealie.fzymgc.house
+    - mealie.k8s.fzymgc.house
+    - mealie.mealie.svc.cluster.local
+    - mealie.mealie.svc
+    - mealie
+  usages:
+    - server auth

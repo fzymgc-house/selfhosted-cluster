@@ -1,0 +1,12 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: mealie
+  namespace: postgres
+spec:
+  cluster:
+    name: main
+  ensure: present
+  name: mealie
+  owner: mealie

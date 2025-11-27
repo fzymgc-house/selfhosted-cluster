@@ -71,6 +71,14 @@ spec:
               login: true
               connectionLimit: -1
               inherit: true
+            - name: mealie
+              ensure: present
+              passwordSecret:
+                  name: main-mealie-credentials
+              superuser: false
+              login: true
+              connectionLimit: -1
+              inherit: true
             - name: windmill
               ensure: present
               superuser: false

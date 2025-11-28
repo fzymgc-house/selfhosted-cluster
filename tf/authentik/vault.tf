@@ -1,17 +1,32 @@
-import {
-  to = vault_auth_backend.oidc
-  id = "oidc"
+# Vault OAuth2/OIDC Integration
+# Provides single sign-on for HashiCorp Vault
+
+# Data sources for Vault configuration
+data "vault_kv_secret_v2" "authentik" {
+  mount = "secret"
+  name  = "fzymgc-house/cluster/authentik"
 }
 
 data "vault_pki_secret_backend_issuer" "fzymgc" {
-  backend = "fzymgc-house/v1/ica1/v1"
+  backend    = "fzymgc-house/v1/ica1/v1"
   issuer_ref = "d2c70b5d-8125-d217-f0a1-39289a096df2"
 }
 
+# Groups for Vault access control
+resource "authentik_group" "vault_users" {
+  name = "vault-users"
+}
 
-data "vault_kv_secret_v2" "authentik" {
-  mount = "secret"
-  name = "fzymgc-house/cluster/authentik"
+resource "authentik_group" "vault_admin" {
+  name         = "vault-admin"
+  parent       = authentik_group.vault_users.id
+  is_superuser = false
+}
+
+# Vault OIDC Auth Backend Configuration
+import {
+  to = vault_auth_backend.oidc
+  id = "oidc"
 }
 
 resource "vault_auth_backend" "oidc" {
@@ -29,30 +44,31 @@ locals {
 }
 
 resource "vault_jwt_auth_backend" "oidc" {
-  path = "oidc"
-  type = "oidc"
-  oidc_client_id = data.vault_kv_secret_v2.authentik.data["vault_oidc_client_id"]
-  oidc_client_secret = data.vault_kv_secret_v2.authentik.data["vault_oidc_client_secret"]
-  oidc_discovery_url = local.authentik_url
+  path                  = "oidc"
+  type                  = "oidc"
+  oidc_client_id        = data.vault_kv_secret_v2.authentik.data["vault_oidc_client_id"]
+  oidc_client_secret    = data.vault_kv_secret_v2.authentik.data["vault_oidc_client_secret"]
+  oidc_discovery_url    = local.authentik_url
   oidc_discovery_ca_pem = join("\n", data.vault_pki_secret_backend_issuer.fzymgc.ca_chain)
-  jwks_ca_pem = join("\n", data.vault_pki_secret_backend_issuer.fzymgc.ca_chain)
-  default_role = "reader"
+  jwks_ca_pem           = join("\n", data.vault_pki_secret_backend_issuer.fzymgc.ca_chain)
+  default_role          = "reader"
 }
 
 import {
   to = vault_jwt_auth_backend_role.reader
   id = "auth/oidc/role/reader"
 }
+
 resource "vault_jwt_auth_backend_role" "reader" {
-  backend = vault_jwt_auth_backend.oidc.path
-  role_name = "reader"
-  user_claim = "sub"
+  backend         = vault_jwt_auth_backend.oidc.path
+  role_name       = "reader"
+  user_claim      = "sub"
   bound_audiences = [local.authentik_url, data.vault_kv_secret_v2.authentik.data["vault_oidc_client_id"]]
-  token_ttl = 3600
-  token_max_ttl = 86400
-  token_policies = ["default","reader"]
-  groups_claim = "groups"
-  oidc_scopes = ["openid", "email", "profile", "groups"]
+  token_ttl       = 3600
+  token_max_ttl   = 86400
+  token_policies  = ["default", "reader"]
+  groups_claim    = "groups"
+  oidc_scopes     = ["openid", "email", "profile", "groups"]
   allowed_redirect_uris = [
     "https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback",
     "https://vault.fzymgc.house/oidc/callback",
@@ -60,22 +76,17 @@ resource "vault_jwt_auth_backend_role" "reader" {
   ]
   verbose_oidc_logging = true
 }
-
-# import {
-#   to = vault_jwt_auth_backend_role.admin
-#   id = "auth/oidc/role/admin"
-# }
 
 resource "vault_jwt_auth_backend_role" "admin" {
-  backend = vault_jwt_auth_backend.oidc.path
-  role_name = "admin"
-  user_claim = "sub"
+  backend         = vault_jwt_auth_backend.oidc.path
+  role_name       = "admin"
+  user_claim      = "sub"
   bound_audiences = [local.authentik_url, data.vault_kv_secret_v2.authentik.data["vault_oidc_client_id"]]
-  token_ttl = 3600
-  token_max_ttl = 86400
-  token_policies = ["default","admin"]
-  groups_claim = "groups"
-  oidc_scopes = ["openid", "email", "profile", "groups"]
+  token_ttl       = 3600
+  token_max_ttl   = 86400
+  token_policies  = ["default", "admin"]
+  groups_claim    = "groups"
+  oidc_scopes     = ["openid", "email", "profile", "groups"]
   allowed_redirect_uris = [
     "https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback",
     "https://vault.fzymgc.house/oidc/callback",
@@ -84,33 +95,62 @@ resource "vault_jwt_auth_backend_role" "admin" {
   verbose_oidc_logging = true
 }
 
+# OAuth2 Provider for Vault
+resource "authentik_provider_oauth2" "vault" {
+  name      = "Provider for Vault"
+  client_id = "IoC5Ul9TnUprBbgPw8LoE0Ivu1X4Pv5YI0q60Bxc"
 
-# data "vault_identity_group" "reader" {
-#   group_name = "reader"
-# }
+  # Note: Vault uses a different authorization flow than Mealie (which uses implicit consent).
+  # This UUID was preserved during terraform import from existing Authentik configuration.
+  # TODO: Identify the flow slug and create a data source reference
+  authorization_flow    = "de91f0c6-7f6e-42cc-b71d-67cc48d2a82a"
+  invalidation_flow     = data.authentik_flow.default_provider_invalidation_flow.id
+  access_token_validity = "minutes=5"
 
-# data "vault_identity_group" "admin" {
-#   group_name = "admin"
-# }
+  allowed_redirect_uris = [
+    {
+      matching_mode = "strict"
+      url           = "https://vault.fzymgc.house/oidc/callback"
+    },
+    {
+      matching_mode = "strict"
+      url           = "https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback"
+    },
+    {
+      matching_mode = "strict"
+      url           = "http://localhost:8250/oidc/callback"
+    }
+  ]
 
-# import {
-#   to = vault_identity_group_alias.reader
-#   id = "95dce99c-a296-3b53-7246-7954ed701498"
-# }
+  property_mappings = [
+    data.authentik_property_mapping_provider_scope.openid.id,
+    data.authentik_property_mapping_provider_scope.email.id,
+    data.authentik_property_mapping_provider_scope.profile.id,
+    data.authentik_property_mapping_provider_scope.offline_access.id
+  ]
 
-# import {
-#   to = vault_identity_group_alias.admin
-#   id = "64fd0437-de89-7353-a3bf-b4d96ba887b1"
-# }
+  # Note: Vault uses a different signing certificate than Mealie (which uses "authentik Self-signed Certificate").
+  # This UUID was preserved during terraform import from existing Authentik configuration.
+  # TODO: Identify the certificate name and create a data source reference
+  signing_key = "55061d48-d235-40dc-834b-426736a2619c"
+}
 
-# resource "vault_identity_group_alias" "reader" {
-#   mount_accessor = vault_jwt_auth_backend.oidc.accessor
-#   canonical_id = data.vault_identity_group.reader.id
-#   name = "vault-user"
-# }
+# Vault Application
+resource "authentik_application" "vault" {
+  name              = "Vault"
+  slug              = "vault"
+  protocol_provider = authentik_provider_oauth2.vault.id
+  meta_launch_url   = "https://vault.fzymgc.house"
+  meta_icon         = "https://vault.fzymgc.house/ui/favicon-c02e22ca67f83a0fb6f2fd265074910a.png"
+}
 
-# resource "vault_identity_group_alias" "admin" {
-#   mount_accessor = vault_jwt_auth_backend.oidc.accessor
-#   canonical_id = data.vault_identity_group.admin.id
-#   name = "vault-admin"
-# }
+# Store Vault OIDC credentials in Vault for cluster consumption
+resource "vault_kv_secret_v2" "vault_oidc" {
+  mount = "secret"
+  name  = "fzymgc-house/cluster/vault/oidc"
+
+  data_json = jsonencode({
+    client_id     = authentik_provider_oauth2.vault.client_id
+    client_secret = authentik_provider_oauth2.vault.client_secret
+  })
+}

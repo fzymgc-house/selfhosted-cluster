@@ -34,6 +34,7 @@ data "authentik_property_mapping_provider_scope" "profile" {
   managed = "goauthentik.io/providers/oauth2/scope-profile"
 }
 
-data "authentik_property_mapping_provider_scope" "groups" {
-  managed = "goauthentik.io/providers/oauth2/scope-groups"
-}
+# Commented out temporarily - managed name may vary by Authentik version
+# data "authentik_property_mapping_provider_scope" "groups" {
+#   managed = "goauthentik.io/providers/oauth2/scope-groups"
+# }

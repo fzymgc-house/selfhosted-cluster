@@ -50,3 +50,14 @@ resource "authentik_application" "argocd" {
   protocol_provider = authentik_provider_oauth2.argocd.id
   meta_launch_url   = "https://argocd.fzymgc.house"
 }
+
+# Store ArgoCD OIDC credentials in Vault for cluster consumption
+resource "vault_kv_secret_v2" "argocd_oidc" {
+  mount = "secret"
+  name  = "fzymgc-house/cluster/argocd/oidc"
+
+  data_json = jsonencode({
+    client_id     = authentik_provider_oauth2.argocd.client_id
+    client_secret = authentik_provider_oauth2.argocd.client_secret
+  })
+}

@@ -42,3 +42,11 @@ resource "authentik_provider_oauth2" "argocd" {
 
   signing_key = "55061d48-d235-40dc-834b-426736a2619c"
 }
+
+# ArgoCD Application
+resource "authentik_application" "argocd" {
+  name              = "ArgoCD"
+  slug              = "argo-cd"
+  protocol_provider = authentik_provider_oauth2.argocd.id
+  meta_launch_url   = "https://argocd.fzymgc.house"
+}

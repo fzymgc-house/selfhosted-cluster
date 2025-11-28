@@ -6,6 +6,9 @@ resource "authentik_provider_oauth2" "argo_workflows" {
   name      = "Provider for Argo Workflow"
   client_id = "3DgaUYpDvHyMuuXGiMVwZXOJzCmTxBeQydZYYF8Z"
 
+  # Note: Argo Workflows uses a different authorization flow than Mealie (which uses implicit consent).
+  # This UUID was preserved during terraform import from existing Authentik configuration.
+  # TODO: Identify the flow slug and create a data source reference
   authorization_flow    = "de91f0c6-7f6e-42cc-b71d-67cc48d2a82a"
   invalidation_flow     = data.authentik_flow.default_provider_invalidation_flow.id
   access_token_validity = "minutes=5"
@@ -27,6 +30,9 @@ resource "authentik_provider_oauth2" "argo_workflows" {
     data.authentik_property_mapping_provider_scope.profile.id
   ]
 
+  # Note: Argo Workflows uses a different signing certificate than Mealie (which uses "authentik Self-signed Certificate").
+  # This UUID was preserved during terraform import from existing Authentik configuration.
+  # TODO: Identify the certificate name and create a data source reference
   signing_key = "55061d48-d235-40dc-834b-426736a2619c"
 }
 

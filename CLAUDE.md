@@ -41,6 +41,87 @@ The `.envrc` file (if using direnv) contains environment variables for BMC acces
 - Terraform (for infrastructure changes)
 - direnv (optional, for automatic environment activation)
 
+## Development Workflow
+
+**CRITICAL: This repository follows a strict GitOps workflow. ALL changes must go through proper feature branches and pull requests.**
+
+### Branch and PR Workflow
+
+1. **NEVER commit directly to `main`**
+   - All changes must be made on feature branches
+   - Branch naming: `feat/description`, `fix/description`, `chore/description`
+   - Example: `feat/add-monitoring`, `fix/database-connection`
+
+2. **Feature Branch Process**
+   ```bash
+   # Create a new branch from main
+   git checkout main
+   git pull
+   git checkout -b feat/your-feature-name
+
+   # Make your changes, commit, and push
+   git add .
+   git commit -m "feat: Description of changes"
+   git push -u origin feat/your-feature-name
+
+   # Create a pull request using gh CLI
+   gh pr create --title "feat: Description" --body "PR description"
+   ```
+
+3. **Pull Request Requirements**
+   - All PRs must pass automated checks (validation, linting, reviews)
+   - PRs are merged to `main` after approval
+   - Use meaningful commit messages following conventional commits format
+
+### GitOps Principles
+
+**CRITICAL: Do NOT apply changes directly to the running cluster using `kubectl apply`**
+
+This cluster uses ArgoCD for GitOps-based deployment. Changes are deployed as follows:
+
+1. **Source of Truth**: Git repository (`main` branch) is the single source of truth
+2. **Automated Sync**: ArgoCD automatically syncs changes from Git to the cluster
+3. **No Manual Application**: Never use `kubectl apply` to deploy application changes
+4. **Exception**: Debugging only - temporary `kubectl` commands for troubleshooting are acceptable, but must not be permanent changes
+
+**Correct Workflow:**
+```bash
+# 1. Make changes in a feature branch
+git checkout -b feat/update-deployment
+# Edit deployment.yaml
+git add argocd/app-configs/app-name/deployment.yaml
+git commit -m "feat: Update deployment configuration"
+git push -u origin feat/update-deployment
+
+# 2. Create PR and merge after review
+gh pr create --title "feat: Update deployment"
+
+# 3. ArgoCD automatically syncs changes after merge to main
+# No manual kubectl apply needed!
+```
+
+**Incorrect Workflow (DO NOT DO THIS):**
+```bash
+# ❌ WRONG - Do not apply directly to cluster
+kubectl --context fzymgc-house apply -f deployment.yaml
+
+# ❌ WRONG - Do not commit directly to main
+git checkout main
+git commit -m "changes"
+git push origin main
+```
+
+### Monitoring Changes
+
+After merging a PR, monitor ArgoCD sync:
+```bash
+# Check application sync status
+kubectl --context fzymgc-house get application app-name -n argocd
+
+# Watch application health
+kubectl --context fzymgc-house get application app-name -n argocd -w
+```
+
 ## Common Commands
 
 ### Ansible Operations

@@ -137,3 +137,14 @@ resource "authentik_application" "vault" {
   meta_launch_url   = "https://vault.fzymgc.house"
   meta_icon         = "https://vault.fzymgc.house/ui/favicon-c02e22ca67f83a0fb6f2fd265074910a.png"
 }
+
+# Store Vault OIDC credentials in Vault for cluster consumption
+resource "vault_kv_secret_v2" "vault_oidc" {
+  mount = "secret"
+  name  = "fzymgc-house/cluster/vault/oidc"
+
+  data_json = jsonencode({
+    client_id     = authentik_provider_oauth2.vault.client_id
+    client_secret = authentik_provider_oauth2.vault.client_secret
+  })
+}

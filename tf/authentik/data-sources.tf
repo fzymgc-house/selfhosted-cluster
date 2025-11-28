@@ -35,3 +35,7 @@ data "authentik_property_mapping_provider_scope" "profile" {
   # Note: The profile scope includes the groups claim in Authentik
   # Groups are provided via: "groups": [group.name for group in request.user.ak_groups.all()]
 }
+
+data "authentik_property_mapping_provider_scope" "offline_access" {
+  managed = "goauthentik.io/providers/oauth2/scope-offline_access"
+}

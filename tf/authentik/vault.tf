@@ -94,3 +94,37 @@ resource "vault_jwt_auth_backend_role" "admin" {
   ]
   verbose_oidc_logging = true
 }
+
+# OAuth2 Provider for Vault
+resource "authentik_provider_oauth2" "vault" {
+  name      = "Provider for Vault"
+  client_id = "IoC5Ul9TnUprBbgPw8LoE0Ivu1X4Pv5YI0q60Bxc"
+
+  authorization_flow    = "de91f0c6-7f6e-42cc-b71d-67cc48d2a82a"
+  invalidation_flow     = data.authentik_flow.default_provider_invalidation_flow.id
+  access_token_validity = "minutes=5"
+
+  allowed_redirect_uris = [
+    {
+      matching_mode = "strict"
+      url           = "https://vault.fzymgc.house/oidc/callback"
+    },
+    {
+      matching_mode = "strict"
+      url           = "https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback"
+    },
+    {
+      matching_mode = "strict"
+      url           = "http://localhost:8250/oidc/callback"
+    }
+  ]
+
+  property_mappings = [
+    data.authentik_property_mapping_provider_scope.openid.id,
+    data.authentik_property_mapping_provider_scope.email.id,
+    data.authentik_property_mapping_provider_scope.profile.id,
+    data.authentik_property_mapping_provider_scope.offline_access.id
+  ]
+
+  signing_key = "55061d48-d235-40dc-834b-426736a2619c"
+}

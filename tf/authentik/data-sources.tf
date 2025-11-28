@@ -32,9 +32,6 @@ data "authentik_property_mapping_provider_scope" "openid" {
 
 data "authentik_property_mapping_provider_scope" "profile" {
   managed = "goauthentik.io/providers/oauth2/scope-profile"
+  # Note: The profile scope includes the groups claim in Authentik
+  # Groups are provided via: "groups": [group.name for group in request.user.ak_groups.all()]
 }
-
-# Commented out temporarily - managed name may vary by Authentik version
-# data "authentik_property_mapping_provider_scope" "groups" {
-#   managed = "goauthentik.io/providers/oauth2/scope-groups"
-# }

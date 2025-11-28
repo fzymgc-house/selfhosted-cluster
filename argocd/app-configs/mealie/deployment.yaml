@@ -70,6 +70,41 @@ spec:
                 secretKeyRef:
                   name: mealie-app-secrets
                   key: openai-api-key
+            # OIDC/SSO Configuration
+            - name: OIDC_AUTH_ENABLED
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-app-secrets
+                  key: oidc-auth-enabled
+            - name: OIDC_PROVIDER_NAME
+              value: "authentik"
+            - name: OIDC_CONFIGURATION_URL
+              value: "https://auth.fzymgc.house/application/o/mealie/.well-known/openid-configuration"
+            - name: OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-app-secrets
+                  key: oidc-client-id
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-app-secrets
+                  key: oidc-client-secret
+            - name: OIDC_SIGNUP_ENABLED
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-app-secrets
+                  key: oidc-signup-enabled
+            - name: OIDC_USER_GROUP
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-app-secrets
+                  key: oidc-user-group
+            - name: OIDC_ADMIN_GROUP
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-app-secrets
+                  key: oidc-admin-group
           volumeMounts:
             - name: mealie-data
               mountPath: /app/data

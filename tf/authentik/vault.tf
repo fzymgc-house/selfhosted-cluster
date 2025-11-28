@@ -4,14 +4,14 @@ import {
 }
 
 data "vault_pki_secret_backend_issuer" "fzymgc" {
-  backend = "fzymgc-house/v1/ica1/v1"
+  backend    = "fzymgc-house/v1/ica1/v1"
   issuer_ref = "d2c70b5d-8125-d217-f0a1-39289a096df2"
 }
 
 
 data "vault_kv_secret_v2" "authentik" {
   mount = "secret"
-  name = "fzymgc-house/cluster/authentik"
+  name  = "fzymgc-house/cluster/authentik"
 }
 
 resource "vault_auth_backend" "oidc" {
@@ -29,14 +29,14 @@ locals {
 }
 
 resource "vault_jwt_auth_backend" "oidc" {
-  path = "oidc"
-  type = "oidc"
-  oidc_client_id = data.vault_kv_secret_v2.authentik.data["vault_oidc_client_id"]
-  oidc_client_secret = data.vault_kv_secret_v2.authentik.data["vault_oidc_client_secret"]
-  oidc_discovery_url = local.authentik_url
+  path                  = "oidc"
+  type                  = "oidc"
+  oidc_client_id        = data.vault_kv_secret_v2.authentik.data["vault_oidc_client_id"]
+  oidc_client_secret    = data.vault_kv_secret_v2.authentik.data["vault_oidc_client_secret"]
+  oidc_discovery_url    = local.authentik_url
   oidc_discovery_ca_pem = join("\n", data.vault_pki_secret_backend_issuer.fzymgc.ca_chain)
-  jwks_ca_pem = join("\n", data.vault_pki_secret_backend_issuer.fzymgc.ca_chain)
-  default_role = "reader"
+  jwks_ca_pem           = join("\n", data.vault_pki_secret_backend_issuer.fzymgc.ca_chain)
+  default_role          = "reader"
 }
 
 import {
@@ -44,15 +44,15 @@ import {
   id = "auth/oidc/role/reader"
 }
 resource "vault_jwt_auth_backend_role" "reader" {
-  backend = vault_jwt_auth_backend.oidc.path
-  role_name = "reader"
-  user_claim = "sub"
+  backend         = vault_jwt_auth_backend.oidc.path
+  role_name       = "reader"
+  user_claim      = "sub"
   bound_audiences = [local.authentik_url, data.vault_kv_secret_v2.authentik.data["vault_oidc_client_id"]]
-  token_ttl = 3600
-  token_max_ttl = 86400
-  token_policies = ["default","reader"]
-  groups_claim = "groups"
-  oidc_scopes = ["openid", "email", "profile", "groups"]
+  token_ttl       = 3600
+  token_max_ttl   = 86400
+  token_policies  = ["default", "reader"]
+  groups_claim    = "groups"
+  oidc_scopes     = ["openid", "email", "profile", "groups"]
   allowed_redirect_uris = [
     "https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback",
     "https://vault.fzymgc.house/oidc/callback",
@@ -67,15 +67,15 @@ resource "vault_jwt_auth_backend_role" "reader" {
 # }
 
 resource "vault_jwt_auth_backend_role" "admin" {
-  backend = vault_jwt_auth_backend.oidc.path
-  role_name = "admin"
-  user_claim = "sub"
+  backend         = vault_jwt_auth_backend.oidc.path
+  role_name       = "admin"
+  user_claim      = "sub"
   bound_audiences = [local.authentik_url, data.vault_kv_secret_v2.authentik.data["vault_oidc_client_id"]]
-  token_ttl = 3600
-  token_max_ttl = 86400
-  token_policies = ["default","admin"]
-  groups_claim = "groups"
-  oidc_scopes = ["openid", "email", "profile", "groups"]
+  token_ttl       = 3600
+  token_max_ttl   = 86400
+  token_policies  = ["default", "admin"]
+  groups_claim    = "groups"
+  oidc_scopes     = ["openid", "email", "profile", "groups"]
   allowed_redirect_uris = [
     "https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback",
     "https://vault.fzymgc.house/oidc/callback",

@@ -15,5 +15,13 @@ terraform {
       source = "hashicorp/helm"
       version = "3.1.1"
     }
+    vault = {
+      source  = "hashicorp/vault"
+      version = "~> 4.0"
+    }
+    authentik = {
+      source  = "goauthentik/authentik"
+      version = "~> 2024.8"
+    }
   }
 }

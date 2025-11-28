@@ -180,3 +180,6 @@ pip-delete-this-directory.txt
 .ansible_facts_cache
 .ansible/
 ansible/.ansible_facts_cache
+
+# Git worktrees
+.worktrees/

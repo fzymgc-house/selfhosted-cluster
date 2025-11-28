@@ -128,3 +128,12 @@ resource "authentik_provider_oauth2" "vault" {
 
   signing_key = "55061d48-d235-40dc-834b-426736a2619c"
 }
+
+# Vault Application
+resource "authentik_application" "vault" {
+  name              = "Vault"
+  slug              = "vault"
+  protocol_provider = authentik_provider_oauth2.vault.id
+  meta_launch_url   = "https://vault.fzymgc.house"
+  meta_icon         = "https://vault.fzymgc.house/ui/favicon-c02e22ca67f83a0fb6f2fd265074910a.png"
+}

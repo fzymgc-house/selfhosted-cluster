@@ -30,6 +30,8 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: mealie
+      annotations:
+        reloader.stakater.com/auto: "true"
     spec:
       containers:
         - name: mealie

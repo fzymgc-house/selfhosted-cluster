@@ -42,3 +42,12 @@ resource "authentik_provider_oauth2" "grafana" {
   # TODO: Identify the certificate name and create a data source reference
   signing_key = "55061d48-d235-40dc-834b-426736a2619c"
 }
+
+# Grafana Application
+resource "authentik_application" "grafana" {
+  name              = "Grafana"
+  slug              = "grafana"
+  protocol_provider = authentik_provider_oauth2.grafana.id
+  meta_launch_url   = "https://grafana.fzymgc.house"
+  meta_description  = "Metrics and monitoring dashboards"
+}

@@ -47,7 +47,6 @@ All collections from `ansible/requirements-ansible.yml`:
 3. **Host prerequisites** (automatically mounted):
    - `~/.ssh` - SSH keys for Git and cluster access
    - `~/.kube/config` - Kubernetes cluster configuration
-   - `~/.aws` - AWS credentials (if needed)
    - 1Password agent socket (macOS: `~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock`)
 
 ### Opening the Repository in a Container
@@ -154,7 +153,6 @@ The following host directories are mounted into the container:
 |-----------|----------------|---------|
 | `~/.ssh` | `/home/vscode/.ssh` | SSH keys (read-only) |
 | `~/.kube` | `/home/vscode/.kube` | Kubernetes config |
-| `~/.aws` | `/home/vscode/.aws` | AWS credentials |
 | 1Password socket | `/home/vscode/.1password/agent.sock` | 1Password CLI auth |
 
 **Note:** Changes to these files inside the container affect your host system.

@@ -20,18 +20,14 @@ resource "authentik_provider_ldap" "nas" {
   # TLS configuration
   tls_server_name = "auth.fzymgc.house"
 
-  # Note: NAS uses a different bind flow than other applications.
-  # This UUID was preserved during terraform import from existing Authentik configuration.
-  # TODO: Identify the flow slug and create a data source reference
-  bind_flow = "b8c1dc50-547b-454d-8015-04202a9bdb17"
+  # NAS uses default authentication flow for LDAP bind
+  bind_flow = data.authentik_flow.default_authentication_flow.id
 
   # Unbind flow matches default_invalidation_flow
   unbind_flow = data.authentik_flow.default_invalidation_flow.id
 
-  # Note: NAS uses the "tls" certificate (same as Grafana signing key).
-  # This UUID was preserved during terraform import from existing Authentik configuration.
-  # TODO: Identify the certificate name and create a data source reference
-  certificate = "55061d48-d235-40dc-834b-426736a2619c"
+  # NAS uses TLS certificate (same as Grafana)
+  certificate = data.authentik_certificate_key_pair.tls.id
 }
 
 # NAS Application

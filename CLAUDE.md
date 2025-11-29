@@ -360,3 +360,4 @@ Defined in `ansible/inventory/`:
 - All external services use HTTPS with valid certificates
 - Vault policies are granular and scoped to specific paths
 - RBAC is namespace-scoped where possible
+- Never commit directly to the main branch, always use a feature branch and a PR

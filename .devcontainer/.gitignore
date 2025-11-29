@@ -1,0 +1,6 @@
+# Devcontainer build artifacts
+.devcontainer/build/
+.devcontainer/.tmp/
+
+# VS Code devcontainer cache
+.devcontainer/.vscode-server/

@@ -22,8 +22,9 @@ resource "authentik_provider_oauth2" "mealie" {
   client_type = "confidential"
   client_id   = "mealie"
 
-  authorization_flow = data.authentik_flow.default_authorization_flow.id
-  invalidation_flow  = data.authentik_flow.default_invalidation_flow.id
+  # Mealie uses explicit consent authorization flow (standardized across all apps)
+  authorization_flow = data.authentik_flow.default_provider_authorization_explicit_consent.id
+  invalidation_flow  = data.authentik_flow.default_provider_invalidation_flow.id
 
   allowed_redirect_uris = [
     {
@@ -42,7 +43,8 @@ resource "authentik_provider_oauth2" "mealie" {
     data.authentik_property_mapping_provider_scope.profile.id
   ]
 
-  signing_key = data.authentik_certificate_key_pair.generated.id
+  # Mealie uses TLS certificate for signing (standardized across all apps)
+  signing_key = data.authentik_certificate_key_pair.tls.id
 }
 
 # Application for Mealie

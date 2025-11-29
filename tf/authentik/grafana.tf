@@ -17,10 +17,8 @@ resource "authentik_provider_oauth2" "grafana" {
   name      = "Provider for Grafana"
   client_id = "XVTJeC00KCGqBu3NduFHwyZ5LzQP7khbCymqQIhP"
 
-  # Note: Grafana uses a different authorization flow than Mealie (which uses implicit consent).
-  # This UUID was preserved during terraform import from existing Authentik configuration.
-  # TODO: Identify the flow slug and create a data source reference
-  authorization_flow    = "de91f0c6-7f6e-42cc-b71d-67cc48d2a82a"
+  # Grafana uses explicit consent authorization flow (different from Mealie's implicit consent)
+  authorization_flow    = data.authentik_flow.default_provider_authorization_explicit_consent.id
   invalidation_flow     = data.authentik_flow.default_provider_invalidation_flow.id
   access_token_validity = "minutes=5"
 
@@ -37,10 +35,8 @@ resource "authentik_provider_oauth2" "grafana" {
     data.authentik_property_mapping_provider_scope.profile.id
   ]
 
-  # Note: Grafana uses a different signing certificate than Mealie (which uses "authentik Self-signed Certificate").
-  # This UUID was preserved during terraform import from existing Authentik configuration.
-  # TODO: Identify the certificate name and create a data source reference
-  signing_key = "55061d48-d235-40dc-834b-426736a2619c"
+  # Grafana uses TLS certificate for signing (different from Mealie's self-signed certificate)
+  signing_key = data.authentik_certificate_key_pair.tls.id
 }
 
 # Grafana Application

@@ -1,9 +1,14 @@
 # Data sources shared across multiple applications
 # These reference Authentik's default flows and resources
 
-# Default authorization flow (implicit consent)
-data "authentik_flow" "default_authorization_flow" {
-  slug = "default-provider-authorization-implicit-consent"
+# Default authorization flow (explicit consent) - used by all OAuth2 apps
+data "authentik_flow" "default_provider_authorization_explicit_consent" {
+  slug = "default-provider-authorization-explicit-consent"
+}
+
+# Default authentication flow - used by NAS LDAP bind flow
+data "authentik_flow" "default_authentication_flow" {
+  slug = "default-authentication-flow"
 }
 
 # Default invalidation flow
@@ -16,9 +21,9 @@ data "authentik_flow" "default_provider_invalidation_flow" {
   slug = "default-provider-invalidation-flow"
 }
 
-# Default self-signed certificate for signing
-data "authentik_certificate_key_pair" "generated" {
-  name = "authentik Self-signed Certificate"
+# TLS certificate - used by all apps
+data "authentik_certificate_key_pair" "tls" {
+  name = "tls"
 }
 
 # Standard OAuth2 scope mappings

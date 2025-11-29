@@ -7,7 +7,7 @@ This directory contains the devcontainer configuration for isolated development 
 The devcontainer provides a complete, reproducible development environment with:
 
 ### Core Tools
-- **Python 3.14** with virtual environment support
+- **Python 3.13** with virtual environment support
 - **Terraform** for infrastructure as code
 - **Ansible** for cluster automation
 - **kubectl** for Kubernetes management
@@ -69,7 +69,7 @@ Once the container is running, open a terminal and check:
 
 ```bash
 # Check Python environment
-python --version          # Should be 3.14.x
+python --version          # Should be 3.13.x
 source .venv/bin/activate
 ansible --version         # Should show Ansible installation
 

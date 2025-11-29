@@ -1,7 +1,7 @@
 # Development container for self-hosted cluster management
-# Based on Python 3.14 with all necessary tools for Terraform, Ansible, and Kubernetes
+# Based on Python 3.13 with all necessary tools for Terraform, Ansible, and Kubernetes
 
-ARG PYTHON_VERSION=3.14
+ARG PYTHON_VERSION=3.13
 FROM mcr.microsoft.com/devcontainers/python:${PYTHON_VERSION}
 
 # Install system dependencies

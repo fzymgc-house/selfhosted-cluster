@@ -1,0 +1,75 @@
+# NAS LDAP Integration - Discovery Results
+# Date: 2025-11-29
+# Phase: 2b of Authentik IaC Migration
+
+## LDAP Provider
+- ID: 6
+- Name: "Provider for NAS"
+- base_dn: "DC=ldap,DC=fzymgc,DC=house"
+- bind_mode: "cached"
+- search_mode: "cached"
+- uid_start_number: 2000
+- gid_start_number: 4000
+- certificate: "55061d48-d235-40dc-834b-426736a2619c" (name: "tls")
+- tls_server_name: "auth.fzymgc.house"
+- mfa_support: true
+- authorization_flow: "b8c1dc50-547b-454d-8015-04202a9bdb17"
+- invalidation_flow: "7d49fc4f-0633-4f5c-bfd3-fd1db48a97da"
+- property_mappings: [] (empty array)
+
+## Application
+- pk: "1c145a3a-4b1c-4848-8391-c8f409781baf"
+- name: "NAS"
+- slug: "nas"
+- provider: 6 (links to LDAP provider above)
+- launch_url: "https://nas.fzymgc.house"
+- meta_launch_url: "https://nas.fzymgc.house"
+- meta_description: "" (empty)
+- group: "" (no group association)
+- policy_engine_mode: "all"
+- open_in_new_tab: false
+
+## Groups
+- **NONE FOUND** - No NAS-specific groups exist in Authentik
+- Task 2 (Import Groups) will be SKIPPED
+
+## Vault Secrets
+- **NO EXISTING SECRETS** - No secret found at secret/fzymgc-house/cluster/nas
+- Will use Pattern A (new secret creation) for Task 5
+
+## Certificate Details
+- UUID: "55061d48-d235-40dc-834b-426736a2619c"
+- Name: "tls"
+- Type: TLS certificate used for LDAP over TLS
+- Note: Will need to reference this UUID in Terraform config
+
+## Data Source Matches (VERIFIED)
+- authorization_flow: "b8c1dc50-547b-454d-8015-04202a9bdb17"
+  - Data source default_authorization_flow: "6cc886c9-1291-4aed-909d-72441457d177"
+  - ❌ DOES NOT MATCH - Must use hardcoded UUID with TODO comment
+- invalidation_flow: "7d49fc4f-0633-4f5c-bfd3-fd1db48a97da"
+  - Data source default_invalidation_flow: "7d49fc4f-0633-4f5c-bfd3-fd1db48a97da"
+  - ✅ MATCHES - Can use data.authentik_flow.default_invalidation_flow.id
+- certificate: "55061d48-d235-40dc-834b-426736a2619c" (name: "tls")
+  - Data source generated cert: "e8fafbd2-baf7-4056-a630-4f87bd5574c4" (name: "authentik Self-signed Certificate")
+  - ❌ DOES NOT MATCH - Must use hardcoded UUID with TODO comment (like Grafana signing_key)
+
+## Import Commands Summary
+```bash
+# Skip Task 2 - no groups to import
+
+# Task 3: Import LDAP Provider
+terraform import authentik_provider_ldap.nas 6
+
+# Task 4: Import Application
+terraform import authentik_application.nas nas
+```
+
+## Terraform Configuration Notes
+- Use bind_mode = "cached" (not "direct")
+- Use search_mode = "cached"
+- base_dn should be "DC=ldap,DC=fzymgc,DC=house"
+- Certificate UUID will likely need hardcoded value with TODO
+- No search_group needed (not configured in existing provider)
+- MFA support is enabled (mfa_support = true)
+- TLS server name is "auth.fzymgc.house"

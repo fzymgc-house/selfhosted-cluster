@@ -44,6 +44,8 @@ resource "authentik_provider_oauth2" "grafana" {
 }
 
 # Grafana Application
+# Note: policy_engine_mode defaults to "any" (allows access if any policy passes).
+# This was changed from "all" during import to match Authentik defaults.
 resource "authentik_application" "grafana" {
   name              = "Grafana"
   slug              = "grafana"
@@ -70,4 +72,12 @@ resource "vault_kv_secret_v2" "grafana" {
       oidc_client_secret = authentik_provider_oauth2.grafana.client_secret
     }
   ))
+
+  custom_metadata {
+    max_versions = 5
+    data = {
+      managed_by  = "terraform"
+      application = "grafana"
+    }
+  }
 }

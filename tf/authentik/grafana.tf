@@ -51,3 +51,23 @@ resource "authentik_application" "grafana" {
   meta_launch_url   = "https://grafana.fzymgc.house"
   meta_description  = "Metrics and monitoring dashboards"
 }
+
+# Read existing Grafana secrets from Vault
+data "vault_kv_secret_v2" "grafana_existing" {
+  mount = "secret"
+  name  = "fzymgc-house/cluster/grafana"
+}
+
+# Store OAuth2 credentials in Vault (merge with existing secrets)
+resource "vault_kv_secret_v2" "grafana" {
+  mount = "secret"
+  name  = "fzymgc-house/cluster/grafana"
+
+  data_json = jsonencode(merge(
+    data.vault_kv_secret_v2.grafana_existing.data,
+    {
+      oidc_client_id     = authentik_provider_oauth2.grafana.client_id
+      oidc_client_secret = authentik_provider_oauth2.grafana.client_secret
+    }
+  ))
+}

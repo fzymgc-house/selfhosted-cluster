@@ -1,0 +1,72 @@
+# Grafana Resource IDs (discovered 2025-11-28)
+
+## Application
+NOTICE: No Grafana application currently exists in Authentik
+Only the OAuth2 provider exists (provider ID: 8)
+Application will need to be created during import process
+
+## OAuth2 Provider
+id: 8
+client_id: XVTJeC00KCGqBu3NduFHwyZ5LzQP7khbCymqQIhP
+access_token_validity: minutes=5
+redirect_uris: https://grafana.fzymgc.house/login/generic_oauth (matching_mode: strict)
+
+## Groups
+grafana-editor: bb1312f0-501e-4b39-a2aa-0cbc482eeb8c (currently no parent)
+grafana-admin: 874bced4-51f5-4381-8fc6-cc20d0a8ab5c (currently no parent)
+
+NOTICE: Groups currently have NO parent/child relationship
+The implementation plan assumes grafana-admin is a child of grafana-editor,
+but currently both groups are independent. This relationship needs to be
+established during the import process.
+
+## Flows & Certificates
+authorization_flow: de91f0c6-7f6e-42cc-b71d-67cc48d2a82a
+  - name: "Authorize Application"
+  - slug: "default-provider-authorization-explicit-consent"
+  - IMPORTANT: This is EXPLICIT consent, NOT implicit consent
+  - The data source uses "default-provider-authorization-implicit-consent"
+  - This DOES NOT MATCH the data source default!
+
+invalidation_flow: 06191900-905a-40fe-88cb-0bfcac9f8a6c
+  - name: "Logged out of application"
+  - slug: "default-provider-invalidation-flow"
+  - This MATCHES the data source
+
+signing_key: 55061d48-d235-40dc-834b-426736a2619c
+  - name: "tls"
+  - IMPORTANT: This is NOT the "authentik Self-signed Certificate"
+  - The data source references "authentik Self-signed Certificate"
+  - This DOES NOT MATCH the data source default!
+
+## Property Mappings
+Property mappings used by provider (in order):
+1. 50863408-de7c-4f33-81fd-6f9a69eb4589 - openid (managed: goauthentik.io/providers/oauth2/scope-openid)
+2. faaa4a6e-5670-4888-ab0d-dbcb2e94dce5 - email (managed: goauthentik.io/providers/oauth2/scope-email)
+3. 25848301-e544-4d1a-96b0-2cbab5fef2c7 - profile (managed: goauthentik.io/providers/oauth2/scope-profile)
+
+These match the standard data sources and can be referenced via:
+- data.authentik_property_mapping_provider_scope.openid
+- data.authentik_property_mapping_provider_scope.email
+- data.authentik_property_mapping_provider_scope.profile
+
+## Data Source Default Values (for comparison)
+default_authorization_flow (implicit consent): 6cc886c9-1291-4aed-909d-72441457d177
+  - slug: "default-provider-authorization-implicit-consent"
+default_provider_invalidation_flow: 06191900-905a-40fe-88cb-0bfcac9f8a6c
+  - slug: "default-provider-invalidation-flow"
+authentik Self-signed Certificate: e8fafbd2-baf7-4056-a630-4f87bd5574c4
+
+## Summary of Discrepancies
+1. No application exists - will need to be created (not just imported)
+2. Groups have no parent/child relationship - needs to be established
+3. Authorization flow is EXPLICIT consent (de91f0c6-...), not IMPLICIT consent (6cc886c9-...)
+4. Signing key is "tls" (55061d48-...), not "authentik Self-signed Certificate" (e8fafbd2-...)
+5. Invalidation flow MATCHES data source (06191900-...)
+
+## Required Actions
+1. Establish parent/child relationship between groups (editor as parent, admin as child)
+2. Create application resource (slug: grafana) and link to provider
+3. Use explicit UUIDs for authorization_flow and signing_key (hardcode with comments)
+4. Can use data source reference for invalidation_flow (it matches)
+5. Can use data source references for property_mappings (they match)

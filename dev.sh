@@ -36,7 +36,7 @@ check_devcontainer_cli() {
         log_error "devcontainer CLI not found!"
         echo ""
         echo "Install it with:"
-        echo "  npm install -g @devcontainers/cli"
+        echo "  brew install devcontainer"
         echo ""
         exit 1
     fi

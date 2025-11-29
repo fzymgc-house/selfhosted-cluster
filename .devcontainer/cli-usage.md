@@ -4,17 +4,15 @@ You can use the devcontainer configuration from any terminal without VS Code usi
 
 ## Installation
 
-### Option 1: npm (Recommended)
+### Option 1: Homebrew (Recommended for macOS)
 
 ```bash
-npm install -g @devcontainers/cli
+brew install devcontainer
 ```
 
-### Option 2: Homebrew (macOS)
+### Option 2: npm (Alternative)
 
 ```bash
-# Install via npm first
-brew install node
 npm install -g @devcontainers/cli
 ```
 
@@ -285,6 +283,6 @@ code .
 
 ## Next Steps
 
-1. Install devcontainer CLI: `npm install -g @devcontainers/cli`
-2. Build the container: `./dev.sh build` (or use the script we'll create)
+1. Install devcontainer CLI: `brew install devcontainer`
+2. Build the container: `./dev.sh build`
 3. Start working: `./dev.sh shell`

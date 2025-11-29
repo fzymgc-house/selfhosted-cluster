@@ -1,12 +1,33 @@
 # Authentik Infrastructure as Code Migration Design
 
 **Date:** 2025-11-28
-**Status:** Approved
+**Status:** Complete (All Existing Resources Migrated)
+**Completion Date:** 2025-11-29
 **Author:** Claude Code
 
 ## Overview
 
 Extract all Authentik applications, providers, and groups into Terraform configuration, using import to preserve existing resources without service disruption.
+
+## Migration Results Summary
+
+**Status:** ✅ Complete (All Existing Resources Migrated)
+
+**Phases Completed:**
+- ✅ **Phase 1:** Critical Infrastructure (Vault, ArgoCD, Argo Workflows, Mealie) - Pre-existing
+- ✅ **Phase 2a:** Grafana OIDC Integration - PR #67 (Merged 2025-11-28)
+- ✅ **Phase 2b:** NAS LDAP Integration - PR #68 (Merged 2025-11-29)
+- ⏸️ **Phase 3:** User Applications - Deferred (applications not yet configured in Authentik)
+
+**Resources Migrated:**
+- 2 new applications (Grafana, NAS)
+- 3 new groups (grafana-admins, grafana-editors, grafana-viewers)
+- 2 new providers (OAuth2, LDAP)
+- 1 new Vault secret
+
+**Validation:** All migrated resources validated with zero configuration drift via `terraform plan -detailed-exitcode`.
+
+**Documentation:** See `docs/plans/2025-11-28-authentik-iac-migration-completion.md` for detailed completion report.
 
 ## Goals
 
@@ -219,25 +240,30 @@ terraform plan  # Should show "No changes"
 
 **Success Criteria:** Observability and storage services maintain authentication.
 
-### Phase 3: User Applications
+### Phase 3: User Applications ⏸️ DEFERRED
 
-**Applications:** Paperless, Windmill, Karakeep, Komodo, fzymgc
+**Status:** Deferred - Applications not yet configured in Authentik
 
-**Groups:**
+**Expected Applications:** Paperless, Windmill, Karakeep, Komodo, fzymgc
+
+**Discovery Results (2025-11-29):**
+- Authentik API query returned only 1 application: Mealie (already managed in Phase 1)
+- None of the Phase 3 applications exist in Authentik
+- Groups for these applications also not found
+
+**Groups (When Created):**
 - paperless-admin, paperless-users
 - windmill-admin, windmill-users
 - karakeep-users
 - komodo-users
 
-**Files:** `paperless.tf`, `windmill.tf`, `karakeep.tf`, `komodo.tf`, `fzymgc.tf`
+**Files (When Implemented):** `paperless.tf`, `windmill.tf`, `karakeep.tf`, `komodo.tf`, `fzymgc.tf`
 
 **Special Considerations:**
 - fzymgc uses Proxy provider (different resource type)
 - Multiple apps with user/admin group hierarchies
 
-**Validation:**
-- All applications authenticate via Authentik
-- User access levels preserved
+**Recommendation:** Execute Phase 3 when these applications are deployed and configured in Authentik. Follow the patterns established in Phases 1-2 for OAuth2/Proxy imports.
 
 **Success Criteria:** All user-facing applications work with no authentication issues.
 

@@ -398,3 +398,6 @@ Defined in `ansible/inventory/`:
 - RBAC is namespace-scoped where possible
 - Never commit directly to the main branch, always use a feature branch and a PR
 - When adding new paths or configuration to vault, be sure that the vault policy/polices are appropriately updated
+- When interacting with Authentik, the API documentation is here: https://api.goauthentik.io
+ The auth token is in vault, the secret is: fzymgc-house/cluster/authentik , the key: terraform_token
+- Do not attempt to use the devcontainer, it's for engineers to use manually

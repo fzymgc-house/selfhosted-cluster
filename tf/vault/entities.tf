@@ -5,5 +5,6 @@ import {
 }
 
 resource "vault_identity_entity" "sean" {
-  name = "sean"
+  name     = "sean"
+  policies = [vault_policy.infrastructure_developer.name]
 }

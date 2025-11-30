@@ -1,7 +1,3 @@
-provider "onepassword" {
-  account = "OGRXP4CXIVAVXIQ2QBBL7ZOHWE"
-}
-
 provider "vault" {
   address = "https://vault.fzymgc.house"
 }

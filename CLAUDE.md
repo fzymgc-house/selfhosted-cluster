@@ -31,15 +31,51 @@ source .venv/bin/activate
 deactivate
 ```
 
-The `.envrc` file (if using direnv) contains environment variables for BMC access and SOPS encryption keys.
+The `.envrc` file (if using direnv) contains environment configuration. **No secrets are stored in .envrc** - all secrets are managed in HashiCorp Vault.
 
 ### Required Tools
 
 - Python 3.13+ (see `.python-version`)
 - kubectl configured with `fzymgc-house` context
-- 1Password CLI (for secrets management)
+- HashiCorp Vault CLI (for secrets management)
 - Terraform (for infrastructure changes)
 - direnv (optional, for automatic environment activation)
+
+### Secrets Management
+
+All infrastructure secrets are stored in HashiCorp Vault at `https://vault.fzymgc.house`:
+
+**Authentication:**
+
+Developers must authenticate to Vault with a token that has the `infrastructure-developer` policy attached.
+
+```bash
+# Authenticate to Vault (required before running Ansible or Terraform)
+export VAULT_ADDR=https://vault.fzymgc.house
+vault login
+# Your token must have the infrastructure-developer policy
+
+# Check authentication status and policies
+vault token lookup
+
+# Helper script for Vault operations
+./scripts/vault-helper.sh status
+./scripts/vault-helper.sh get bmc/tpi-alpha
+```
+
+**Required Vault Policy:**
+
+Developers need read access to `secret/fzymgc-house/infrastructure/*` and `secret/fzymgc-house/*`. See `docs/vault-migration.md` for the complete `infrastructure-developer` policy definition.
+
+**Secret Organization:**
+- Infrastructure secrets: `secret/fzymgc-house/infrastructure/*`
+  - BMC passwords: `infrastructure/bmc/tpi-alpha`, `infrastructure/bmc/tpi-beta`
+  - API tokens: `infrastructure/cloudflare/api-token`
+  - Service tokens: `infrastructure/vault/root-token`
+- Application secrets: `secret/fzymgc-house/*` (accessed via ExternalSecrets)
+
+**Migration Guide:**
+See `docs/vault-migration.md` for detailed migration documentation from 1Password to Vault.
 
 ## Development Workflow
 
@@ -361,3 +397,4 @@ Defined in `ansible/inventory/`:
 - Vault policies are granular and scoped to specific paths
 - RBAC is namespace-scoped where possible
 - Never commit directly to the main branch, always use a feature branch and a PR
+- When adding new paths or configuration to vault, be sure that the vault policy/polices are appropriately updated

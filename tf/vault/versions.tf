@@ -7,10 +7,6 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "2.38.0"
     }
-    onepassword = {
-      source  = "1Password/onepassword"
-      version = "2.2.1"
-    }
     vault = {
       source  = "hashicorp/vault"
       version = "5.5.0"

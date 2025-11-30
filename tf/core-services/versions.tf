@@ -7,10 +7,6 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "2.38.0"
     }
-    onepassword = {
-      source  = "1Password/onepassword"
-      version = "2.2.1"
-    }
     helm = {
       source = "hashicorp/helm"
       version = "3.1.1"

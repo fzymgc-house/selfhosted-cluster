@@ -21,6 +21,7 @@ The devcontainer provides a complete, reproducible development environment with:
 - `direnv` - Environment variable management
 - Git, SSH, and essential build tools
 - Docker-in-Docker support
+- 1Password SSH Agent integration (via socket proxy)
 
 ### Python Packages
 All packages from `requirements.txt` are automatically installed:
@@ -45,10 +46,11 @@ All collections from `ansible/requirements-ansible.yml`:
 1. **VS Code** with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 2. **Docker Desktop** or Docker Engine running
 3. **socat** (for 1Password socket proxy): `brew install socat`
-4. **Host prerequisites** (automatically mounted):
+4. **1Password** with SSH agent enabled (for SSH key management)
+5. **Host prerequisites** (automatically mounted):
    - `~/.ssh` - SSH keys for Git and cluster access
    - `~/.kube/config` - Kubernetes cluster configuration
-   - 1Password app running with SSH agent enabled
+   - `~/.vault-token` - Vault authentication token
 
 ### Opening the Repository in a Container
 
@@ -82,8 +84,8 @@ kubectl --context fzymgc-house get nodes
 # Check Vault connectivity
 curl -s https://vault.fzymgc.house/v1/sys/health | jq
 
-# Check 1Password CLI
-op account list
+# Check SSH agent (1Password keys)
+ssh-add -L
 ```
 
 ## Working with the Container
@@ -129,20 +131,19 @@ ansible -i ansible/inventory/hosts.yml all -m ping
 ### Kubernetes Operations
 
 ```bash
-# Use the alias (kc = kubectl --context fzymgc-house)
-kc get nodes
-kc get pods -A
+# Use the alias (k = kubectl with default context fzymgc-house)
+k get nodes
+k get pods -A
 
-# Or full command
-kubectl --context fzymgc-house get nodes
+# Or full command (context is already set as default)
+kubectl get nodes
 ```
 
 ## Helpful Aliases
 
 The container includes these pre-configured aliases:
 
-- `k` → `kubectl`
-- `kc` → `kubectl --context fzymgc-house`
+- `k` → `kubectl` (default context: fzymgc-house)
 - `tf` → `terraform`
 - `ll` → `ls -alh`
 
@@ -154,7 +155,8 @@ The following host directories are mounted into the container:
 |-----------|----------------|---------|
 | `~/.ssh` | `/home/vscode/.ssh` | SSH keys (read-only) |
 | `~/.kube` | `/home/vscode/.kube` | Kubernetes config |
-| 1Password socket | `/home/vscode/.1password/agent.sock` | 1Password CLI auth |
+| `~/.vault-token` | `/home/vscode/.vault-token` | Vault authentication |
+| 1Password socket | `/home/vscode/.1password/agent.sock` | SSH agent for Git/SSH operations |
 
 **Note:** Changes to these files inside the container affect your host system.
 
@@ -249,7 +251,7 @@ The `dev.sh` script automatically creates a socket proxy when starting the conta
 ./dev.sh exec "git fetch"
 ```
 
-**Note:** The 1Password CLI (`op` command) is not installed as it requires direct app communication which doesn't work in containers. The SSH agent socket provides all necessary functionality for development workflows.
+**Note:** Only the 1Password SSH agent socket is available in the container. This provides SSH key access for Git and SSH operations, which is all that's needed for development workflows.
 
 ### kubectl Context Not Found
 
@@ -272,9 +274,10 @@ kubectl config get-contexts
 ## Security Considerations
 
 - SSH keys are mounted read-only
-- Secrets should use 1Password CLI or Vault, never committed to Git
+- Secrets are managed via HashiCorp Vault, never committed to Git
 - The container has access to your cluster - use carefully
 - Docker-in-Docker is enabled - be cautious with untrusted images
+- 1Password SSH agent provides secure SSH key access without exposing private keys
 
 ## Further Reading
 

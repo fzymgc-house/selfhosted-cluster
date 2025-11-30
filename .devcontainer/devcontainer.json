@@ -25,7 +25,11 @@
     }
   },
 
-  // Mount the host's SSH, kubeconfig, and Vault token for authentication
+  // Override default workspace mount to use /workspace instead of /workspaces
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "workspaceFolder": "/workspace",
+
+  // Mount host's SSH, kubeconfig, and Vault token for authentication
   "mounts": [
     "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readonly",
     "source=${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached",

@@ -4,7 +4,7 @@ import {
 }
 
 resource "vault_policy" "token-create" {
-  name = "token-create"
+  name   = "token-create"
   policy = <<EOT
 # Allows the client to create child tokens
 path "auth/token/create" {

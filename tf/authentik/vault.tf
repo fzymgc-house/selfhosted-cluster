@@ -24,16 +24,8 @@ resource "authentik_group" "vault_admin" {
 }
 
 # Vault OIDC Auth Backend Configuration
-import {
-  to = vault_auth_backend.oidc
-  id = "oidc"
-}
-
-resource "vault_auth_backend" "oidc" {
-  type = "oidc"
-  path = "oidc"
-}
-
+# Note: Using vault_jwt_auth_backend instead of vault_auth_backend
+# as it provides full OIDC configuration support
 import {
   to = vault_jwt_auth_backend.oidc
   id = "oidc"
@@ -44,14 +36,14 @@ locals {
 }
 
 resource "vault_jwt_auth_backend" "oidc" {
-  path                  = "oidc"
-  type                  = "oidc"
-  oidc_client_id        = data.vault_kv_secret_v2.authentik.data["vault_oidc_client_id"]
-  oidc_client_secret    = data.vault_kv_secret_v2.authentik.data["vault_oidc_client_secret"]
-  oidc_discovery_url    = local.authentik_url
-  oidc_discovery_ca_pem = join("\n", data.vault_pki_secret_backend_issuer.fzymgc.ca_chain)
-  jwks_ca_pem           = join("\n", data.vault_pki_secret_backend_issuer.fzymgc.ca_chain)
-  default_role          = "reader"
+  path               = "oidc"
+  type               = "oidc"
+  oidc_client_id     = data.vault_kv_secret_v2.authentik.data["vault_oidc_client_id"]
+  oidc_client_secret = data.vault_kv_secret_v2.authentik.data["vault_oidc_client_secret"]
+  oidc_discovery_url = local.authentik_url
+  # Note: auth.fzymgc.house uses Let's Encrypt cert, not internal CA
+  # System CA store is used for certificate verification
+  default_role = "reader"
 }
 
 import {
@@ -68,7 +60,8 @@ resource "vault_jwt_auth_backend_role" "reader" {
   token_max_ttl   = 86400
   token_policies  = ["default", "reader"]
   groups_claim    = "groups"
-  oidc_scopes     = ["openid", "email", "profile", "groups"]
+  # Note: groups claim is included in profile scope per Authentik docs
+  oidc_scopes     = ["openid", "email", "profile"]
   allowed_redirect_uris = [
     "https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback",
     "https://vault.fzymgc.house/oidc/callback",
@@ -86,7 +79,8 @@ resource "vault_jwt_auth_backend_role" "admin" {
   token_max_ttl   = 86400
   token_policies  = ["default", "admin"]
   groups_claim    = "groups"
-  oidc_scopes     = ["openid", "email", "profile", "groups"]
+  # Note: groups claim is included in profile scope per Authentik docs
+  oidc_scopes     = ["openid", "email", "profile"]
   allowed_redirect_uris = [
     "https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback",
     "https://vault.fzymgc.house/oidc/callback",

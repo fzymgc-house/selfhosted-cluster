@@ -202,7 +202,12 @@ verify_secrets() {
     echo ""
 
     # Only verify if secrets were actually created
-    if [ ${#CREATED_SECRETS[@]} -eq 0 ]; then
+    # Temporarily disable set -u to safely check array
+    set +u
+    local num_created=${#CREATED_SECRETS[@]}
+    set -u
+
+    if [ $num_created -eq 0 ]; then
         log_warn "No secrets were created during migration (may already exist or no values found)"
         log_info "Skipping verification"
         return 0

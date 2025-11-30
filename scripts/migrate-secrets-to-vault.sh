@@ -192,11 +192,18 @@ verify_secrets() {
 
     echo ""
     echo "Secrets created:"
-    vault kv list secret/fzymgc-house/infrastructure/ || true
+    set +e
+    vault kv list secret/fzymgc-house/infrastructure/
+    set -e
     echo ""
 
     # Test reading one secret
-    if vault kv get secret/fzymgc-house/infrastructure/bmc/tpi-alpha &> /dev/null; then
+    set +e
+    vault kv get secret/fzymgc-house/infrastructure/bmc/tpi-alpha &> /dev/null
+    local result=$?
+    set -e
+
+    if [ $result -eq 0 ]; then
         log_info "✓ Successfully verified secret access"
     else
         log_error "Failed to read secrets from Vault"

@@ -115,9 +115,10 @@ main() {
     fi
 
     # Install Ansible Galaxy collections
+    # Note: Using python -m to avoid shebang issues in containers
     if [[ -f "ansible/requirements-ansible.yml" ]]; then
         log_info "Installing Ansible Galaxy collections..."
-        ansible-galaxy collection install -r ansible/requirements-ansible.yml
+        python -m ansible galaxy collection install -r ansible/requirements-ansible.yml
     else
         log_warn "ansible/requirements-ansible.yml not found, skipping collections"
     fi
@@ -125,7 +126,7 @@ main() {
     # Verify installation
     log_info "Verifying installation..."
     echo ""
-    ansible --version
+    python -m ansible --version
     echo ""
 
     log_info "✓ Setup complete!"
@@ -137,7 +138,7 @@ main() {
     echo "  deactivate"
     echo ""
     echo "Installed Ansible collections:"
-    ansible-galaxy collection list | grep -E "kubernetes.core|community.general|community.hashi_vault" || true
+    python -m ansible galaxy collection list | grep -E "kubernetes.core|community.general|community.hashi_vault" || true
 }
 
 main "$@"

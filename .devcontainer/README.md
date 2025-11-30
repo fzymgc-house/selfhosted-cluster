@@ -13,7 +13,7 @@ The devcontainer provides a complete, reproducible development environment with:
 - **kubectl** for Kubernetes management
 - **Helm** for Kubernetes package management
 - **GitHub CLI (gh)** for PR and repository management
-- **1Password CLI** for secrets management
+- **1Password SSH Agent** for SSH key management (via socket proxy)
 - **k3sup** for k3s cluster management
 
 ### Utilities
@@ -44,10 +44,11 @@ All collections from `ansible/requirements-ansible.yml`:
 
 1. **VS Code** with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 2. **Docker Desktop** or Docker Engine running
-3. **Host prerequisites** (automatically mounted):
+3. **socat** (for 1Password socket proxy): `brew install socat`
+4. **Host prerequisites** (automatically mounted):
    - `~/.ssh` - SSH keys for Git and cluster access
    - `~/.kube/config` - Kubernetes cluster configuration
-   - 1Password agent socket (macOS: `~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock`)
+   - 1Password app running with SSH agent enabled
 
 ### Opening the Repository in a Container
 
@@ -226,13 +227,29 @@ Dev Containers: Rebuild Container Without Cache
 sudo chown -R $(id -u):$(id -g) ~/.kube ~/.ssh
 ```
 
-### 1Password Not Working
+### 1Password SSH Agent
 
-1. Ensure 1Password app is running on host
-2. Verify socket path matches your system:
-   - macOS: `~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock`
-   - Linux: `~/.1password/agent.sock`
-3. Update mount path in `devcontainer.json` if needed
+**Working Solution:** The 1Password SSH agent is integrated via a `socat` proxy that works around Docker Desktop's limitation with paths containing spaces.
+
+**What Works:**
+- ✅ SSH keys from 1Password available in the container
+- ✅ Git/GitHub authentication using 1Password SSH keys
+- ✅ Any SSH operations using keys stored in 1Password
+
+**Setup:**
+The `dev.sh` script automatically creates a socket proxy when starting the container:
+```bash
+# Start container (proxy auto-created)
+./dev.sh up
+
+# Test SSH keys
+./dev.sh exec "ssh-add -L"
+
+# Use Git with 1Password keys
+./dev.sh exec "git fetch"
+```
+
+**Note:** The 1Password CLI (`op` command) is not installed as it requires direct app communication which doesn't work in containers. The SSH agent socket provides all necessary functionality for development workflows.
 
 ### kubectl Context Not Found
 

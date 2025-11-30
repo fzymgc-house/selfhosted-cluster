@@ -42,6 +42,49 @@ check_devcontainer_cli() {
     fi
 }
 
+setup_1password_proxy() {
+    local source_socket="${HOME}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+    local proxy_socket="${HOME}/.1password-agent-proxy.sock"
+    local pid_file="${HOME}/.1password-agent-proxy.pid"
+
+    # Check if source socket exists
+    if [[ ! -S "$source_socket" ]]; then
+        log_warn "1Password agent socket not found - proxy not created"
+        return 0
+    fi
+
+    # Check if socat is installed
+    if ! command -v socat &> /dev/null; then
+        log_warn "socat not installed. Run: brew install socat"
+        return 0
+    fi
+
+    # Kill existing proxy if running
+    if [[ -f "$pid_file" ]]; then
+        local old_pid
+        old_pid=$(cat "$pid_file")
+        if ps -p "$old_pid" > /dev/null 2>&1; then
+            kill "$old_pid" 2>/dev/null || true
+        fi
+        rm -f "$pid_file"
+    fi
+
+    # Remove old socket
+    rm -f "$proxy_socket"
+
+    # Start proxy
+    socat "UNIX-LISTEN:${proxy_socket},fork,mode=700" "UNIX-CONNECT:${source_socket}" &
+    echo $! > "$pid_file"
+
+    # Wait for socket
+    sleep 0.5
+
+    if [[ -S "$proxy_socket" ]]; then
+        log_info "✓ 1Password proxy ready"
+    fi
+}
+
+
 show_usage() {
     cat << EOF
 Usage: ./dev.sh <command> [options]
@@ -86,6 +129,7 @@ cmd_rebuild() {
 cmd_up() {
     log_step "Starting devcontainer..."
     cd "$REPO_ROOT"
+    setup_1password_proxy
     devcontainer up --workspace-folder .
     log_info "✓ Container is running"
 }
@@ -94,7 +138,8 @@ cmd_shell() {
     log_step "Opening interactive shell in devcontainer..."
     cd "$REPO_ROOT"
 
-    # Ensure container is running
+    # Set up proxy and ensure container is running
+    setup_1password_proxy
     devcontainer up --workspace-folder . > /dev/null 2>&1
 
     # Open interactive shell with nice prompt
@@ -117,7 +162,8 @@ cmd_exec() {
     log_step "Executing command in devcontainer..."
     cd "$REPO_ROOT"
 
-    # Ensure container is running
+    # Set up proxy and ensure container is running
+    setup_1password_proxy
     devcontainer up --workspace-folder . > /dev/null 2>&1
 
     # Execute the command

@@ -28,14 +28,21 @@
   // Mount the host's SSH and kubeconfig for authentication
   "mounts": [
     "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readonly",
-    "source=${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock,target=/home/vscode/.1password/agent.sock,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached"
+  ],
+
+  // Mount 1Password SSH agent socket via proxy (Docker Desktop can't mount paths with spaces)
+  // The proxy socket is created by dev.sh script at ~/.1password-agent-proxy.sock
+  // Run `./dev.sh up` to start the container with the proxy automatically configured
+  "runArgs": [
+    "-v",
+    "${localEnv:HOME}/.1password-agent-proxy.sock:/home/vscode/.1password/agent.sock"
   ],
 
   // Set environment variables
   "containerEnv": {
     "KUBECONFIG": "/home/vscode/.kube/config",
-    "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}",
+    "SSH_AUTH_SOCK": "/home/vscode/.1password/agent.sock",
     "VAULT_ADDR": "https://vault.fzymgc.house"
   },
 

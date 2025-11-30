@@ -19,6 +19,13 @@ log_warn() {
     echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
+# Fix 1Password SSH agent socket permissions
+if [[ -S "/home/vscode/.1password/agent.sock" ]]; then
+    log_info "Setting up 1Password SSH agent..."
+    sudo chmod 666 /home/vscode/.1password/agent.sock
+    log_info "✓ 1Password SSH agent configured"
+fi
+
 # Run the existing setup script
 log_info "Running Python virtual environment setup..."
 if [[ -f "setup-venv.sh" ]]; then
@@ -49,16 +56,6 @@ if command -v kubectl &> /dev/null && [[ -f "${HOME}/.kube/config" ]]; then
     fi
 fi
 
-# Test 1Password CLI if socket is available
-if [[ -S "${HOME}/.1password/agent.sock" ]]; then
-    log_info "1Password agent socket detected"
-    export OP_CONNECT_TOKEN="${OP_CONNECT_TOKEN:-}"
-    if op account list &> /dev/null; then
-        log_info "✓ 1Password CLI authenticated"
-    else
-        log_warn "1Password CLI not authenticated, some operations may fail"
-    fi
-fi
 
 # Check Vault connectivity
 if command -v curl &> /dev/null; then

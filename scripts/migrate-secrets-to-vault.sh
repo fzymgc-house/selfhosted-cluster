@@ -123,6 +123,7 @@ extract_secrets() {
 create_vault_secrets() {
     log_step "Creating secrets in Vault..."
 
+    CREATED_SECRETS=()
     local created=0
     local skipped=0
 
@@ -130,6 +131,7 @@ create_vault_secrets() {
     if [ -n "${TPI_ALPHA_BMC:-}" ]; then
         log_info "Creating secret/fzymgc-house/infrastructure/bmc/tpi-alpha..."
         vault kv put secret/fzymgc-house/infrastructure/bmc/tpi-alpha password="$TPI_ALPHA_BMC"
+        CREATED_SECRETS+=("secret/fzymgc-house/infrastructure/bmc/tpi-alpha")
         ((created++))
     else
         log_warn "Skipping TPI Alpha BMC (no value)"
@@ -139,6 +141,7 @@ create_vault_secrets() {
     if [ -n "${TPI_BETA_BMC:-}" ]; then
         log_info "Creating secret/fzymgc-house/infrastructure/bmc/tpi-beta..."
         vault kv put secret/fzymgc-house/infrastructure/bmc/tpi-beta password="$TPI_BETA_BMC"
+        CREATED_SECRETS+=("secret/fzymgc-house/infrastructure/bmc/tpi-beta")
         ((created++))
     else
         log_warn "Skipping TPI Beta BMC (no value)"
@@ -149,6 +152,7 @@ create_vault_secrets() {
     if [ -n "${CLOUDFLARE_TOKEN:-}" ]; then
         log_info "Creating secret/fzymgc-house/infrastructure/cloudflare/api-token..."
         vault kv put secret/fzymgc-house/infrastructure/cloudflare/api-token token="$CLOUDFLARE_TOKEN"
+        CREATED_SECRETS+=("secret/fzymgc-house/infrastructure/cloudflare/api-token")
         ((created++))
     else
         log_warn "Skipping Cloudflare API token (no value)"
@@ -191,15 +195,23 @@ verify_secrets() {
     log_step "Verifying secrets in Vault..."
 
     echo ""
-    echo "Secrets created:"
+    echo "Secrets in Vault:"
     set +e
     vault kv list secret/fzymgc-house/infrastructure/
     set -e
     echo ""
 
-    # Test reading one secret
+    # Only verify if secrets were actually created
+    if [ ${#CREATED_SECRETS[@]} -eq 0 ]; then
+        log_warn "No secrets were created during migration (may already exist or no values found)"
+        log_info "Skipping verification"
+        return 0
+    fi
+
+    # Test reading the first created secret to verify access
+    local test_secret="${CREATED_SECRETS[0]}"
     set +e
-    vault kv get secret/fzymgc-house/infrastructure/bmc/tpi-alpha &> /dev/null
+    vault kv get "$test_secret" &> /dev/null
     local result=$?
     set -e
 

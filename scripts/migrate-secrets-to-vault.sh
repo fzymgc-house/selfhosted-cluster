@@ -146,6 +146,26 @@ create_vault_secrets() {
     log_info "Developers must authenticate with their own Vault token that has the 'infrastructure-developer' policy"
 }
 
+create_vault_policy() {
+    log_step "Creating infrastructure-developer Vault policy..."
+
+    local policy_file="tf/vault/policy-infrastructure-developer.hcl"
+
+    if [ ! -f "$policy_file" ]; then
+        log_error "Policy file not found: $policy_file"
+        exit 1
+    fi
+
+    log_info "Creating policy from $policy_file..."
+    if vault policy write infrastructure-developer "$policy_file"; then
+        log_info "✓ Created infrastructure-developer policy"
+    else
+        log_warn "Failed to create policy (may already exist or insufficient permissions)"
+    fi
+
+    echo ""
+}
+
 verify_secrets() {
     log_step "Verifying secrets in Vault..."
 
@@ -193,6 +213,7 @@ main() {
 
     check_prerequisites
     check_vault_auth
+    create_vault_policy
     extract_secrets
     create_vault_secrets
     verify_secrets

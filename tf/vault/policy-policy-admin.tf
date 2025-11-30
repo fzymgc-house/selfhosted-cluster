@@ -4,7 +4,7 @@ import {
 }
 
 resource "vault_policy" "policy-admin" {
-  name = "policy-admin"
+  name   = "policy-admin"
   policy = <<EOT
 # Allow full management of Vault policies
 path "sys/policy/*" {

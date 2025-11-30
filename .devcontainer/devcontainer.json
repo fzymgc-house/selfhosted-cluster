@@ -1,95 +1,98 @@
 {
-  "name": "Self-Hosted Cluster Development",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": "..",
-    "args": {
-      "PYTHON_VERSION": "3.13"
-    }
-  },
-
-  // Features to install (alternative to Dockerfile for some tools)
-  "features": {
-    "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "moby": false
-    },
-    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
-      "version": "latest",
-      "helm": "latest",
-      "minikube": "none"
-    },
-    "ghcr.io/devcontainers/features/terraform:1": {
-      "version": "latest"
-    }
-  },
-
-  // Override default workspace mount to use /workspace instead of /workspaces
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-  "workspaceFolder": "/workspace",
-
-  // Mount host's SSH and kubeconfig for authentication
-  // Note: Vault token is NOT mounted - users should run 'vault login' inside the container
-  "mounts": [
-    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readonly",
-    "source=${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached"
-  ],
-
-  // Set environment variables
-  "containerEnv": {
-    "KUBECONFIG": "/home/vscode/.kube/config",
-    "VAULT_ADDR": "https://vault.fzymgc.house"
-  },
-
-  // Forward ports for development
-  "forwardPorts": [],
-
-  // Post-create command to set up the environment
-  "postCreateCommand": "bash .devcontainer/post-create.sh",
-
-  // Customize VS Code settings
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "hashicorp.terraform",
-        "redhat.ansible",
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "ms-kubernetes-tools.vscode-kubernetes-tools",
-        "redhat.vscode-yaml",
-        "esbenp.prettier-vscode",
-        "GitHub.copilot"
-      ],
-      "settings": {
-        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
-        "python.formatting.provider": "black",
-        "python.linting.enabled": true,
-        "python.linting.pylintEnabled": false,
-        "python.linting.flake8Enabled": true,
-        "terraform.languageServer.enable": true,
-        "ansible.python.interpreterPath": "${workspaceFolder}/.venv/bin/python",
-        "[yaml]": {
-          "editor.insertSpaces": true,
-          "editor.tabSize": 2,
-          "editor.autoIndent": "advanced"
-        },
-        "[terraform]": {
-          "editor.formatOnSave": true
-        },
-        "[python]": {
-          "editor.formatOnSave": true
-        },
-        "files.associations": {
-          "*.tf": "terraform",
-          "*.tfvars": "terraform",
-          "*.yml": "ansible",
-          "*.yaml": "ansible"
+    "name": "Self-Hosted Cluster Development",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "..",
+        "args": {
+            "PYTHON_VERSION": "3.13"
         }
-      }
-    }
-  },
+    },
 
-  // Use bash as the default shell
-  "remoteUser": "vscode"
+    // Features to install (alternative to Dockerfile for some tools)
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "moby": false
+        },
+        "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+            "version": "latest",
+            "helm": "latest",
+            "minikube": "none"
+        },
+        "ghcr.io/devcontainers/features/terraform:1": {
+            "version": "latest"
+        }
+    },
+
+    // Override default workspace mount to use /workspace instead of /workspaces
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+    "workspaceFolder": "/workspace",
+
+    // Mount host's SSH, kubeconfig, and 1Password agent for authentication
+    // Note: Vault token is NOT mounted - users should run 'vault login' inside the container
+    // Note: 1Password must be configured to use ~/.1password/agent.sock (Settings > Developer > SSH Agent)
+    "mounts": [
+        "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readonly",
+        "source=${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/.1password,target=/home/vscode/.1password,type=bind"
+    ],
+
+    // Set environment variables
+    "containerEnv": {
+        "KUBECONFIG": "/home/vscode/.kube/config",
+        "VAULT_ADDR": "https://vault.fzymgc.house",
+        "SSH_AUTH_SOCK": "/home/vscode/.1password/agent.sock"
+    },
+
+    // Forward ports for development
+    "forwardPorts": [],
+
+    // Post-create command to set up the environment
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+    // Customize VS Code settings
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "hashicorp.terraform",
+                "redhat.ansible",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-kubernetes-tools.vscode-kubernetes-tools",
+                "redhat.vscode-yaml",
+                "esbenp.prettier-vscode",
+                "GitHub.copilot"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+                "python.formatting.provider": "black",
+                "python.linting.enabled": true,
+                "python.linting.pylintEnabled": false,
+                "python.linting.flake8Enabled": true,
+                "terraform.languageServer.enable": true,
+                "ansible.python.interpreterPath": "${workspaceFolder}/.venv/bin/python",
+                "[yaml]": {
+                    "editor.insertSpaces": true,
+                    "editor.tabSize": 2,
+                    "editor.autoIndent": "advanced"
+                },
+                "[terraform]": {
+                    "editor.formatOnSave": true
+                },
+                "[python]": {
+                    "editor.formatOnSave": true
+                },
+                "files.associations": {
+                    "*.tf": "terraform",
+                    "*.tfvars": "terraform",
+                    "*.yml": "ansible",
+                    "*.yaml": "ansible"
+                }
+            }
+        }
+    },
+
+    // Use bash as the default shell
+    "remoteUser": "vscode"
 }

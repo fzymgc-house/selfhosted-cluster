@@ -1,3 +1,4 @@
+---
 k8s_cluster_endpoint_name: k8s-cluster.fzymgc.house
 k8s_cluster_endpoint_ip: 10.255.254.6
 k8s_cluster_cidr: 10.42.0.0/16

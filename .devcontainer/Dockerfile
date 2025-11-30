@@ -42,6 +42,12 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 # Install k3sup for cluster management
 RUN curl -sLS https://get.k3sup.dev | sh
 
+# Install HashiCorp Vault CLI
+RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list \
+    && apt-get update && apt-get install -y vault \
+    && rm -rf /var/lib/apt/lists/*
+
 # Set up Python virtual environment directory
 ENV VIRTUAL_ENV=/workspace/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"

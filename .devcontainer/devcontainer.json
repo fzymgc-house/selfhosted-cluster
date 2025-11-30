@@ -29,11 +29,11 @@
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
   "workspaceFolder": "/workspace",
 
-  // Mount host's SSH, kubeconfig, and Vault token for authentication
+  // Mount host's SSH and kubeconfig for authentication
+  // Note: Vault token is NOT mounted - users should run 'vault login' inside the container
   "mounts": [
     "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readonly",
-    "source=${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.vault-token,target=/home/vscode/.vault-token,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached"
   ],
 
   // Set environment variables

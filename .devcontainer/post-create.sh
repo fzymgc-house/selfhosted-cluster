@@ -88,7 +88,7 @@ fi
 # Install Claude Code CLI using native binary installer
 log_info "Installing Claude Code CLI..."
 # Ensure ~/.local/bin is in PATH (installer puts binary there)
-if ! grep -q 'HOME/.local/bin' /home/vscode/.bashrc; then
+if ! grep -q '\.local/bin' /home/vscode/.bashrc; then
     echo 'export PATH="$HOME/.local/bin:$PATH"' >> /home/vscode/.bashrc
 fi
 export PATH="$HOME/.local/bin:$PATH"
@@ -97,10 +97,17 @@ if command -v claude &> /dev/null; then
     log_info "✓ Claude Code CLI already installed: $(claude --version 2>/dev/null || echo 'unknown version')"
 else
     # Use native binary installer (recommended by Anthropic)
-    if curl -fsSL https://claude.ai/install.sh | bash; then
-        log_info "✓ Claude Code CLI installed successfully"
+    # Download first, then execute for better security practice
+    INSTALL_SCRIPT="/tmp/claude-install.sh"
+    if curl -fsSL https://claude.ai/install.sh -o "$INSTALL_SCRIPT"; then
+        if bash "$INSTALL_SCRIPT"; then
+            log_info "✓ Claude Code CLI installed successfully"
+        else
+            log_warn "Failed to install Claude Code CLI"
+        fi
+        rm -f "$INSTALL_SCRIPT"
     else
-        log_warn "Failed to install Claude Code CLI"
+        log_warn "Failed to download Claude Code CLI installer"
     fi
 fi
 

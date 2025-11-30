@@ -1,8 +1,3 @@
-import {
-  id = "auth/kubernetes/role/mealie"
-  to = vault_kubernetes_auth_backend_role.mealie
-}
-
 resource "vault_kubernetes_auth_backend_role" "mealie" {
   backend                          = vault_auth_backend.kubernetes.path
   role_name                        = "mealie"

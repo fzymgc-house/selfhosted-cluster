@@ -124,7 +124,8 @@ resource "authentik_provider_oauth2" "vault" {
     data.authentik_property_mapping_provider_scope.openid.id,
     data.authentik_property_mapping_provider_scope.email.id,
     data.authentik_property_mapping_provider_scope.profile.id,
-    data.authentik_property_mapping_provider_scope.offline_access.id
+    data.authentik_property_mapping_provider_scope.offline_access.id,
+    data.authentik_property_mapping_provider_scope.groups.id
   ]
 
   # Vault uses TLS certificate for signing

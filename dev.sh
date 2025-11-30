@@ -187,9 +187,19 @@ cmd_stop() {
 
 cmd_down() {
     log_step "Stopping and removing devcontainer..."
-    cd "$REPO_ROOT"
-    devcontainer down --workspace-folder .
-    log_info "✓ Container removed"
+
+    # Find the container
+    local container_id
+    container_id=$(docker ps -aq --filter "label=devcontainer.local_folder=$REPO_ROOT" | head -1)
+
+    if [[ -n "$container_id" ]]; then
+        log_info "Found container: $container_id"
+        docker stop "$container_id" 2>/dev/null || true
+        docker rm "$container_id"
+        log_info "✓ Container removed"
+    else
+        log_warn "No devcontainer found to remove"
+    fi
 }
 
 cmd_clean() {

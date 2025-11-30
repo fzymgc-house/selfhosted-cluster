@@ -54,7 +54,6 @@ RUN echo 'eval "$(direnv hook bash)"' >> /home/vscode/.bashrc
 
 # Add helpful aliases
 RUN echo 'alias k=kubectl' >> /home/vscode/.bashrc \
-    && echo 'alias kc="kubectl --context fzymgc-house"' >> /home/vscode/.bashrc \
     && echo 'alias tf=terraform' >> /home/vscode/.bashrc \
     && echo 'alias ll="ls -alh"' >> /home/vscode/.bashrc
 

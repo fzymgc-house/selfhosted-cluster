@@ -57,12 +57,12 @@ if [[ -z "$(git config --global user.name 2>/dev/null)" ]]; then
     echo "  git config --global user.email 'your.email@example.com'"
 fi
 
-# Set up kubectl context if available
+# Set up kubectl default context if available
 if command -v kubectl &> /dev/null && [[ -f "${HOME}/.kube/config" ]]; then
     log_info "Checking kubectl configuration..."
     if kubectl config get-contexts fzymgc-house &> /dev/null; then
         kubectl config use-context fzymgc-house
-        log_info "✓ kubectl context set to fzymgc-house"
+        log_info "✓ kubectl default context set to fzymgc-house"
     else
         log_warn "fzymgc-house context not found in kubeconfig"
     fi
@@ -85,10 +85,37 @@ if [[ -f ".envrc" ]]; then
     direnv allow .
 fi
 
+# Install Claude Code CLI using native binary installer
+log_info "Installing Claude Code CLI..."
+# Ensure ~/.local/bin is in PATH (installer puts binary there)
+if ! grep -q '\.local/bin' /home/vscode/.bashrc; then
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> /home/vscode/.bashrc
+fi
+export PATH="$HOME/.local/bin:$PATH"
+
+if command -v claude &> /dev/null; then
+    log_info "✓ Claude Code CLI already installed: $(claude --version 2>/dev/null || echo 'unknown version')"
+else
+    # Use native binary installer (recommended by Anthropic)
+    # Download first, then execute for better security practice
+    INSTALL_SCRIPT="/tmp/claude-install.sh"
+    if curl -fsSL https://claude.ai/install.sh -o "$INSTALL_SCRIPT"; then
+        if bash "$INSTALL_SCRIPT"; then
+            log_info "✓ Claude Code CLI installed successfully"
+        else
+            log_warn "Failed to install Claude Code CLI"
+        fi
+        rm -f "$INSTALL_SCRIPT"
+    else
+        log_warn "Failed to download Claude Code CLI installer"
+    fi
+fi
+
 echo ""
 log_info "=== Development environment setup complete! ==="
 echo ""
 echo "Available tools:"
+echo "  - Claude Code: $(claude --version 2>/dev/null || echo 'not available')"
 echo "  - Terraform: $(terraform version -json 2>/dev/null | jq -r .terraform_version || echo 'not available')"
 echo "  - Ansible: $(ansible --version 2>/dev/null | head -1 || echo 'not available')"
 echo "  - kubectl: $(kubectl version --client -o json 2>/dev/null | jq -r .clientVersion.gitVersion || echo 'not available')"
@@ -99,6 +126,6 @@ echo "Useful commands:"
 echo "  - Activate Python venv: source .venv/bin/activate"
 echo "  - Vault login:          vault login"
 echo "  - Vault helper:         ./scripts/vault-helper.sh status"
-echo "  - kubectl (cluster):    kubectl --context fzymgc-house get nodes"
+echo "  - kubectl (alias 'k'):  k get nodes"
 echo "  - Terraform:            cd tf/authentik && terraform plan"
 echo ""

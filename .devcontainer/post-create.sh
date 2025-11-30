@@ -31,9 +31,40 @@ if command -v vault &> /dev/null; then
         log_warn "Not authenticated to Vault"
         echo ""
         echo "Please authenticate to Vault to access infrastructure secrets:"
-        echo "  vault login"
+        echo "  vault login -method=github"
         echo ""
-        echo "After authenticating, your token will be saved to ~/.vault-token"
+        echo "Then create an orphan token with infrastructure access:"
+        echo "  vault token create -policy=infrastructure-developer -orphan"
+        echo ""
+        echo "Use the generated token for Terraform/Ansible operations."
+        echo ""
+    fi
+fi
+
+# GitHub CLI authentication
+if command -v gh &> /dev/null; then
+    log_info "Checking GitHub CLI authentication..."
+    if gh auth status &> /dev/null; then
+        log_info "✓ Already authenticated to GitHub"
+    else
+        log_warn "Not authenticated to GitHub CLI"
+        echo ""
+        echo "Please authenticate to GitHub (use HTTPS for best compatibility):"
+        echo "  gh auth login -p https -w"
+        echo ""
+    fi
+fi
+
+# Terraform Cloud authentication
+if command -v terraform &> /dev/null; then
+    log_info "Checking Terraform Cloud authentication..."
+    if [[ -f "${HOME}/.terraform.d/credentials.tfrc.json" ]]; then
+        log_info "✓ Terraform Cloud credentials found"
+    else
+        log_warn "Not authenticated to Terraform Cloud"
+        echo ""
+        echo "Please authenticate to Terraform Cloud:"
+        echo "  terraform login"
         echo ""
     fi
 fi
@@ -124,8 +155,10 @@ echo "  - Python: $(python --version 2>&1)"
 echo ""
 echo "Useful commands:"
 echo "  - Activate Python venv: source .venv/bin/activate"
-echo "  - Vault login:          vault login"
-echo "  - Vault helper:         ./scripts/vault-helper.sh status"
+echo "  - Vault login:          vault login -method=github"
+echo "  - Vault infra token:    vault token create -policy=infrastructure-developer -orphan"
+echo "  - GitHub login:         gh auth login -p https -w"
+echo "  - Terraform login:      terraform login"
 echo "  - kubectl (alias 'k'):  k get nodes"
-echo "  - Terraform:            cd tf/authentik && terraform plan"
+echo "  - Terraform (alias):    tf plan"
 echo ""

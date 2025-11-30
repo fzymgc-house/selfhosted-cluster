@@ -101,14 +101,22 @@ extract_secrets() {
     fi
     set -u
 
-    # Extract from 1Password
-    log_info "Extracting secrets from 1Password..."
+    # Extract from 1Password (only if op command is available)
+    if command -v op &> /dev/null; then
+        log_info "Extracting secrets from 1Password..."
 
-    CLOUDFLARE_TOKEN=$(op item get --vault fzymgc-house "cloudflare-api-token" --fields password 2>/dev/null || echo "")
-    if [ -n "$CLOUDFLARE_TOKEN" ]; then
-        log_info "✓ Found Cloudflare API token in 1Password"
+        set +e
+        CLOUDFLARE_TOKEN=$(op item get --vault fzymgc-house "cloudflare-api-token" --fields password --reveal 2>/dev/null)
+        set -e
+
+        if [ -n "$CLOUDFLARE_TOKEN" ]; then
+            log_info "✓ Found Cloudflare API token in 1Password"
+        else
+            log_warn "Cloudflare API token not found in 1Password"
+        fi
     else
-        log_warn "Cloudflare API token not found in 1Password"
+        log_warn "1Password CLI not available, skipping 1Password extraction"
+        CLOUDFLARE_TOKEN=""
     fi
 }
 

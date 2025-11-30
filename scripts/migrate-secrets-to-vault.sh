@@ -74,9 +74,14 @@ extract_secrets() {
     log_step "Extracting secrets from current sources..."
 
     # Extract from .envrc (if it still has secrets - may already be migrated)
+    # Temporarily disable strict error handling to allow missing vars
+    set +u
     if [ -f .envrc ]; then
         # Safely source .envrc, ignoring errors
-        source .envrc 2>/dev/null || true
+        set +e
+        source .envrc 2>/dev/null
+        set -e
+
         TPI_ALPHA_BMC="${TPI_ALPHA_BMC_ROOT_PW:-}"
         TPI_BETA_BMC="${TPI_BETA_BMC_ROOT_PW:-}"
 
@@ -94,6 +99,7 @@ extract_secrets() {
     else
         log_warn ".envrc not found"
     fi
+    set -u
 
     # Extract from 1Password
     log_info "Extracting secrets from 1Password..."
@@ -158,7 +164,13 @@ create_vault_policy() {
     fi
 
     log_info "Creating policy from $policy_file..."
-    if vault policy write infrastructure-developer "$policy_file"; then
+    # Temporarily disable exit on error for policy creation
+    set +e
+    vault policy write infrastructure-developer "$policy_file"
+    local result=$?
+    set -e
+
+    if [ $result -eq 0 ]; then
         log_info "✓ Created infrastructure-developer policy"
     else
         log_warn "Failed to create policy (may already exist or insufficient permissions)"

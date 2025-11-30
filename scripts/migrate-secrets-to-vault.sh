@@ -73,22 +73,23 @@ check_vault_auth() {
 extract_secrets() {
     log_step "Extracting secrets from current sources..."
 
-    # Extract from .envrc
+    # Extract from .envrc (if it still has secrets - may already be migrated)
     if [ -f .envrc ]; then
-        source .envrc
+        # Safely source .envrc, ignoring errors
+        source .envrc 2>/dev/null || true
         TPI_ALPHA_BMC="${TPI_ALPHA_BMC_ROOT_PW:-}"
         TPI_BETA_BMC="${TPI_BETA_BMC_ROOT_PW:-}"
 
         if [ -n "$TPI_ALPHA_BMC" ]; then
             log_info "✓ Found TPI Alpha BMC password in .envrc"
         else
-            log_warn "TPI Alpha BMC password not found in .envrc"
+            log_warn "TPI Alpha BMC password not found in .envrc (may already be migrated)"
         fi
 
         if [ -n "$TPI_BETA_BMC" ]; then
             log_info "✓ Found TPI Beta BMC password in .envrc"
         else
-            log_warn "TPI Beta BMC password not found in .envrc"
+            log_warn "TPI Beta BMC password not found in .envrc (may already be migrated)"
         fi
     else
         log_warn ".envrc not found"
@@ -224,11 +225,17 @@ main() {
     log_info "  Migration Complete!"
     log_info "=========================================="
     echo ""
+    echo "Summary:"
+    echo "  - Vault policy: infrastructure-developer created"
+    echo "  - Secrets migrated: Check output above for details"
+    echo "  - Secrets skipped: Check warnings above"
+    echo ""
     echo "Next steps:"
-    echo "  1. Review docs/vault-migration.md for details"
-    echo "  2. Update Ansible and Terraform configurations"
+    echo "  1. If secrets were skipped, manually add them to Vault:"
+    echo "     vault kv put secret/fzymgc-house/infrastructure/bmc/tpi-alpha password=\"...\""
+    echo "  2. Review docs/vault-migration.md for details"
     echo "  3. Test with: cd ansible && ansible-playbook --check ..."
-    echo "  4. Remove old secrets from .envrc and 1Password"
+    echo "  4. Developers need tokens with infrastructure-developer policy"
     echo ""
 }
 

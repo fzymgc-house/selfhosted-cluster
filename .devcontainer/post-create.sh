@@ -19,11 +19,23 @@ log_warn() {
     echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
-# Fix 1Password SSH agent socket permissions
-if [[ -S "/home/vscode/.1password/agent.sock" ]]; then
-    log_info "Setting up 1Password SSH agent..."
-    sudo chmod 666 /home/vscode/.1password/agent.sock
-    log_info "✓ 1Password SSH agent configured"
+# Vault authentication setup
+if command -v vault &> /dev/null; then
+    log_info "Setting up Vault authentication..."
+    export VAULT_ADDR="${VAULT_ADDR:-https://vault.fzymgc.house}"
+
+    # Check if already authenticated
+    if vault token lookup &> /dev/null; then
+        log_info "✓ Already authenticated to Vault"
+    else
+        log_warn "Not authenticated to Vault"
+        echo ""
+        echo "Please authenticate to Vault to access infrastructure secrets:"
+        echo "  vault login"
+        echo ""
+        echo "After authenticating, your token will be saved to ~/.vault-token"
+        echo ""
+    fi
 fi
 
 # Run the existing setup script
@@ -85,6 +97,8 @@ echo "  - Python: $(python --version 2>&1)"
 echo ""
 echo "Useful commands:"
 echo "  - Activate Python venv: source .venv/bin/activate"
+echo "  - Vault login:          vault login"
+echo "  - Vault helper:         ./scripts/vault-helper.sh status"
 echo "  - kubectl (cluster):    kubectl --context fzymgc-house get nodes"
 echo "  - Terraform:            cd tf/authentik && terraform plan"
 echo ""

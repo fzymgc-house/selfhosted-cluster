@@ -100,6 +100,10 @@ If you're the person performing the initial migration:
    # Create each secret in Vault manually
    ```
 
+3. **Clean up unused secrets:**
+   - The `k3sup_onepassword_sdk_token` variable in the ansible-vault file is unused and should be removed
+   - See `docs/ansible-vault-cleanup.md` for details
+
 See `docs/vault-migration.md` for complete migration instructions.
 
 ## What Changed

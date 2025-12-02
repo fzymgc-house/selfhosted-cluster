@@ -1,6 +1,15 @@
 ---
 # Teleport role definitions
-# These are stored as ConfigMaps and applied via Helm values or tctl
+# These are stored as ConfigMaps for reference and applied via tctl after deployment
+#
+# To apply these roles after Teleport is running:
+#   kubectl --context fzymgc-house exec -n teleport deploy/teleport-auth -- \
+#     tctl create -f /dev/stdin < <(kubectl --context fzymgc-house get cm teleport-roles -n teleport -o jsonpath='{.data.admin-role\.yaml}')
+#   kubectl --context fzymgc-house exec -n teleport deploy/teleport-auth -- \
+#     tctl create -f /dev/stdin < <(kubectl --context fzymgc-house get cm teleport-roles -n teleport -o jsonpath='{.data.access-role\.yaml}')
+#
+# Or copy and apply locally:
+#   kubectl --context fzymgc-house get cm teleport-roles -n teleport -o jsonpath='{.data.admin-role\.yaml}' | tctl create -f -
 apiVersion: v1
 kind: ConfigMap
 metadata:

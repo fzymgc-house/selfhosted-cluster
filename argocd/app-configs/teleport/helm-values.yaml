@@ -28,7 +28,7 @@ auth:
   teleportConfig:
     storage:
       type: postgresql
-      conn_string: "postgres://teleport@teleport-db-rw.teleport.svc.cluster.local:5432/teleport?sslmode=disable"
+      conn_string: "postgres://teleport@teleport-db-rw.teleport.svc.cluster.local:5432/teleport?sslmode=require"
       # Password provided via environment variable from secret
 
 # Authentication configuration

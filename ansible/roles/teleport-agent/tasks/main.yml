@@ -2,14 +2,21 @@
 ---
 # tasks file for teleport-agent
 
-- name: Add Teleport APT key
-  ansible.builtin.apt_key:
+- name: Create keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Download Teleport GPG key
+  ansible.builtin.get_url:
     url: https://apt.releases.teleport.dev/gpg
-    state: present
+    dest: /etc/apt/keyrings/teleport.asc
+    mode: "0644"
 
 - name: Add Teleport APT repository
   ansible.builtin.apt_repository:
-    repo: "deb https://apt.releases.teleport.dev/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable/v17"
+    repo: "deb [signed-by=/etc/apt/keyrings/teleport.asc] https://apt.releases.teleport.dev/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable/v17"
     state: present
     filename: teleport
 

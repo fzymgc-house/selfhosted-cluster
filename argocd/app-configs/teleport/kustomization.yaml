@@ -4,3 +4,4 @@ kind: Kustomization
 namespace: teleport
 resources:
   - namespace.yaml
+  - postgres-cluster.yaml

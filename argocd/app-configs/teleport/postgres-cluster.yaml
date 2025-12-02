@@ -1,0 +1,31 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: teleport-db
+  namespace: teleport
+spec:
+  instances: 1
+
+  postgresql:
+    parameters:
+      wal_level: logical
+      max_replication_slots: "10"
+
+  bootstrap:
+    initdb:
+      database: teleport
+      owner: teleport
+      secret:
+        name: teleport-db-credentials
+
+  storage:
+    size: 5Gi
+    storageClass: postgres-storage
+
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    limits:
+      memory: 512Mi

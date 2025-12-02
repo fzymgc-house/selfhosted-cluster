@@ -4,9 +4,89 @@
 
 **Goal:** Deploy self-hosted Teleport providing SSH and Kubernetes access with Authentik OIDC authentication.
 
-**Architecture:** Teleport runs as a Helm-deployed cluster in `standalone` mode with PostgreSQL backend (CNPG), Vault-managed secrets via ExternalSecrets, and Authentik OIDC for authentication. Node agents are deployed via Ansible.
+**Architecture:** Teleport runs as a Helm-deployed cluster in `standalone` mode with PostgreSQL backend (CNPG), Vault-managed secrets via ExternalSecrets, and Authentik OIDC for authentication. Node agents are deployed via Ansible. Teleport roles and OIDC connector are managed via Terraform (`tf/teleport/`).
 
 **Tech Stack:** Teleport Helm chart, CloudNativePG, HashiCorp Vault, Authentik, Terraform, Ansible
+
+---
+
+## Pre-Deployment: Vault Secrets Setup
+
+Before deploying Teleport, the following secrets must be created in Vault:
+
+### 1. Database Credentials
+
+```bash
+# Generate a secure random password
+DB_PASSWORD=$(openssl rand -base64 24)
+
+# Store in Vault
+vault kv put secret/fzymgc-house/cluster/teleport/db \
+  username=teleport \
+  password="$DB_PASSWORD"
+```
+
+### 2. Node Join Token
+
+```bash
+# Generate a secure join token
+JOIN_TOKEN=$(openssl rand -hex 32)
+
+# Store in Vault
+vault kv put secret/fzymgc-house/cluster/teleport/join-token \
+  token="$JOIN_TOKEN"
+```
+
+### 3. OIDC Credentials (Created by Authentik Terraform)
+
+The OIDC credentials are automatically created when running `terraform apply` in `tf/authentik/`:
+
+```bash
+cd tf/authentik
+terraform apply
+```
+
+This creates the secret at `secret/fzymgc-house/cluster/teleport/oidc` with `client_id` and `client_secret`.
+
+---
+
+## Post-Deployment: Terraform Provider Bootstrap
+
+After Teleport is deployed and running, you need to configure the Terraform provider for managing roles and OIDC:
+
+### 1. Create Initial Admin User
+
+```bash
+kubectl --context fzymgc-house exec -n teleport deployment/teleport-auth -- \
+  tctl users add terraform-admin --roles=editor --logins=root
+```
+
+### 2. Generate Identity File for Terraform
+
+```bash
+# Get the one-time password from the previous command output, then:
+tsh login --proxy=teleport.fzymgc.house --user=terraform-admin
+
+# Generate long-lived identity file for Terraform
+tctl auth sign --user=terraform-admin --out=terraform-identity --ttl=8760h
+```
+
+### 3. Configure Terraform Variables
+
+Create `tf/teleport/terraform.tfvars`:
+```hcl
+teleport_identity_file = "/path/to/terraform-identity"
+```
+
+### 4. Apply Teleport Resources
+
+```bash
+cd tf/teleport
+terraform init
+terraform apply
+```
+
+This creates the admin/access roles and Authentik OIDC connector.
 
 ---
 
@@ -172,7 +252,8 @@ metadata:
   namespace: teleport
 spec:
   instances: 1
-  imageName: ghcr.io/cloudnative-pg/postgresql:17.5-standard-bullseye
+  # Pin PostgreSQL version to avoid unexpected upgrades
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.4
 
   primaryUpdateStrategy: unsupervised
 
@@ -180,7 +261,7 @@ spec:
 
   bootstrap:
     initdb:
-      database: teleport_backend
+      database: teleport
       owner: teleport
       secret:
         name: teleport-db-credentials
@@ -319,6 +400,9 @@ git commit -m "feat(teleport): Add ExternalSecret for PostgreSQL credentials"
 
 **Step 1: Create RBAC resources**
 
+Note: The RBAC follows least-privilege - Teleport only needs impersonation and minimal pod access.
+User permissions are enforced through impersonation, not direct ClusterRole permissions.
+
 ```yaml
 # argocd/app-configs/teleport/rbac.yaml
 ---
@@ -327,30 +411,22 @@ kind: ServiceAccount
 metadata:
   name: teleport
   namespace: teleport
+  labels:
+    app.kubernetes.io/name: teleport
 ---
+# ClusterRole for Kubernetes access - allows Teleport to impersonate users
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: teleport-kubernetes-access
 rules:
-  # Allow Teleport to impersonate users and groups
+  # Impersonation for Kubernetes access
   - apiGroups: [""]
     resources: ["users", "groups", "serviceaccounts"]
     verbs: ["impersonate"]
-  # Allow Teleport to impersonate extras (e.g., for user extra info)
   - apiGroups: [""]
-    resources: ["pods", "pods/exec", "pods/portforward", "pods/log"]
-    verbs: ["*"]
-  - apiGroups: [""]
-    resources: ["namespaces", "services", "secrets", "configmaps", "persistentvolumeclaims"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["apps"]
-    resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["batch"]
-    resources: ["jobs", "cronjobs"]
-    verbs: ["get", "list", "watch"]
-  # SelfSubjectAccessReview for authorization checks
+    resources: ["pods"]
+    verbs: ["get"]
   - apiGroups: ["authorization.k8s.io"]
     resources: ["selfsubjectaccessreviews", "selfsubjectrulesreviews"]
     verbs: ["create"]
@@ -873,131 +949,177 @@ git commit -m "feat(teleport): Add ExternalSecret for OIDC credentials"
 
 ---
 
-### Task 3.3: Create Teleport OIDC Connector Resource
+### Task 3.3: Create Teleport Terraform Module for Roles and OIDC
 
 **Files:**
-- Create: `argocd/app-configs/teleport/oidc-connector.yaml`
-- Modify: `argocd/app-configs/teleport/kustomization.yaml`
+- Create: `tf/teleport/versions.tf`
+- Create: `tf/teleport/terraform.tf`
+- Create: `tf/teleport/variables.tf`
+- Create: `tf/teleport/roles.tf`
+- Create: `tf/teleport/oidc.tf`
+- Create: `tf/teleport/outputs.tf`
 
-**Step 1: Create the OIDC connector as a Teleport resource**
+**Note:** Roles and OIDC connector are managed via Terraform for proper GitOps workflow.
+This requires Teleport to be deployed first, then bootstrapping Terraform access (see "Post-Deployment: Terraform Provider Bootstrap" section above).
 
-Note: This will be applied via `tctl` after Teleport is running.
+**Step 1: Create versions.tf**
 
-```yaml
-# argocd/app-configs/teleport/oidc-connector.yaml
-# This is a Teleport resource, not a Kubernetes resource
-# Apply with: tctl create -f oidc-connector.yaml
-kind: oidc
-version: v3
-metadata:
-  name: authentik
-spec:
-  issuer_url: https://auth.fzymgc.house/application/o/teleport/
-  client_id: teleport
-  client_secret_file: /etc/teleport-oidc/client_secret
-  redirect_url: https://teleport.fzymgc.house/v1/webapi/oidc/callback
-  display: "Login with Authentik"
-  scope:
-    - openid
-    - profile
-    - email
-    - groups
-  claims_to_roles:
-    - claim: groups
-      value: teleport-admins
-      roles:
-        - admin
-    - claim: groups
-      value: teleport-users
-      roles:
-        - access
+```hcl
+# tf/teleport/versions.tf
+terraform {
+  required_version = ">= 1.12.2"
+
+  required_providers {
+    teleport = {
+      source  = "terraform.releases.teleport.dev/gravitational/teleport"
+      version = "~> 17.0"
+    }
+    vault = {
+      source  = "hashicorp/vault"
+      version = "5.5.0"
+    }
+  }
+}
 ```
 
-**Step 2: Commit**
+**Step 2: Create roles.tf**
+
+```hcl
+# tf/teleport/roles.tf
+
+# Admin role - Full cluster access
+resource "teleport_role" "admin" {
+  version = "v7"
+  metadata = {
+    name        = "admin"
+    description = "Full administrative access to all resources"
+  }
+
+  spec = {
+    options = {
+      max_session_ttl = "12h"
+    }
+
+    allow = {
+      # SSH logins - use traits from OIDC
+      logins = ["root", "admin", "{{internal.logins}}"]
+
+      node_labels = {
+        "*" = ["*"]
+      }
+
+      kubernetes_groups = ["system:masters"]
+      kubernetes_labels = {
+        "*" = ["*"]
+      }
+      kubernetes_resources = [{
+        kind      = "*"
+        namespace = "*"
+        name      = "*"
+        verbs     = ["*"]
+      }]
+
+      rules = [{
+        resources = ["*"]
+        verbs     = ["*"]
+      }]
+    }
+  }
+}
+
+# Access role - Standard user access
+resource "teleport_role" "access" {
+  version = "v7"
+  metadata = {
+    name        = "access"
+    description = "Standard SSH and Kubernetes read access"
+  }
+
+  spec = {
+    options = {
+      max_session_ttl = "8h"
+    }
+
+    allow = {
+      logins = ["{{internal.logins}}"]
+
+      node_labels = {
+        "env" = ["production"]
+      }
+
+      kubernetes_groups = ["view"]
+      kubernetes_labels = {
+        "*" = ["*"]
+      }
+      kubernetes_resources = [
+        {
+          kind      = "pod"
+          namespace = "*"
+          name      = "*"
+          verbs     = ["get", "list", "watch"]
+        },
+        {
+          kind      = "deployment"
+          namespace = "*"
+          name      = "*"
+          verbs     = ["get", "list", "watch"]
+        },
+        {
+          kind      = "service"
+          namespace = "*"
+          name      = "*"
+          verbs     = ["get", "list", "watch"]
+        }
+      ]
+    }
+  }
+}
+```
+
+**Step 3: Create oidc.tf**
+
+```hcl
+# tf/teleport/oidc.tf
+
+data "vault_kv_secret_v2" "teleport_oidc" {
+  mount = "secret"
+  name  = "fzymgc-house/cluster/teleport/oidc"
+}
+
+resource "teleport_oidc_connector" "authentik" {
+  version = "v3"
+  metadata = {
+    name = "authentik"
+  }
+
+  spec = {
+    display       = "Authentik SSO"
+    client_id     = data.vault_kv_secret_v2.teleport_oidc.data["client_id"]
+    client_secret = data.vault_kv_secret_v2.teleport_oidc.data["client_secret"]
+    issuer_url    = var.authentik_issuer_url
+    redirect_url  = ["https://${var.teleport_public_addr}/v1/webapi/oidc/callback"]
+
+    claims_to_roles = [
+      {
+        claim = "groups"
+        value = "teleport-admins"
+        roles = [teleport_role.admin.metadata.name]
+      },
+      {
+        claim = "groups"
+        value = "teleport-users"
+        roles = [teleport_role.access.metadata.name]
+      }
+    ]
+  }
+}
+```
+
+**Step 4: Commit**
 
 ```bash
-git add argocd/app-configs/teleport/oidc-connector.yaml
-git commit -m "feat(teleport): Add OIDC connector configuration for Authentik"
-```
-
----
-
-### Task 3.4: Create Teleport Roles
-
-**Files:**
-- Create: `argocd/app-configs/teleport/roles.yaml`
-
-**Step 1: Create Teleport role definitions**
-
-```yaml
-# argocd/app-configs/teleport/roles.yaml
-# Apply with: tctl create -f roles.yaml
----
-kind: role
-version: v7
-metadata:
-  name: admin
-spec:
-  allow:
-    logins:
-      - root
-      - "{{internal.logins}}"
-    node_labels:
-      "*": "*"
-    kubernetes_labels:
-      "*": "*"
-    kubernetes_groups:
-      - system:masters
-    kubernetes_resources:
-      - kind: "*"
-        namespace: "*"
-        name: "*"
-        verbs: ["*"]
-    rules:
-      - resources: ["*"]
-        verbs: ["*"]
-  options:
-    forward_agent: true
-    max_session_ttl: 12h
----
-kind: role
-version: v7
-metadata:
-  name: access
-spec:
-  allow:
-    logins:
-      - "{{internal.logins}}"
-      - "{{email.local(external.email)}}"
-    node_labels:
-      env: production
-    kubernetes_labels:
-      "*": "*"
-    kubernetes_groups:
-      - view
-    kubernetes_resources:
-      - kind: pod
-        namespace: "*"
-        name: "*"
-        verbs: ["get", "list", "watch"]
-      - kind: pod/exec
-        namespace: "*"
-        name: "*"
-        verbs: ["create"]
-      - kind: pod/log
-        namespace: "*"
-        name: "*"
-        verbs: ["get", "list"]
-  options:
-    forward_agent: false
-    max_session_ttl: 8h
-```
-
-**Step 2: Commit**
-
-```bash
-git add argocd/app-configs/teleport/roles.yaml
-git commit -m "feat(teleport): Add admin and access role definitions"
+git add tf/teleport/
+git commit -m "feat(teleport): Add Terraform module for roles and OIDC connector"
 ```
 
 ---
@@ -1243,22 +1365,30 @@ kubectl --context fzymgc-house wait --for=condition=Ready cluster/teleport-db -n
 kubectl --context fzymgc-house wait --for=condition=Ready pod -l app.kubernetes.io/name=teleport -n teleport --timeout=300s
 ```
 
-**Step 3: Create initial admin user (local auth)**
+**Step 3: Create initial admin user for Terraform bootstrapping**
 
 ```bash
-kubectl --context fzymgc-house exec -n teleport deployment/teleport-auth -- tctl users add admin --roles=admin --logins=root,admin
+kubectl --context fzymgc-house exec -n teleport deployment/teleport-auth -- \
+  tctl users add terraform-admin --roles=editor --logins=root
 ```
 
-**Step 4: Apply OIDC connector**
+**Step 4: Generate identity file for Terraform provider**
 
 ```bash
-kubectl --context fzymgc-house exec -n teleport deployment/teleport-auth -- tctl create -f /path/to/oidc-connector.yaml
+# Login with the one-time password from step 3
+tsh login --proxy=teleport.fzymgc.house --user=terraform-admin
+
+# Generate long-lived identity file (1 year)
+tctl auth sign --user=terraform-admin --out=terraform-identity --ttl=8760h
 ```
 
-**Step 5: Apply roles**
+**Step 5: Apply Teleport Terraform (roles and OIDC)**
 
 ```bash
-kubectl --context fzymgc-house exec -n teleport deployment/teleport-auth -- tctl create -f /path/to/roles.yaml
+cd tf/teleport
+echo 'teleport_identity_file = "/path/to/terraform-identity"' > terraform.tfvars
+terraform init
+terraform apply
 ```
 
 **Step 6: Deploy node agents via Ansible**
@@ -1268,10 +1398,17 @@ source .venv/bin/activate
 ansible-playbook -i ansible/inventory/hosts.yml ansible/teleport-agents-playbook.yml
 ```
 
-**Step 7: Verify node registration**
+**Step 7: Verify deployment**
 
 ```bash
+# Check nodes registered
 kubectl --context fzymgc-house exec -n teleport deployment/teleport-auth -- tctl nodes ls
+
+# Check roles created
+kubectl --context fzymgc-house exec -n teleport deployment/teleport-auth -- tctl get roles
+
+# Check OIDC connector
+kubectl --context fzymgc-house exec -n teleport deployment/teleport-auth -- tctl get oidc
 ```
 
 ---

@@ -4,6 +4,8 @@ kind: Cluster
 metadata:
   name: teleport-db
   namespace: teleport
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   instances: 1
 

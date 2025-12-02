@@ -18,9 +18,9 @@ service:
   annotations:
     metallb.universe.tf/loadBalancerIPs: "192.168.20.146"
 
-# Use existing service account (created by rbac.yaml)
+# Let Helm create the service account
 serviceAccount:
-  create: false
+  create: true
   name: teleport
 
 # PostgreSQL backend (instead of etcd)

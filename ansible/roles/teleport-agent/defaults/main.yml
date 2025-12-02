@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT-0
+---
+# defaults file for teleport-agent
+
+# Teleport agent configuration defaults
+teleport_auth_server: "teleport.fzymgc.house:443"
+teleport_log_severity: "INFO"

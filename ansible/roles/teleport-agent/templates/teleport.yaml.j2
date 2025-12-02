@@ -1,0 +1,22 @@
+version: v3
+teleport:
+  nodename: "{{ inventory_hostname }}"
+  data_dir: /var/lib/teleport
+  auth_token: "{{ teleport_join_token }}"
+  auth_server: "{{ teleport_auth_server }}"
+  log:
+    severity: "{{ teleport_log_severity }}"
+    output: stderr
+
+ssh_service:
+  enabled: true
+  labels:
+    env: production
+    role: "{{ 'control-plane' if 'control_plane' in group_names else 'worker' }}"
+    hostname: "{{ inventory_hostname }}"
+
+auth_service:
+  enabled: false
+
+proxy_service:
+  enabled: false

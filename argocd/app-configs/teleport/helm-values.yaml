@@ -1,0 +1,70 @@
+# Teleport Helm values for standalone mode with PostgreSQL backend
+# Chart: teleport-cluster from https://charts.releases.teleport.dev
+
+chartMode: standalone
+
+clusterName: teleport.fzymgc.house
+publicAddr:
+  - teleport.fzymgc.house:443
+
+proxyListenerMode: multiplex
+
+# Kubernetes service configuration
+service:
+  type: LoadBalancer
+  spec:
+    loadBalancerIP: ""  # Will be assigned by MetalLB
+
+# Use existing service account (created by rbac.yaml)
+serviceAccount:
+  create: false
+  name: teleport
+
+# PostgreSQL backend (instead of etcd)
+persistence:
+  enabled: false  # Don't use PVC, use PostgreSQL
+
+auth:
+  teleportConfig:
+    storage:
+      type: postgresql
+      conn_string: "postgres://teleport@teleport-db-rw.teleport.svc.cluster.local:5432/teleport?sslmode=disable"
+      # Password provided via environment variable from secret
+
+# Environment variables from secrets
+extraEnv:
+  - name: TELEPORT_STORAGE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: teleport-db-credentials
+        key: password
+
+# TLS - use cert-manager issued certificate
+tls:
+  existingSecretName: teleport-tls
+
+# Kubernetes access configuration
+kubernetes:
+  enabled: true
+  publicAddr:
+    - teleport.fzymgc.house:443
+
+# SSH service - handled by node agents, not the cluster
+sshService:
+  enabled: false
+
+# Resource limits for homelab
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
+
+# Single replica for homelab
+highAvailability:
+  replicaCount: 1
+
+# Logging
+log:
+  level: INFO

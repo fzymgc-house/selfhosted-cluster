@@ -7,6 +7,9 @@ metadata:
 spec:
   instances: 1
 
+  # Pin PostgreSQL version to avoid unexpected upgrades
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.4
+
   postgresql:
     parameters:
       wal_level: logical

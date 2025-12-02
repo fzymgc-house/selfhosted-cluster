@@ -1,5 +1,8 @@
 # Teleport Helm values for standalone mode with PostgreSQL backend
 # Chart: teleport-cluster from https://charts.releases.teleport.dev
+#
+# NOTE: OIDC connector and roles are managed via Terraform (tf/teleport/)
+# Run `terraform apply` in tf/teleport/ after Teleport is deployed
 
 chartMode: standalone
 
@@ -12,8 +15,8 @@ proxyListenerMode: multiplex
 # Kubernetes service configuration
 service:
   type: LoadBalancer
-  spec:
-    loadBalancerIP: ""  # Will be assigned by MetalLB
+  annotations:
+    metallb.universe.tf/loadBalancerIPs: "10.255.254.20"
 
 # Use existing service account (created by rbac.yaml)
 serviceAccount:
@@ -31,30 +34,10 @@ auth:
       conn_string: "postgres://teleport@teleport-db-rw.teleport.svc.cluster.local:5432/teleport?sslmode=require"
       # Password provided via environment variable from secret
 
-# Authentication configuration
+# Authentication - OIDC connector created by Terraform after deployment
+# Local auth enabled as fallback until OIDC connector is configured
 authentication:
-  type: oidc
-  connectorName: authentik
-  localAuth: true  # Allow local auth as fallback
-
-# OIDC Connector configuration
-# Note: client_secret comes from environment variable
-proxySettings:
-  oidcConnector:
-    name: authentik
-    display: "Authentik SSO"
-    redirectURL: "https://teleport.fzymgc.house/v1/webapi/oidc/callback"
-    issuerURL: "https://auth.fzymgc.house/application/o/teleport/"
-    clientID: "teleport"
-    claimsToRoles:
-      - claim: groups
-        value: teleport-admins
-        roles:
-          - admin
-      - claim: groups
-        value: teleport-users
-        roles:
-          - access
+  localAuth: true
 
 # Environment variables from secrets
 extraEnv:
@@ -63,11 +46,6 @@ extraEnv:
       secretKeyRef:
         name: teleport-db-credentials
         key: password
-  - name: TELEPORT_OIDC_CLIENT_SECRET
-    valueFrom:
-      secretKeyRef:
-        name: teleport-oidc
-        key: client_secret
 
 # TLS - use cert-manager issued certificate
 tls:

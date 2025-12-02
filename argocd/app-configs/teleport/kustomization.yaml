@@ -9,5 +9,3 @@ resources:
   - db-secrets.yaml
   - join-token-secret.yaml
   - certificate.yaml
-  - oidc-secrets.yaml
-  - roles.yaml

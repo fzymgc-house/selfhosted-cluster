@@ -1,0 +1,58 @@
+---
+# Teleport role definitions
+# These are stored as ConfigMaps and applied via Helm values or tctl
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: teleport-roles
+  namespace: teleport
+data:
+  admin-role.yaml: |
+    kind: role
+    version: v7
+    metadata:
+      name: admin
+    spec:
+      options:
+        max_session_ttl: 12h
+      allow:
+        logins: ["root", "admin", "sean"]
+        node_labels:
+          "*": "*"
+        kubernetes_groups:
+          - system:masters
+        kubernetes_labels:
+          "*": "*"
+        kubernetes_resources:
+          - kind: "*"
+            namespace: "*"
+            name: "*"
+            verbs: ["*"]
+        rules:
+          - resources: ["*"]
+            verbs: ["*"]
+  access-role.yaml: |
+    kind: role
+    version: v7
+    metadata:
+      name: access
+    spec:
+      options:
+        max_session_ttl: 8h
+      allow:
+        logins: ["sean"]
+        node_labels:
+          env: production
+        kubernetes_groups:
+          - view
+        kubernetes_labels:
+          "*": "*"
+        kubernetes_resources:
+          - kind: pod
+            namespace: "*"
+            name: "*"
+            verbs: ["get", "list", "watch"]
+          - kind: deployment
+            namespace: "*"
+            name: "*"
+            verbs: ["get", "list", "watch"]

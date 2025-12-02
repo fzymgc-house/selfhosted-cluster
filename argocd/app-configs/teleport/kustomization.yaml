@@ -11,3 +11,4 @@ resources:
   - certificate.yaml
   - oidc-secrets.yaml
   - oidc-connector.yaml
+  - roles.yaml

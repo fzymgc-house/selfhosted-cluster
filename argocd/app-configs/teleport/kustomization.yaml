@@ -5,3 +5,4 @@ namespace: teleport
 resources:
   - namespace.yaml
   - postgres-cluster.yaml
+  - db-secrets.yaml

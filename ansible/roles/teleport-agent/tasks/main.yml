@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: MIT-0
+---
+# tasks file for teleport-agent
+
+- name: Create keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Download Teleport GPG key
+  ansible.builtin.get_url:
+    url: https://apt.releases.teleport.dev/gpg
+    dest: /etc/apt/keyrings/teleport.asc
+    mode: "0644"
+
+- name: Add Teleport APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/teleport.asc] https://apt.releases.teleport.dev/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable/v17"
+    state: present
+    filename: teleport
+
+- name: Install Teleport package
+  ansible.builtin.apt:
+    name: teleport
+    state: present
+    update_cache: true
+
+- name: Deploy Teleport configuration
+  ansible.builtin.template:
+    src: teleport.yaml.j2
+    dest: /etc/teleport.yaml
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart teleport
+
+- name: Enable and start Teleport service
+  ansible.builtin.systemd:
+    name: teleport
+    enabled: true
+    state: started

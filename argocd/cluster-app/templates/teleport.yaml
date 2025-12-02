@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: teleport
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  sources:
+    # Helm chart source
+    - repoURL: https://charts.releases.teleport.dev
+      targetRevision: "17.0.0"
+      chart: teleport-cluster
+      helm:
+        releaseName: teleport
+        valueFiles:
+          - $values/argocd/app-configs/teleport/helm-values.yaml
+    # Values from git repo
+    - repoURL: https://github.com/fzymgc-house/selfhosted-cluster.git
+      targetRevision: HEAD
+      ref: values
+    # Kustomization for supporting resources (namespace, secrets, RBAC, etc.)
+    - repoURL: https://github.com/fzymgc-house/selfhosted-cluster.git
+      targetRevision: HEAD
+      path: argocd/app-configs/teleport
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: teleport
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true

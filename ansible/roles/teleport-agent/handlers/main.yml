@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: MIT-0
+---
+# handlers file for teleport-agent
+
+- name: Restart teleport
+  ansible.builtin.systemd:
+    name: teleport
+    state: restarted
+    daemon_reload: true

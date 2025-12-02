@@ -1,0 +1,34 @@
+---
+# SPDX-License-Identifier: MIT
+# code: language=ansible
+# Deploy Teleport SSH agents to cluster nodes
+
+- name: Deploy Teleport SSH Agents
+  hosts: tp_cluster_nodes
+  become: true
+  gather_facts: true
+
+  vars:
+    # Get the join token from Vault
+    # This requires VAULT_ADDR and VAULT_TOKEN to be set
+    teleport_join_token: "{{ lookup('community.hashi_vault.hashi_vault', 'secret/data/fzymgc-house/cluster/teleport/join-token:token') }}"
+
+  pre_tasks:
+    - name: Verify Vault connectivity
+      ansible.builtin.debug:
+        msg: "Join token retrieved from Vault (length: {{ teleport_join_token | length }})"
+      failed_when: teleport_join_token | length < 10
+
+  roles:
+    - teleport-agent
+
+  post_tasks:
+    - name: Verify Teleport service is running
+      ansible.builtin.systemd:
+        name: teleport
+        state: started
+      register: teleport_service
+
+    - name: Display Teleport service status
+      ansible.builtin.debug:
+        msg: "Teleport service is {{ 'running' if teleport_service.status.ActiveState == 'active' else 'not running' }}"

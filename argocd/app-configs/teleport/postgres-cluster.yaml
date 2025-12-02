@@ -10,7 +10,8 @@ spec:
   instances: 1
 
   # Pin PostgreSQL version to avoid unexpected upgrades
-  imageName: ghcr.io/cloudnative-pg/postgresql:16.4
+  # PostgreSQL 17+ includes wal2json by default for logical replication
+  imageName: ghcr.io/cloudnative-pg/postgresql:17.5
 
   postgresql:
     parameters:

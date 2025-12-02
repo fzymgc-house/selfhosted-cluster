@@ -23,6 +23,8 @@ spec:
       owner: teleport
       secret:
         name: teleport-db-credentials
+      postInitSQL:
+        - ALTER ROLE teleport WITH REPLICATION;
 
   storage:
     size: 5Gi

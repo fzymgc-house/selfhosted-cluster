@@ -29,19 +29,20 @@ persistence:
 
 auth:
   teleportConfig:
-    storage:
-      type: postgresql
-      conn_string: "postgres://teleport@teleport-db-rw.teleport.svc.cluster.local:5432/teleport?sslmode=require"
-      # Password provided via environment variable from secret
+    teleport:
+      storage:
+        type: postgresql
+        conn_string: "postgresql://teleport@teleport-db-rw.teleport.svc.cluster.local:5432/teleport?sslmode=require"
 
 # Authentication - OIDC connector created by Terraform after deployment
 # Local auth enabled as fallback until OIDC connector is configured
 authentication:
   localAuth: true
 
-# Environment variables from secrets
+# Environment variables from secrets for PostgreSQL backend
+# Using standard libpq environment variables for authentication
 extraEnv:
-  - name: TELEPORT_STORAGE_PASSWORD
+  - name: PGPASSWORD
     valueFrom:
       secretKeyRef:
         name: teleport-db-credentials

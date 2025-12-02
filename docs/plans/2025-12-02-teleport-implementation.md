@@ -26,18 +26,7 @@ vault kv put secret/fzymgc-house/cluster/teleport/db \
   password="$DB_PASSWORD"
 ```
 
-### 2. Node Join Token
-
-```bash
-# Generate a secure join token
-JOIN_TOKEN=$(openssl rand -hex 32)
-
-# Store in Vault
-vault kv put secret/fzymgc-house/cluster/teleport/join-token \
-  token="$JOIN_TOKEN"
-```
-
-### 3. OIDC Credentials (Created by Authentik Terraform)
+### 2. OIDC Credentials (Created by Authentik Terraform)
 
 The OIDC credentials are automatically created when running `terraform apply` in `tf/authentik/`:
 
@@ -474,76 +463,7 @@ git commit -m "feat(teleport): Add service account and RBAC for Kubernetes acces
 
 ---
 
-### Task 2.2: Create ExternalSecret for Join Token
-
-**Files:**
-- Create: `argocd/app-configs/teleport/join-token-secret.yaml`
-- Modify: `argocd/app-configs/teleport/kustomization.yaml`
-
-**Step 1: Generate and store join token in Vault**
-
-```bash
-# Generate a secure join token
-JOIN_TOKEN=$(openssl rand -hex 32)
-
-# Store in Vault
-vault kv put secret/fzymgc-house/cluster/teleport/join-token \
-  token="$JOIN_TOKEN"
-```
-
-**Step 2: Create the ExternalSecret**
-
-```yaml
-# argocd/app-configs/teleport/join-token-secret.yaml
-apiVersion: external-secrets.io/v1
-kind: ExternalSecret
-metadata:
-  name: teleport-join-token
-  namespace: teleport
-spec:
-  secretStoreRef:
-    name: vault
-    kind: ClusterSecretStore
-  target:
-    name: teleport-join-token
-    creationPolicy: Owner
-    deletionPolicy: Delete
-    template:
-      type: Opaque
-      data:
-        auth-token: "{{ .token }}"
-  data:
-    - secretKey: token
-      remoteRef:
-        key: fzymgc-house/cluster/teleport/join-token
-        property: token
-```
-
-**Step 3: Update kustomization.yaml**
-
-```yaml
-# argocd/app-configs/teleport/kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
-resources:
-  - namespace.yaml
-  - rbac.yaml
-  - db-secrets.yaml
-  - join-token-secret.yaml
-  - postgres-cluster.yaml
-```
-
-**Step 4: Commit**
-
-```bash
-git add argocd/app-configs/teleport/
-git commit -m "feat(teleport): Add ExternalSecret for node join token"
-```
-
----
-
-### Task 2.3: Create Teleport Helm Values
+### Task 2.2: Create Teleport Helm Values
 
 **Files:**
 - Create: `argocd/app-configs/teleport/values.yaml`
@@ -1319,30 +1239,56 @@ git commit -m "feat(ansible): Add teleport-agent role for node SSH access"
 
 **Step 1: Create the playbook**
 
+This playbook dynamically generates short-lived join tokens using `tctl`, eliminating the need
+for static tokens stored in Vault. The token is generated just before deployment and expires
+after 15 minutes.
+
 ```yaml
 # ansible/teleport-agents-playbook.yml
-# SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: MIT
 # code: language=ansible
 ---
-- name: Deploy Teleport SSH agents to cluster nodes
+- name: Generate Teleport Join Token
+  hosts: localhost
+  gather_facts: false
+  vars:
+    teleport_namespace: teleport
+    teleport_deployment: teleport-auth
+    token_ttl: 15m
+
+  tasks:
+    - name: Generate short-lived join token via tctl
+      ansible.builtin.command:
+        cmd: >-
+          kubectl --context fzymgc-house exec -n {{ teleport_namespace }}
+          deployment/{{ teleport_deployment }} --
+          tctl tokens add --type=node --ttl={{ token_ttl }} --format=text
+      register: token_result
+      changed_when: false
+
+    - name: Set join token fact for other plays
+      ansible.builtin.set_fact:
+        teleport_join_token: "{{ token_result.stdout | trim }}"
+      delegate_to: localhost
+      delegate_facts: true
+
+- name: Deploy Teleport SSH Agents
   hosts: tp_cluster_nodes
+  become: true
   gather_facts: true
 
   vars:
-    # Fetch join token from Vault
-    teleport_join_token: "{{ lookup('community.hashi_vault.hashi_vault', 'secret/data/fzymgc-house/cluster/teleport/join-token:token') }}"
+    teleport_join_token: "{{ hostvars['localhost']['teleport_join_token'] }}"
 
   roles:
-    - role: teleport-agent
-      tags:
-        - teleport-agent
+    - teleport-agent
 ```
 
 **Step 2: Commit**
 
 ```bash
 git add ansible/teleport-agents-playbook.yml
-git commit -m "feat(ansible): Add playbook for deploying Teleport agents to nodes"
+git commit -m "feat(ansible): Add playbook for deploying Teleport agents with dynamic tokens"
 ```
 
 ---

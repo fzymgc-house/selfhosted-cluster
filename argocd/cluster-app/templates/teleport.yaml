@@ -10,7 +10,7 @@ spec:
   sources:
     # Helm chart source
     - repoURL: https://charts.releases.teleport.dev
-      targetRevision: "17.0.0"
+      targetRevision: "18.4.2"
       chart: teleport-cluster
       helm:
         releaseName: teleport

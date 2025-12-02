@@ -7,3 +7,4 @@ resources:
   - rbac.yaml
   - postgres-cluster.yaml
   - db-secrets.yaml
+  - join-token-secret.yaml

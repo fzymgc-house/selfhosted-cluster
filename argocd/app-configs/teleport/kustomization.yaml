@@ -10,3 +10,4 @@ resources:
   - join-token-secret.yaml
   - certificate.yaml
   - oidc-secrets.yaml
+  - oidc-connector.yaml

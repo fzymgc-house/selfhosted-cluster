@@ -14,6 +14,8 @@ spec:
     name: cloudflare-acme-issuer
     kind: ClusterIssuer
   dnsNames:
+    - tp.fzymgc.house
     - teleport.fzymgc.house
+    - teleport.k8s.fzymgc.house
   usages:
     - server auth

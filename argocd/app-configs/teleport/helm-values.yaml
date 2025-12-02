@@ -31,6 +31,31 @@ auth:
       conn_string: "postgres://teleport@teleport-db-rw.teleport.svc.cluster.local:5432/teleport?sslmode=disable"
       # Password provided via environment variable from secret
 
+# Authentication configuration
+authentication:
+  type: oidc
+  connectorName: authentik
+  localAuth: true  # Allow local auth as fallback
+
+# OIDC Connector configuration
+# Note: client_secret comes from environment variable
+proxySettings:
+  oidcConnector:
+    name: authentik
+    display: "Authentik SSO"
+    redirectURL: "https://teleport.fzymgc.house/v1/webapi/oidc/callback"
+    issuerURL: "https://auth.fzymgc.house/application/o/teleport/"
+    clientID: "teleport"
+    claimsToRoles:
+      - claim: groups
+        value: teleport-admins
+        roles:
+          - admin
+      - claim: groups
+        value: teleport-users
+        roles:
+          - access
+
 # Environment variables from secrets
 extraEnv:
   - name: TELEPORT_STORAGE_PASSWORD
@@ -38,6 +63,11 @@ extraEnv:
       secretKeyRef:
         name: teleport-db-credentials
         key: password
+  - name: TELEPORT_OIDC_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: teleport-oidc
+        key: client_secret
 
 # TLS - use cert-manager issued certificate
 tls:

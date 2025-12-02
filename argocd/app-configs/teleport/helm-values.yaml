@@ -1,4 +1,4 @@
-# Teleport Helm values for standalone mode with PostgreSQL backend
+# Teleport Helm values for standalone mode with PVC backend
 # Chart: teleport-cluster from https://charts.releases.teleport.dev
 #
 # NOTE: OIDC connector and roles are managed via Terraform (tf/teleport/)
@@ -23,30 +23,16 @@ serviceAccount:
   create: true
   name: teleport
 
-# PostgreSQL backend (instead of etcd)
+# Use PVC for storage (default backend - stores data in /var/lib/teleport)
 persistence:
-  enabled: false  # Don't use PVC, use PostgreSQL
-
-auth:
-  teleportConfig:
-    teleport:
-      storage:
-        type: postgresql
-        conn_string: "postgresql://teleport@teleport-db-rw.teleport.svc.cluster.local:5432/teleport?sslmode=require"
+  enabled: true
+  storageClassName: longhorn
+  volumeSize: 10Gi
 
 # Authentication - OIDC connector created by Terraform after deployment
 # Local auth enabled as fallback until OIDC connector is configured
 authentication:
   localAuth: true
-
-# Environment variables from secrets for PostgreSQL backend
-# Using standard libpq environment variables for authentication
-extraEnv:
-  - name: PGPASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: teleport-db-credentials
-        key: password
 
 # TLS - use cert-manager issued certificate
 tls:

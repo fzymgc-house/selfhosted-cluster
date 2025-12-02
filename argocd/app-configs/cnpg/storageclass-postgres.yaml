@@ -10,5 +10,6 @@ parameters:
   numberOfReplicas: "1"
   fsType: ext4
   dataLocality: strict-local
+  dataEngine: v1
 
 

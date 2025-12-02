@@ -4,5 +4,6 @@ kind: Kustomization
 namespace: teleport
 resources:
   - namespace.yaml
+  - rbac.yaml
   - postgres-cluster.yaml
   - db-secrets.yaml

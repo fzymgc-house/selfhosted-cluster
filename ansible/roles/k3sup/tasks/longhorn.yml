@@ -67,6 +67,7 @@
               numberOfReplicas: "2"
               encrypted: "true"
               dataLocality: "best-effort"
+              dataEngine: "v1"
               # global secret that contains the encryption key that will be used for all volumes
               csi.storage.k8s.io/provisioner-secret-name: "longhorn-crypto-config"
               csi.storage.k8s.io/provisioner-secret-namespace: "longhorn-system"
@@ -80,7 +81,7 @@
   run_once: true
   delegate_to: localhost
 
-- name: Create encrypted storage class
+- name: Create 1-replica encrypted storage class
   kubernetes.core.k8s:
       kubeconfig: "/Users/sean/.kube/configs/{{ k8s_context }}-admin.yml"
       state: present
@@ -98,6 +99,7 @@
               numberOfReplicas: "1"
               encrypted: "true"
               dataLocality: "best-effort"
+              dataEngine: "v1"
               # global secret that contains the encryption key that will be used for all volumes
               csi.storage.k8s.io/provisioner-secret-name: "longhorn-crypto-config"
               csi.storage.k8s.io/provisioner-secret-namespace: "longhorn-system"

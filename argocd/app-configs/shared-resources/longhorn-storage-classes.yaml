@@ -9,3 +9,4 @@ volumeBindingMode: WaitForFirstConsumer
 parameters:
   numberOfReplicas: "2"
   dataLocality: best-effort
+  dataEngine: v1

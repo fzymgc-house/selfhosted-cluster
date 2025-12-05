@@ -63,18 +63,3 @@ spec:
   immediate: true
   pluginConfiguration:
     name: barman-cloud.cloudnative-pg.io
----
-apiVersion: postgresql.cnpg.io/v1
-kind: ScheduledBackup
-metadata:
-  name: main-backup-daily-snapshot
-  namespace: postgres
-spec:
-  schedule: "0 0 0 * *"
-  backupOwnerReference: cluster
-  cluster:
-    name: main
-  immediate: true
-  method: volumeSnapshot
-
-

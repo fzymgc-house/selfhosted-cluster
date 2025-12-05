@@ -9,14 +9,19 @@ metadata:
 spec:
   instances: 1
 
-  # Pin PostgreSQL version to avoid unexpected upgrades
-  # PostgreSQL 17+ includes wal2json by default for logical replication
-  imageName: ghcr.io/cloudnative-pg/postgresql:17.5
+  # PostgreSQL 18 minimal image (required for ImageVolume extensions)
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-minimal-trixie
 
   postgresql:
     parameters:
       wal_level: logical
       max_replication_slots: "10"
+
+    # ImageVolume extension for wal2json (requires k8s 1.33+, CNPG 1.27+)
+    extensions:
+      - name: wal2json
+        image:
+          reference: ghcr.io/fzymgc-house/wal2json:2.6-pg18-trixie
 
   bootstrap:
     initdb:

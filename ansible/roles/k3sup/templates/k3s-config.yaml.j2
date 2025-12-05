@@ -11,3 +11,8 @@ disable-network-policy: true
 disable:
   - traefik
   - servicelb
+# Enable ImageVolume feature gate for CNPG extension support
+kube-apiserver-arg:
+  - feature-gates=ImageVolume=true
+kubelet-arg:
+  - feature-gates=ImageVolume=true

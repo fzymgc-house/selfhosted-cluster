@@ -8,9 +8,25 @@
 
 **Tech Stack:** Kubernetes, ArgoCD, Rancher System Upgrade Controller, Kustomize
 
+## Status
+
+| Task | Status | Notes |
+|------|--------|-------|
+| 1. Create namespace manifest | ✅ Complete | Commit `c38e2bd` |
+| 2. Create controller deployment | ✅ Complete | Commit `3b01b69` |
+| 3. Create server upgrade plan | ✅ Complete | Commit `dbc81bc` |
+| 4. Create agent upgrade plan | ✅ Complete | Commit `588ea36` |
+| 5. Create kustomization | ✅ Complete | Commit `d6a5fd4` |
+| 6. Create ArgoCD Application | ✅ Complete | Commit `6a66d12` |
+| 7. Add Plan CRD | ✅ Complete | Commit `e49dfd2` |
+| 8. Push and create PR | ✅ Complete | PR #99 |
+| 9. Monitor upgrade after merge | ⏳ Pending | Awaiting PR merge |
+
+**PR:** https://github.com/fzymgc-house/selfhosted-cluster/pull/99
+
 ---
 
-### Task 1: Create system-upgrade namespace manifest
+### Task 1: Create system-upgrade namespace manifest ✅
 
 **Files:**
 - Create: `argocd/app-configs/system-upgrade/namespace.yaml`
@@ -43,7 +59,7 @@ git commit -m "feat(system-upgrade): Add namespace manifest"
 
 ---
 
-### Task 2: Create controller deployment manifest
+### Task 2: Create controller deployment manifest ✅
 
 **Files:**
 - Create: `argocd/app-configs/system-upgrade/controller.yaml`
@@ -209,7 +225,7 @@ git commit -m "feat(system-upgrade): Add controller deployment manifest"
 
 ---
 
-### Task 3: Create server upgrade plan
+### Task 3: Create server upgrade plan ✅
 
 **Files:**
 - Create: `argocd/app-configs/system-upgrade/plan-server.yaml`
@@ -254,7 +270,7 @@ git commit -m "feat(system-upgrade): Add server upgrade plan for v1.34.2"
 
 ---
 
-### Task 4: Create agent upgrade plan
+### Task 4: Create agent upgrade plan ✅
 
 **Files:**
 - Create: `argocd/app-configs/system-upgrade/plan-agent.yaml`
@@ -302,7 +318,7 @@ git commit -m "feat(system-upgrade): Add agent upgrade plan for v1.34.2"
 
 ---
 
-### Task 5: Create kustomization
+### Task 5: Create kustomization ✅
 
 **Files:**
 - Create: `argocd/app-configs/system-upgrade/kustomization.yaml`
@@ -335,7 +351,7 @@ git commit -m "feat(system-upgrade): Add kustomization"
 
 ---
 
-### Task 6: Create ArgoCD Application
+### Task 6: Create ArgoCD Application ✅
 
 **Files:**
 - Create: `argocd/cluster-app/templates/system-upgrade.yaml`
@@ -383,7 +399,7 @@ git commit -m "feat(system-upgrade): Add ArgoCD Application"
 
 ---
 
-### Task 7: Add Plan CRD
+### Task 7: Add Plan CRD ✅
 
 **Files:**
 - Create: `argocd/app-configs/system-upgrade/crd.yaml`
@@ -433,7 +449,7 @@ git commit -m "feat(system-upgrade): Add Plan CRD"
 
 ---
 
-### Task 8: Push and create PR
+### Task 8: Push and create PR ✅
 
 **Files:**
 - None (git operations only)

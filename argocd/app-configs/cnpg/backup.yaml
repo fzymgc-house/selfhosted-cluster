@@ -60,6 +60,5 @@ spec:
   backupOwnerReference: cluster
   cluster:
     name: main
-  immediate: true
   pluginConfiguration:
     name: barman-cloud.cloudnative-pg.io

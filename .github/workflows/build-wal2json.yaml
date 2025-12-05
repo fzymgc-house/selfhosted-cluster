@@ -43,7 +43,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=2.6-pg18-trixie
-            type=raw,value=latest
+            type=raw,value=pg18-latest
 
       - name: Build and push
         uses: docker/build-push-action@v6

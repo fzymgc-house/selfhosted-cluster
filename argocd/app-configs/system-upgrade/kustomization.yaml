@@ -13,6 +13,7 @@ resources:
   - plan-agent.yaml
 patches:
   # Add sync-wave annotations for ArgoCD ordering
+  # Wave -100: CRD, Namespace, RBAC (must exist before deployment)
   - target:
       kind: CustomResourceDefinition
       name: plans.upgrade.cattle.io
@@ -30,6 +31,22 @@ patches:
         value:
           argocd.argoproj.io/sync-wave: "-100"
   - target:
+      kind: ServiceAccount
+      name: system-upgrade
+    patch: |
+      - op: add
+        path: /metadata/annotations
+        value:
+          argocd.argoproj.io/sync-wave: "-100"
+  - target:
+      kind: ConfigMap
+      name: default-controller-env
+    patch: |
+      - op: add
+        path: /metadata/annotations
+        value:
+          argocd.argoproj.io/sync-wave: "-100"
+  - target:
       kind: ClusterRole
       name: system-upgrade-controller
     patch: |
@@ -61,6 +78,23 @@ patches:
         path: /metadata/annotations
         value:
           argocd.argoproj.io/sync-wave: "-100"
+  - target:
+      kind: Role
+      name: system-upgrade-controller
+    patch: |
+      - op: add
+        path: /metadata/annotations
+        value:
+          argocd.argoproj.io/sync-wave: "-100"
+  - target:
+      kind: RoleBinding
+      name: system-upgrade
+    patch: |
+      - op: add
+        path: /metadata/annotations
+        value:
+          argocd.argoproj.io/sync-wave: "-100"
+  # Wave -99: Deployment (needs RBAC to exist)
   - target:
       kind: Deployment
       name: system-upgrade-controller
@@ -68,7 +102,7 @@ patches:
       - op: add
         path: /metadata/annotations
         value:
-          argocd.argoproj.io/sync-wave: "-100"
+          argocd.argoproj.io/sync-wave: "-99"
       - op: replace
         path: /spec/replicas
         value: 1

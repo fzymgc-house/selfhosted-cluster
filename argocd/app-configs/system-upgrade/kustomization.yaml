@@ -3,8 +3,84 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: system-upgrade
 resources:
-  - crd.yaml
-  - namespace.yaml
-  - controller.yaml
+  # Upstream SUC - includes Namespace, ServiceAccount, ConfigMap, Deployment
+  # Also includes proper ClusterRole/ClusterRoleBinding (not cluster-admin)
+  - https://github.com/rancher/system-upgrade-controller?ref=v0.14.2
+  # CRD from release artifacts
+  - https://github.com/rancher/system-upgrade-controller/releases/download/v0.14.2/crd.yaml
+  # Local upgrade plans
   - plan-server.yaml
   - plan-agent.yaml
+patches:
+  # Add sync-wave annotations for ArgoCD ordering
+  - target:
+      kind: CustomResourceDefinition
+      name: plans.upgrade.cattle.io
+    patch: |
+      - op: add
+        path: /metadata/annotations
+        value:
+          argocd.argoproj.io/sync-wave: "-100"
+  - target:
+      kind: Namespace
+      name: system-upgrade
+    patch: |
+      - op: add
+        path: /metadata/annotations
+        value:
+          argocd.argoproj.io/sync-wave: "-100"
+  - target:
+      kind: ClusterRole
+      name: system-upgrade-controller
+    patch: |
+      - op: add
+        path: /metadata/annotations
+        value:
+          argocd.argoproj.io/sync-wave: "-100"
+  - target:
+      kind: ClusterRole
+      name: system-upgrade-controller-drainer
+    patch: |
+      - op: add
+        path: /metadata/annotations
+        value:
+          argocd.argoproj.io/sync-wave: "-100"
+  - target:
+      kind: ClusterRoleBinding
+      name: system-upgrade-controller
+    patch: |
+      - op: add
+        path: /metadata/annotations
+        value:
+          argocd.argoproj.io/sync-wave: "-100"
+  - target:
+      kind: ClusterRoleBinding
+      name: system-upgrade-controller-drainer
+    patch: |
+      - op: add
+        path: /metadata/annotations
+        value:
+          argocd.argoproj.io/sync-wave: "-100"
+  - target:
+      kind: Deployment
+      name: system-upgrade-controller
+    patch: |
+      - op: add
+        path: /metadata/annotations
+        value:
+          argocd.argoproj.io/sync-wave: "-100"
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+images:
+  - name: rancher/system-upgrade-controller
+    newTag: v0.14.2

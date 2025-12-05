@@ -23,5 +23,7 @@ RUN apt-get update && \
 # CNPG expects: /lib/*.so and /share/extension/*
 FROM scratch
 
-COPY --from=builder /usr/lib/postgresql/18/lib/wal2json.so /lib/
-COPY --from=builder /usr/share/postgresql/18/extension/wal2json* /share/extension/
+ARG PG_MAJOR=18
+
+COPY --from=builder /usr/lib/postgresql/${PG_MAJOR}/lib/wal2json.so /lib/
+COPY --from=builder /usr/share/postgresql/${PG_MAJOR}/extension/wal2json* /share/extension/

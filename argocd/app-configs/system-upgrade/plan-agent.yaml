@@ -13,8 +13,7 @@ spec:
     force: true
     ignoreDaemonSets: true
     deleteEmptydirData: true
-    timeout: 5m
-    gracePeriod: 30
+    skipWaitForDeleteTimeout: 60
   nodeSelector:
     matchExpressions:
       - key: node-role.kubernetes.io/control-plane

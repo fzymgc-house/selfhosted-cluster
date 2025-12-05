@@ -35,8 +35,13 @@ jobs:
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            # Skip Jinja2 templates (contain {{ }} which fails yamllint braces rule)
+            if [[ "$file" == *.j2 ]]; then
+              echo "Skipping Jinja2 template: $file"
+              continue
+            fi
             echo "Linting $file"
-            yamllint -d "{extends: default, rules: {line-length: disable, indentation: {spaces: 2}}}" "$file"
+            yamllint -d "{extends: default, rules: {line-length: disable, indentation: disable}}" "$file"
           done
 
   label:

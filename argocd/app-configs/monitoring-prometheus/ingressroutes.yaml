@@ -40,7 +40,7 @@ spec:
         - name: modern-auth
           namespace: prometheus
       services:
-        - name: kube-prometheus-stack-prometheus
+        - name: kps-kube-prometheus-stack-prometheus
           port: 9090
   tls:
     secretName: wildcard-fzymgc-house-tls

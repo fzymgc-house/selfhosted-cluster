@@ -1,0 +1,18 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: prometheus-tls
+  namespace: prometheus
+spec:
+  secretName: wildcard-fzymgc-house-tls
+  issuerRef:
+    name: cloudflare-acme-issuer
+    kind: ClusterIssuer
+  additionalOutputFormats:
+    - type: CombinedPEM
+  dnsNames:
+    - "*.fzymgc.house"
+    - "*.k8s.fzymgc.house"
+  usages:
+    - server auth

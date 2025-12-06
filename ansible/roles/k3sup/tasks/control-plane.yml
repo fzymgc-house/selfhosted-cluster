@@ -10,24 +10,24 @@
 
 - name: Install required packages
   ansible.builtin.package:
-      name: "{{ k3sup_packages }}"
-      state: present
+    name: "{{ k3sup_packages }}"
+    state: present
   tags:
     - open-iscsi
 
 - name: Enable and start open-iscsi service
   ansible.builtin.systemd:
-      name: iscsid
-      state: started
-      enabled: true
+    name: iscsid
+    state: started
+    enabled: true
   tags:
     - open-iscsi
 
 - name: Template k3sup-plan.json
   ansible.builtin.template:
-      src: k3sup-plan.json.j2
-      dest: /tmp/k3sup-plan.json
-      mode: "0644"
+    src: k3sup-plan.json.j2
+    dest: /tmp/k3sup-plan.json
+    mode: "0644"
   run_once: true
   delegate_to: localhost
   become: false
@@ -35,18 +35,18 @@
 # yamllint disable rule:line-length
 - name: Plan k3s install
   ansible.builtin.shell:
-      cmd: |
-          set -o pipefail
-          env | sort
-          pwd
-          k3sup plan /tmp/k3sup-plan.json \
-            --context {{ k8s_context }} \
-            --local-path $HOME/.kube/configs/{{ k8s_context }}-admin.yml \
-            --servers 3 \
-            --tls-san {{ k8s_cluster_sans }} \
-            --user {{ k8s_user_name }} \
-            > /tmp/k3sup-install.sh
-      executable: /bin/bash
+    cmd: |
+        set -o pipefail
+        env | sort
+        pwd
+        k3sup plan /tmp/k3sup-plan.json \
+          --context {{ k8s_context }} \
+          --local-path $HOME/.kube/configs/{{ k8s_context }}-admin.yml \
+          --servers 3 \
+          --tls-san {{ k8s_cluster_sans }} \
+          --user {{ k8s_user_name }} \
+          > /tmp/k3sup-install.sh
+    executable: /bin/bash
   changed_when: false
   run_once: true
   delegate_to: localhost
@@ -54,34 +54,34 @@
 
 - name: Create k3s config directory
   ansible.builtin.file:
-      path: /etc/rancher/k3s
-      state: directory
-      mode: "0755"
-      owner: root
-      group: root
+    path: /etc/rancher/k3s
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
 
 - name: Create k3s config file
   ansible.builtin.template:
-      src: k3s-config.yaml.j2
-      dest: /etc/rancher/k3s/config.yaml
-      mode: "0640"
-      owner: root
-      group: root
+    src: k3s-config.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml
+    mode: "0640"
+    owner: root
+    group: root
 
 - name: Configure k3s registries
   ansible.builtin.copy:
-      src: k3s-embedded-registries.yaml
-      dest: /etc/rancher/k3s/registries.yaml
-      mode: "0640"
-      owner: root
-      group: root
+    src: k3s-embedded-registries.yaml
+    dest: /etc/rancher/k3s/registries.yaml
+    mode: "0640"
+    owner: root
+    group: root
 
 - name: Check if k3s is already installed using k3sup ready
   ansible.builtin.shell:
-      cmd: |
-          set -o pipefail
-          k3sup ready --attempts=2 --kubeconfig $HOME/.kube/configs/{{ k8s_context }}-admin.yml --context {{ k8s_context }}
-      executable: /bin/bash
+    cmd: |
+        set -o pipefail
+        k3sup ready --attempts=2 --kubeconfig $HOME/.kube/configs/{{ k8s_context }}-admin.yml --context {{ k8s_context }}
+    executable: /bin/bash
   failed_when: false
   changed_when: false
   run_once: true
@@ -93,13 +93,13 @@
 
 - name: Install k3s
   ansible.builtin.shell:
-      cmd: |
-          set -o pipefail
-          env | sort
-          pwd
-          bash /tmp/k3sup-install.sh | tee /tmp/k3sup-install.log
-      creates: "/Users/sean/.kube/configs/tpi-beta-admin.yml"
-      executable: /bin/bash
+    cmd: |
+        set -o pipefail
+        env | sort
+        pwd
+        bash /tmp/k3sup-install.sh | tee /tmp/k3sup-install.log
+    creates: "/Users/sean/.kube/configs/tpi-beta-admin.yml"
+    executable: /bin/bash
   tags:
     - k3s-install
   run_once: true
@@ -114,11 +114,11 @@
 
 - name: Create CSI snapshot controller
   ansible.builtin.shell:
-      cmd: |
-          set -o pipefail
-          export KUBECONFIG=$HOME/.kube/configs/{{ k8s_context }}-admin.yml
-          kubectl apply -k {{ role_path }}/files/csi-snapshot-setup
-      executable: /bin/bash
+    cmd: |
+        set -o pipefail
+        export KUBECONFIG=$HOME/.kube/configs/{{ k8s_context }}-admin.yml
+        kubectl apply -k {{ role_path }}/files/csi-snapshot-setup
+    executable: /bin/bash
   run_once: true
   delegate_to: localhost
   become: false
@@ -166,11 +166,11 @@
 
 - name: Edit local kube config to set the server to the api lb
   ansible.builtin.lineinfile:
-      state: present
-      path: /Users/sean/.kube/configs/{{ k8s_context }}-admin.yml
-      regexp: '^(\s*)server: https://.*$'
-      line: '\1server: https://{{ k8s_cluster_endpoint_name }}:6443'
-      backrefs: true
+    state: present
+    path: /Users/sean/.kube/configs/{{ k8s_context }}-admin.yml
+    regexp: '^(\s*)server: https://.*$'
+    line: '\1server: https://{{ k8s_cluster_endpoint_name }}:6443'
+    backrefs: true
   run_once: true
   delegate_to: localhost
   become: false

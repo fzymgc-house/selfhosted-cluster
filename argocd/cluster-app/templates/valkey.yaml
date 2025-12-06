@@ -30,6 +30,8 @@ spec:
                                             app.kubernetes.io/name: authentik
                                             app.kubernetes.io/instance: authentik
                                             app.kubernetes.io/component: server
+                                    namespaces:
+                                        - authentik
                                     topologyKey: kubernetes.io/hostname
                       resourcesPreset: micro
                   replica:

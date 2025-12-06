@@ -25,14 +25,12 @@ spec:
                       affinity:
                           podAffinity:
                               requiredDuringSchedulingIgnoredDuringExecution:
-                                  - weight: 100
-                                    podAffinityTerm:
-                                        labelSelector:
-                                            matchLabels:
-                                                app.kubernetes.io/name: authentik
-                                                app.kubernetes.io/instance: authentik
-                                                app.kubernetes.io/component: server
-                                        topologyKey: kubernetes.io/hostname
+                                  - labelSelector:
+                                        matchLabels:
+                                            app.kubernetes.io/name: authentik
+                                            app.kubernetes.io/instance: authentik
+                                            app.kubernetes.io/component: server
+                                    topologyKey: kubernetes.io/hostname
                       resourcesPreset: micro
                   replica:
                       replicaCount: 2

@@ -85,7 +85,7 @@ resource "kubernetes_storage_class" "longhorn_encrypted" {
   storage_provisioner    = "driver.longhorn.io"
   allow_volume_expansion = true
   reclaim_policy         = "Delete"
-  volume_binding_mode    = "Immediate"
+  volume_binding_mode    = "WaitForFirstConsumer"
 
   parameters = {
     numberOfReplicas                                   = "2"
@@ -113,10 +113,10 @@ resource "kubernetes_storage_class" "longhorn_1replica_encrypted" {
   storage_provisioner    = "driver.longhorn.io"
   allow_volume_expansion = true
   reclaim_policy         = "Delete"
-  volume_binding_mode    = "Immediate"
+  volume_binding_mode    = "WaitForFirstConsumer"
 
   parameters = {
-    numberOfReplicas                                   = "1"
+    numberOfReplicas                                   = "2"
     encrypted                                          = "true"
     dataLocality                                       = "best-effort"
     dataEngine                                         = "v1"

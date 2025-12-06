@@ -31,9 +31,9 @@ resource "helm_release" "longhorn" {
       volumeBindingMode        = "WaitForFirstConsumer"
     }
     defaultSettings = {
-      defaultDataPath      = "/data/longhorn"
-      snapshotMaxCount     = "10"
-      defaultReplicaCount  = "2"
+      defaultDataPath     = "/data/longhorn"
+      snapshotMaxCount    = "10"
+      defaultReplicaCount = "2"
     }
     defaultBackupStore = {
       backupTarget                 = "s3://fzymgc-cluster-storage@us-east-1/longhorn-backups"
@@ -131,4 +131,101 @@ resource "kubernetes_storage_class" "longhorn_1replica_encrypted" {
   }
 
   depends_on = [kubernetes_secret.longhorn_crypto_config]
+}
+
+# Longhorn recurring jobs for automated maintenance
+resource "kubernetes_manifest" "longhorn_recurring_job_backup_snapshot_cleanup" {
+  manifest = {
+    apiVersion = "longhorn.io/v1beta2"
+    kind       = "RecurringJob"
+    metadata = {
+      name      = "backup-snapshot-cleanup"
+      namespace = kubernetes_namespace.longhorn_system.metadata[0].name
+    }
+    spec = {
+      concurrency = 1
+      cron        = "5 21 * * *"
+      groups      = ["default"]
+      labels      = {}
+      name        = "backup-snapshot-cleanup"
+      parameters  = {}
+      retain      = 7
+      task        = "snapshot-delete"
+    }
+  }
+
+  depends_on = [helm_release.longhorn]
+}
+
+resource "kubernetes_manifest" "longhorn_recurring_job_daily_backup" {
+  manifest = {
+    apiVersion = "longhorn.io/v1beta2"
+    kind       = "RecurringJob"
+    metadata = {
+      name      = "daily-backup"
+      namespace = kubernetes_namespace.longhorn_system.metadata[0].name
+    }
+    spec = {
+      concurrency = 4
+      cron        = "0 3 * * *"
+      groups      = ["default"]
+      labels      = {}
+      name        = "daily-backup"
+      parameters = {
+        full-backup-interval = "7"
+      }
+      retain = 6
+      task   = "backup"
+    }
+  }
+
+  depends_on = [helm_release.longhorn]
+}
+
+resource "kubernetes_manifest" "longhorn_recurring_job_fstrim" {
+  manifest = {
+    apiVersion = "longhorn.io/v1beta2"
+    kind       = "RecurringJob"
+    metadata = {
+      name      = "fstrim"
+      namespace = kubernetes_namespace.longhorn_system.metadata[0].name
+    }
+    spec = {
+      concurrency = 4
+      cron        = "0 4 * * *"
+      groups      = ["default"]
+      labels      = {}
+      name        = "fstrim"
+      parameters  = {}
+      retain      = 0
+      task        = "filesystem-trim"
+    }
+  }
+
+  depends_on = [helm_release.longhorn]
+}
+
+resource "kubernetes_manifest" "longhorn_recurring_job_system_backup" {
+  manifest = {
+    apiVersion = "longhorn.io/v1beta2"
+    kind       = "RecurringJob"
+    metadata = {
+      name      = "system-backup"
+      namespace = kubernetes_namespace.longhorn_system.metadata[0].name
+    }
+    spec = {
+      concurrency = 0
+      cron        = "0 0 * * *"
+      groups      = []
+      labels      = {}
+      name        = "system-backup"
+      parameters = {
+        volume-backup-policy = "if-not-present"
+      }
+      retain = 3
+      task   = "system-backup"
+    }
+  }
+
+  depends_on = [helm_release.longhorn]
 }

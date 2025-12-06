@@ -134,3 +134,24 @@ import {
   to = kubernetes_manifest.cluster_app
   id = "apiVersion=argoproj.io/v1alpha1,kind=Application,namespace=argocd,name=cluster-app"
 }
+
+# Longhorn Recurring Jobs
+import {
+  to = kubernetes_manifest.longhorn_recurring_job_backup_snapshot_cleanup
+  id = "apiVersion=longhorn.io/v1beta2,kind=RecurringJob,namespace=longhorn-system,name=backup-snapshot-cleanup"
+}
+
+import {
+  to = kubernetes_manifest.longhorn_recurring_job_daily_backup
+  id = "apiVersion=longhorn.io/v1beta2,kind=RecurringJob,namespace=longhorn-system,name=daily-backup"
+}
+
+import {
+  to = kubernetes_manifest.longhorn_recurring_job_fstrim
+  id = "apiVersion=longhorn.io/v1beta2,kind=RecurringJob,namespace=longhorn-system,name=fstrim"
+}
+
+import {
+  to = kubernetes_manifest.longhorn_recurring_job_system_backup
+  id = "apiVersion=longhorn.io/v1beta2,kind=RecurringJob,namespace=longhorn-system,name=system-backup"
+}

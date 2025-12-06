@@ -24,7 +24,7 @@ spec:
                   primary:
                       affinity:
                           podAffinity:
-                              preferredDuringSchedulingIgnoredDuringExecution:
+                              requiredDuringSchedulingIgnoredDuringExecution:
                                   - weight: 100
                                     podAffinityTerm:
                                         labelSelector:

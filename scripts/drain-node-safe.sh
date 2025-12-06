@@ -106,22 +106,28 @@ if [[ -z "$NODE_NAME" ]]; then
     usage
 fi
 
-# Build kubectl command
-KUBECTL="kubectl"
+# Check for required dependencies
+if ! command -v jq &>/dev/null; then
+    log_error "jq is required but not installed. Install with: apt install jq"
+    exit 1
+fi
+
+# Build kubectl command as array to handle spaces in context names
+KUBECTL=(kubectl)
 if [[ -n "$KUBE_CONTEXT" ]]; then
-    KUBECTL="kubectl --context $KUBE_CONTEXT"
+    KUBECTL=(kubectl --context "$KUBE_CONTEXT")
 fi
 
 log_info "Checking node '$NODE_NAME'..."
 
 # Verify node exists
-if ! $KUBECTL get node "$NODE_NAME" &>/dev/null; then
+if ! "${KUBECTL[@]}" get node "$NODE_NAME" &>/dev/null; then
     log_error "Node '$NODE_NAME' not found"
     exit 1
 fi
 
 # Check if node is already drained
-if $KUBECTL get node "$NODE_NAME" -o jsonpath='{.spec.unschedulable}' | grep -q true; then
+if "${KUBECTL[@]}" get node "$NODE_NAME" -o jsonpath='{.spec.unschedulable}' | grep -q true; then
     log_info "Node is already cordoned"
 else
     log_info "Node is not cordoned yet"
@@ -129,7 +135,7 @@ fi
 
 # Find instance manager pods on this node
 log_info "Finding Longhorn instance managers on node '$NODE_NAME'..."
-INSTANCE_MANAGERS=$($KUBECTL get pods -n longhorn-system \
+INSTANCE_MANAGERS=$("${KUBECTL[@]}" get pods -n longhorn-system \
     -l longhorn.io/component=instance-manager \
     --field-selector spec.nodeName="$NODE_NAME" \
     -o jsonpath='{.items[*].metadata.name}')
@@ -145,7 +151,7 @@ log_info "Found instance managers: $INSTANCE_MANAGERS"
 # Get corresponding PDBs
 PDBS=()
 for im in $INSTANCE_MANAGERS; do
-    if $KUBECTL get pdb -n longhorn-system "$im" &>/dev/null; then
+    if "${KUBECTL[@]}" get pdb -n longhorn-system "$im" &>/dev/null; then
         PDBS+=("$im")
     fi
 done
@@ -164,7 +170,7 @@ if [[ "$FORCE" == "false" ]]; then
 
     # Check volumes on this node
     log_info "Checking volumes attached to node '$NODE_NAME'..."
-    VOLUMES=$($KUBECTL get volumes -n longhorn-system -o json | \
+    VOLUMES=$("${KUBECTL[@]}" get volumes -n longhorn-system -o json | \
         jq -r --arg node "$NODE_NAME" \
         '.items[] | select(.status.currentNodeID == $node) | .metadata.name')
 
@@ -177,9 +183,9 @@ if [[ "$FORCE" == "false" ]]; then
         # Check volume health
         UNHEALTHY=false
         while read -r vol; do
-            STATE=$($KUBECTL get volume -n longhorn-system "$vol" -o jsonpath='{.status.state}')
-            ROBUSTNESS=$($KUBECTL get volume -n longhorn-system "$vol" -o jsonpath='{.status.robustness}')
-            REPLICA_COUNT=$($KUBECTL get volume -n longhorn-system "$vol" -o jsonpath='{.spec.numberOfReplicas}')
+            STATE=$("${KUBECTL[@]}" get volume -n longhorn-system "$vol" -o jsonpath='{.status.state}')
+            ROBUSTNESS=$("${KUBECTL[@]}" get volume -n longhorn-system "$vol" -o jsonpath='{.status.robustness}')
+            REPLICA_COUNT=$("${KUBECTL[@]}" get volume -n longhorn-system "$vol" -o jsonpath='{.spec.numberOfReplicas}')
 
             log_info "  Volume $vol: state=$STATE robustness=$ROBUSTNESS replicas=$REPLICA_COUNT"
 
@@ -207,7 +213,7 @@ if [[ "$FORCE" == "false" ]]; then
 
     # Check for volume rebuilding operations
     log_info "Checking for active volume operations..."
-    REBUILDING=$($KUBECTL get volumes -n longhorn-system -o json | \
+    REBUILDING=$("${KUBECTL[@]}" get volumes -n longhorn-system -o json | \
         jq -r --arg node "$NODE_NAME" \
         '[.items[] | select(.status.currentNodeID == $node and .status.isStandby == false and .status.rebuildStatus != null)] | length')
 
@@ -236,13 +242,13 @@ fi
 log_info "Deleting PodDisruptionBudgets..."
 for pdb in "${PDBS[@]}"; do
     log_info "  Deleting PDB: $pdb"
-    $KUBECTL delete pdb -n longhorn-system "$pdb"
+    "${KUBECTL[@]}" delete pdb -n longhorn-system "$pdb"
 done
 
 log_info "✓ PDBs deleted successfully"
 log_info ""
 log_info "Node is ready to drain. Run:"
-log_info "  $KUBECTL drain $NODE_NAME --ignore-daemonsets --delete-emptydir-data"
+log_info "  ${KUBECTL[*]} drain $NODE_NAME --ignore-daemonsets --delete-emptydir-data"
 log_info ""
 log_info "After maintenance, uncordon the node:"
-log_info "  $KUBECTL uncordon $NODE_NAME"
+log_info "  ${KUBECTL[*]} uncordon $NODE_NAME"

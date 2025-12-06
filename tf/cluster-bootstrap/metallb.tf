@@ -1,8 +1,8 @@
 // metallb.tf - MetalLB load balancer installation and configuration
 
-resource "kubernetes_namespace" "metallb_system" {
+resource "kubernetes_namespace" "metallb" {
   metadata {
-    name = "metallb-system"
+    name = "metallb"
   }
 }
 
@@ -11,7 +11,7 @@ resource "helm_release" "metallb" {
   repository = "https://metallb.github.io/metallb"
   chart      = "metallb"
   version    = var.metallb_version
-  namespace  = kubernetes_namespace.metallb_system.metadata[0].name
+  namespace  = kubernetes_namespace.metallb.metadata[0].name
 
   wait = true
 
@@ -24,7 +24,7 @@ resource "kubernetes_manifest" "metallb_ip_address_pool" {
     kind       = "IPAddressPool"
     metadata = {
       name      = "default"
-      namespace = kubernetes_namespace.metallb_system.metadata[0].name
+      namespace = kubernetes_namespace.metallb.metadata[0].name
     }
     spec = {
       addresses = [
@@ -43,7 +43,7 @@ resource "kubernetes_manifest" "metallb_l2_advertisement" {
     kind       = "L2Advertisement"
     metadata = {
       name      = "default"
-      namespace = kubernetes_namespace.metallb_system.metadata[0].name
+      namespace = kubernetes_namespace.metallb.metadata[0].name
     }
     spec = {
       ipAddressPools = ["default"]

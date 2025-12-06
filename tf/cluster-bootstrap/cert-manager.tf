@@ -8,8 +8,8 @@ resource "kubernetes_namespace" "cert_manager" {
 
 # Get CA certificate and key from Vault
 data "vault_kv_secret_v2" "fzymgc_ica1_ca" {
-  mount = "fzymgc-house"
-  name  = "infrastructure/pki/fzymgc-ica1-ca"
+  mount = "secret"
+  name  = "fzymgc-house/infrastructure/pki/fzymgc-ica1-ca"
 }
 
 resource "helm_release" "cert_manager" {

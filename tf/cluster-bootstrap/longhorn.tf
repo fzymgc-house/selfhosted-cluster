@@ -8,13 +8,13 @@ resource "kubernetes_namespace" "longhorn_system" {
 
 # Get Longhorn secrets from Vault
 data "vault_kv_secret_v2" "longhorn_crypto_key" {
-  mount = "fzymgc-house"
-  name  = "cluster/longhorn/crypto-key"
+  mount = "secret"
+  name  = "fzymgc-house/cluster/longhorn/crypto-key"
 }
 
 data "vault_kv_secret_v2" "longhorn_cloudflare_r2" {
-  mount = "fzymgc-house"
-  name  = "cluster/longhorn/cloudflare-r2"
+  mount = "secret"
+  name  = "fzymgc-house/cluster/longhorn/cloudflare-r2"
 }
 
 resource "helm_release" "longhorn" {

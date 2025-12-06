@@ -22,5 +22,5 @@ output "external_secrets_namespace" {
 
 output "metallb_namespace" {
   description = "MetalLB namespace"
-  value       = kubernetes_namespace.metallb_system.metadata[0].name
+  value       = kubernetes_namespace.metallb.metadata[0].name
 }

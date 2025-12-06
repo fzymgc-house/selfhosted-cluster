@@ -25,8 +25,8 @@ resource "helm_release" "external_secrets_operator" {
 
 # Get Vault CA chain from Vault
 data "vault_kv_secret_v2" "vault_ca_chain" {
-  mount = "fzymgc-house"
-  name  = "infrastructure/pki/fzymgc-ica1-ca"
+  mount = "secret"
+  name  = "fzymgc-house/infrastructure/pki/fzymgc-ica1-ca"
 }
 
 resource "kubernetes_secret" "vault_ca_chain" {

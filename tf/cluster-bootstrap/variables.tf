@@ -9,7 +9,7 @@ variable "cluster_domain" {
 variable "argocd_version" {
   description = "ArgoCD Helm chart version"
   type        = string
-  default     = "9.0.5"
+  default     = "9.1.6"
 }
 
 variable "cert_manager_version" {
@@ -21,23 +21,23 @@ variable "cert_manager_version" {
 variable "external_secrets_version" {
   description = "External Secrets Operator Helm chart version"
   type        = string
-  default     = "0.20.4"
+  default     = "1.1.1"
 }
 
 variable "longhorn_version" {
   description = "Longhorn Helm chart version"
   type        = string
-  default     = "1.10.0"
+  default     = "1.10.1"
 }
 
 variable "metallb_version" {
   description = "MetalLB Helm chart version"
   type        = string
-  default     = "v0.15.2"
+  default     = "0.15.3"
 }
 
 variable "prometheus_operator_crds_version" {
   description = "Prometheus Operator CRDs Helm chart version"
   type        = string
-  default     = "24.0.1"
+  default     = "25.0.0"
 }

@@ -8,13 +8,13 @@ resource "kubernetes_namespace" "argocd" {
 
 # Get ArgoCD secrets from Vault
 data "vault_kv_secret_v2" "argocd_config" {
-  mount = "fzymgc-house"
-  name  = "cluster/argocd"
+  mount = "secret"
+  name  = "fzymgc-house/cluster/argocd"
 }
 
 data "vault_kv_secret_v2" "fzymgc_ica1_ca_fullchain" {
-  mount = "fzymgc-house"
-  name  = "infrastructure/pki/fzymgc-ica1-ca"
+  mount = "secret"
+  name  = "fzymgc-house/infrastructure/pki/fzymgc-ica1-ca"
 }
 
 # OIDC configuration secret for Authentik
@@ -64,6 +64,10 @@ resource "kubernetes_secret" "argocd_selfhosted_repo" {
 
 # ArgoCD secret managed via External Secrets
 resource "kubernetes_manifest" "argocd_secret_external" {
+  field_manager {
+    force_conflicts = true
+  }
+
   manifest = {
     apiVersion = "external-secrets.io/v1"
     kind       = "ExternalSecret"
@@ -83,9 +87,9 @@ resource "kubernetes_manifest" "argocd_secret_external" {
         template = {
           type = "Opaque"
           data = {
-            "admin.password"        = "{{ .admin_password | b64enc }}"
-            "admin.passwordMtime"   = "{{ .admin_password_mtime | b64enc }}"
-            "server.secretkey"      = "{{ .server_secret_key | b64enc }}"
+            "admin.password"        = "{{ .admin_password | b64enc}}"
+            "admin.passwordMtime"   = "{{ .admin_password_mtime | b64enc}}"
+            "server.secretkey"      = "{{ .server_secret_key | b64enc}}"
             "webhook.github.secret" = "{{ .webhook_github_secret | b64enc }}"
           }
         }

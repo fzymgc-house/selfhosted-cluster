@@ -6,14 +6,14 @@
   ansible.builtin.import_tasks: storage.yml
   become: true
   tags:
-      - k3s-storage
+    - k3s-storage
 
 - name: Install required packages
   ansible.builtin.package:
       name: "{{ k3sup_packages }}"
       state: present
   tags:
-      - open-iscsi
+    - open-iscsi
 
 - name: Enable and start open-iscsi service
   ansible.builtin.systemd:
@@ -21,7 +21,7 @@
       state: started
       enabled: true
   tags:
-      - open-iscsi
+    - open-iscsi
 
 - name: Template k3sup-plan.json
   ansible.builtin.template:
@@ -89,7 +89,7 @@
   become: false
   register: k3s_ready
   tags:
-      - k3s-ready
+    - k3s-ready
 
 - name: Install k3s
   ansible.builtin.shell:
@@ -101,7 +101,7 @@
       creates: "/Users/sean/.kube/configs/tpi-beta-admin.yml"
       executable: /bin/bash
   tags:
-      - k3s-install
+    - k3s-install
   run_once: true
   delegate_to: localhost
   become: false
@@ -110,7 +110,7 @@
 - name: Install Calico
   ansible.builtin.import_tasks: calico.yml
   tags:
-      - k8s-calico
+    - k8s-calico
 
 - name: Create CSI snapshot controller
   ansible.builtin.shell:
@@ -124,7 +124,7 @@
   become: false
   changed_when: false
   tags:
-      - k8s-csi-snapshot-controller
+    - k8s-csi-snapshot-controller
 
 # NOTE: The following components have been migrated to Terraform (tf/cluster-bootstrap)
 # Run `terraform apply` in tf/cluster-bootstrap after cluster deployment
@@ -142,27 +142,27 @@
 # - name: Install Prometheus Operator CRDs
 #   ansible.builtin.import_tasks: prometheus-crds.yml
 #   tags:
-#       - k8s-prometheus-crds
+#     - k8s-prometheus-crds
 #
 # - name: Install Longhorn
 #   ansible.builtin.import_tasks: longhorn.yml
 #   tags:
-#       - k8s-longhorn
+#     - k8s-longhorn
 #
 # - name: Install External Secrets Operator
 #   ansible.builtin.import_tasks: external-secrets-operator.yml
 #   tags:
-#       - k8s-external-secrets
+#     - k8s-external-secrets
 #
 # - name: Install Cert Manager
 #   ansible.builtin.import_tasks: cert-manager.yml
 #   tags:
-#       - k8s-cert-manager
+#     - k8s-cert-manager
 #
 # - name: Install Argo CD
 #   ansible.builtin.import_tasks: argocd.yml
 #   tags:
-#       - k8s-argocd
+#     - k8s-argocd
 
 - name: Edit local kube config to set the server to the api lb
   ansible.builtin.lineinfile:
@@ -175,4 +175,4 @@
   delegate_to: localhost
   become: false
   tags:
-      - k8s-server-api-lb
+    - k8s-server-api-lb

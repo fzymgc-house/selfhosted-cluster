@@ -7,6 +7,6 @@ allowVolumeExpansion: true
 reclaimPolicy: Retain
 volumeBindingMode: WaitForFirstConsumer
 parameters:
-  numberOfReplicas: "2"
+  numberOfReplicas: "3"
   dataLocality: best-effort
   dataEngine: v1

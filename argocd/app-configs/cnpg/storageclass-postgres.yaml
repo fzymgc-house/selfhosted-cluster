@@ -7,7 +7,7 @@ allowVolumeExpansion: true
 volumeBindingMode: WaitForFirstConsumer
 reclaimPolicy: Retain
 parameters:
-  numberOfReplicas: "2"
+  numberOfReplicas: "3"
   fsType: ext4
   dataLocality: best-effort
   dataEngine: v1

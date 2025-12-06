@@ -22,6 +22,15 @@
         user_friendly_names yes
         find_multipaths yes
       }
+
+      # Blacklist Longhorn iSCSI devices to prevent multipath interference
+      blacklist {
+        # Exclude Longhorn iSCSI devices by vendor/product
+        device {
+          vendor "IET"
+          product "VIRTUAL-DISK"
+        }
+      }
     dest: /etc/multipath.conf
     mode: '0644'
     owner: root

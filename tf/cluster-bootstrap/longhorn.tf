@@ -157,6 +157,11 @@ resource "kubernetes_manifest" "longhorn_recurring_job_backup_snapshot_cleanup" 
   depends_on = [helm_release.longhorn]
 }
 
+import {
+  to = kubernetes_manifest.longhorn_recurring_job_backup_snapshot_cleanup
+  id = "apiVersion=longhorn.io/v1beta2,kind=RecurringJob,namespace=longhorn-system,name=backup-snapshot-cleanup"
+}
+
 resource "kubernetes_manifest" "longhorn_recurring_job_daily_backup" {
   manifest = {
     apiVersion = "longhorn.io/v1beta2"
@@ -182,6 +187,11 @@ resource "kubernetes_manifest" "longhorn_recurring_job_daily_backup" {
   depends_on = [helm_release.longhorn]
 }
 
+import {
+  to = kubernetes_manifest.longhorn_recurring_job_daily_backup
+  id = "apiVersion=longhorn.io/v1beta2,kind=RecurringJob,namespace=longhorn-system,name=daily-backup"
+}
+
 resource "kubernetes_manifest" "longhorn_recurring_job_fstrim" {
   manifest = {
     apiVersion = "longhorn.io/v1beta2"
@@ -203,6 +213,11 @@ resource "kubernetes_manifest" "longhorn_recurring_job_fstrim" {
   }
 
   depends_on = [helm_release.longhorn]
+}
+
+import {
+  to = kubernetes_manifest.longhorn_recurring_job_fstrim
+  id = "apiVersion=longhorn.io/v1beta2,kind=RecurringJob,namespace=longhorn-system,name=fstrim"
 }
 
 resource "kubernetes_manifest" "longhorn_recurring_job_system_backup" {
@@ -228,4 +243,9 @@ resource "kubernetes_manifest" "longhorn_recurring_job_system_backup" {
   }
 
   depends_on = [helm_release.longhorn]
+}
+
+import {
+  to = kubernetes_manifest.longhorn_recurring_job_system_backup
+  id = "apiVersion=longhorn.io/v1beta2,kind=RecurringJob,namespace=longhorn-system,name=system-backup"
 }

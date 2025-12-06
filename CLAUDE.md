@@ -160,12 +160,34 @@ kubectl --context fzymgc-house get application app-name -n argocd -w
 
 ## Common Commands
 
+### Cluster Bootstrap Workflow
+
+**IMPORTANT:** Infrastructure components are deployed in two stages:
+
+1. **Ansible Stage**: Deploy the base Kubernetes cluster
+2. **Terraform Stage**: Bootstrap core infrastructure components
+
+```bash
+# Stage 1: Deploy k3s cluster with Ansible
+source .venv/bin/activate
+ansible-playbook -i ansible/inventory/hosts.yml ansible/k3s-playbook.yml
+
+# Stage 2: Bootstrap infrastructure with Terraform
+cd tf/cluster-bootstrap
+terraform init
+terraform apply
+
+# After bootstrap, ArgoCD takes over GitOps deployment
+```
+
+**Note:** Ansible no longer installs Prometheus CRDs, cert-manager, External Secrets, Longhorn, MetalLB, or ArgoCD. These have been migrated to `tf/cluster-bootstrap`.
+
 ### Ansible Operations
 
 Always activate the virtual environment first: `source .venv/bin/activate`
 
 ```bash
-# Deploy/update k3s cluster
+# Deploy/update k3s cluster (no longer includes bootstrap components)
 ansible-playbook -i ansible/inventory/hosts.yml ansible/k3s-playbook.yml
 
 # Bootstrap nodes (OS configuration)
@@ -173,9 +195,6 @@ ansible-playbook -i ansible/inventory/hosts.yml ansible/bootstrap-nodes-playbook
 
 # Reboot cluster nodes
 ansible-playbook -i ansible/inventory/hosts.yml ansible/reboot-nodes-playbook.yml
-
-# Run specific tags (e.g., update Longhorn only)
-ansible-playbook -i ansible/inventory/hosts.yml ansible/k3s-playbook.yml --tags k8s-longhorn
 
 # Syntax check and dry run
 ansible-playbook -i ansible/inventory/hosts.yml playbook.yml --syntax-check
@@ -209,7 +228,12 @@ kubectl --context fzymgc-house logs -n namespace -l app=app-name
 Each Terraform module is independent. Work within the module directory:
 
 ```bash
-# Navigate to specific module
+# Cluster bootstrap (run after Ansible deploys k3s)
+cd tf/cluster-bootstrap
+terraform init
+terraform apply
+
+# Other infrastructure modules
 cd tf/vault  # or tf/authentik, tf/grafana, tf/core-services
 
 # Initialize and plan
@@ -233,14 +257,20 @@ The repository is organized in three layers:
 1. **Ansible Layer** (`ansible/`): Physical cluster deployment
    - Node bootstrapping and OS configuration
    - k3s cluster deployment via k3sup
-   - Core infrastructure installation
    - Hardware-level automation (BMC access, network config)
 
-2. **Terraform Layer** (`tf/`): External service configuration
-   - Vault policies, auth backends, PKI
-   - Authentik OIDC applications and groups
-   - Grafana dashboards and data sources
-   - Services that have Terraform providers
+2. **Terraform Layer** (`tf/`): Infrastructure configuration
+   - **Cluster Bootstrap** (`tf/cluster-bootstrap`): Core infrastructure components
+     - Prometheus Operator CRDs
+     - cert-manager for certificate management
+     - External Secrets Operator for Vault integration
+     - Longhorn distributed storage
+     - MetalLB load balancer
+     - ArgoCD for GitOps
+   - **External Services** (`tf/vault`, `tf/authentik`, `tf/grafana`):
+     - Vault policies, auth backends, PKI
+     - Authentik OIDC applications and groups
+     - Grafana dashboards and data sources
 
 3. **Kubernetes Layer** (`argocd/`): Application deployment
    - Application manifests and kustomizations

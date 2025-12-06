@@ -56,13 +56,19 @@
   tags:
     - iscsid
 
-- name: Link k3s containerd socket to var run docker socket
-  ansible.builtin.file:
-    src: /run/k3s/containerd/containerd.sock
-    dest: /var/run/docker.sock
-    mode: '0640'
+- name: Configure docker socket symlink via systemd-tmpfiles.d
+  ansible.builtin.copy:
+    src: docker-sock.conf
+    dest: /etc/tmpfiles.d/docker-sock.conf
+    mode: '0644'
     owner: root
     group: root
-    state: link
+  tags:
+    - docker-containerd
+
+- name: Create docker socket symlink immediately
+  ansible.builtin.command:
+    cmd: systemd-tmpfiles --create /etc/tmpfiles.d/docker-sock.conf
+  changed_when: true
   tags:
     - docker-containerd

@@ -48,52 +48,80 @@ kubectl --context fzymgc-house get pods -n argo-workflows
 
 ### Phase 1: Set up Infrastructure ✅ COMPLETE
 
-**Status**: Completed 2025-12-07 (awaiting manual configuration)
+**Status**: Completed 2025-12-07
 
 **Issues**: #128, #129, #130, #131
 
 **Completed Tasks**:
-- ✅ Created workspace setup script and documentation (#128)
-  - Script: `scripts/create-windmill-workspace.sh`
-  - Manual workspace creation required via UI
+- ✅ Created workspace `terraform-gitops` (#128)
+  - Workspace token stored in Vault
+  - Workspace synced with `wmill sync`
 - ✅ Created actions-runner-controller deployment (#129)
   - ArgoCD app: `argocd/cluster-app/templates/actions-runner-controller.yaml`
   - Runner config: `argocd/app-configs/actions-runner-controller/`
-  - Awaiting GitHub token in Vault
-- ✅ Documented Storj S3 configuration (#130)
-  - Guide: `docs/windmill-s3-setup.md`
-  - Workspace-level S3 resource setup
-- ✅ Documented Discord webhook integration (#131)
-  - Guide: `docs/windmill-discord-setup.md`
-  - Notification script examples
+  - GitHub token stored in Vault
+  - Documentation: `docs/github-token-setup.md`
+- ✅ Configured Storj S3 storage (#130)
+  - Resource: `windmill/u/admin/terraform_s3_storage.resource.yaml`
+  - Documentation: `docs/windmill-s3-setup.md`
+- ✅ Configured Discord bot integration (#131)
+  - Resource: `windmill/u/admin/terraform_discord_bot.resource.yaml`
+  - Documentation: `docs/windmill-discord-bot-setup.md`
+  - Bot credentials stored in Vault
 
-**Manual Steps Required**:
-1. Create Windmill workspace `terraform-gitops`
-2. Generate and store GitHub Actions token in Vault
-3. Create Discord webhook and store in Vault
-4. Configure S3 resource in Windmill workspace
-5. Configure Discord resource in Windmill workspace
+**Workspace Resources Created**:
+- `u/admin/github_token` - GitHub repository access
+- `u/admin/terraform_discord_bot` - Discord notifications with interactive buttons
+- `u/admin/terraform_s3_storage` - S3 backend for Terraform state
 
 **Documentation**:
-- `scripts/create-windmill-workspace.sh`
-- `docs/windmill-s3-setup.md`
-- `docs/windmill-discord-setup.md`
-- `argocd/app-configs/actions-runner-controller/README.md`
+- `docs/windmill-sync-setup.md` - Complete sync workflow guide
+- `docs/github-token-setup.md` - GitHub PAT creation guide
+- `docs/windmill-s3-setup.md` - S3 storage configuration
+- `docs/windmill-discord-bot-setup.md` - Discord bot setup
+- `scripts/setup-windmill-sync.sh` - Automated workspace sync script
 
 ---
 
-### Phase 2: Develop Windmill Flows ⏳ PENDING
+### Phase 2: Develop Windmill Flows ✅ COMPLETE
 
-**Status**: Not Started
+**Status**: Completed 2025-12-07
 
 **Issues**: #132, #133, #134, #135, #136
 
-**Tasks**:
-- [ ] Create windmill/ directory structure (#132)
-- [ ] Write reusable scripts (#133)
-- [ ] Create Terraform deployment flow (#134)
-- [ ] Configure Windmill resources (#135)
-- [ ] Test flows locally (#136)
+**Completed Tasks**:
+- ✅ Created windmill/ directory structure (#132)
+  - `wmill.yaml` with Python3 default runtime
+  - `variables.json` with all secret definitions
+  - `f/terraform/` for flows and scripts
+  - `u/admin/` for resources
+- ✅ Wrote reusable scripts (#133)
+  - `git_clone.py` - Clone repository with GitHub token
+  - `terraform_init.py` - Initialize Terraform with S3 backend
+  - `terraform_plan.py` - Run plan and parse output
+  - `terraform_apply.py` - Apply Terraform changes
+  - `notify_approval.py` - Discord approval notifications
+  - `notify_status.py` - Discord status notifications
+- ✅ Created Terraform deployment flow (#134)
+  - `deploy_vault.flow` - Complete flow for tf/vault module
+  - Includes: Clone → Init → Plan → Approval → Apply → Notify
+  - Skip logic for no-change plans
+  - Error handling with failure notifications
+- ✅ Configured Windmill resources (#135)
+  - Discord bot configuration
+  - S3 storage configuration
+  - GitHub token configuration
+- ✅ Synced to Windmill (#136)
+  - All scripts pushed successfully
+  - All resources created
+  - Flow deployed and ready to test
+
+**Files Created**:
+- Scripts: `windmill/f/terraform/*.py` (6 scripts)
+- Flow: `windmill/f/terraform/deploy_vault.flow/flow.yaml`
+- Resources: `windmill/u/admin/*.resource.yaml` (3 resources)
+- Variables: `windmill/variables.json`
+- Configuration: `windmill/wmill.yaml`
 
 ---
 
@@ -188,3 +216,15 @@ Not applicable - per user decision, Argo Events and Workflows are being removed 
 ---
 
 **Last Updated**: 2025-12-07
+
+## Phase Completion Summary
+
+- ✅ **Phase 0**: Argo Events/Workflows disabled
+- ✅ **Phase 1**: Infrastructure configured (workspace, runner, S3, Discord)
+- ✅ **Phase 2**: Windmill flows and scripts developed
+- ⏳ **Phase 3**: GitHub Integration (next)
+- ⏳ **Phase 4**: Testing
+- ⏳ **Phase 5**: Cleanup
+- ⏳ **Phase 6**: Monitoring
+
+**Next Steps**: Create GitHub Actions workflow for wmill sync and configure webhooks

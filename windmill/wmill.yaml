@@ -1,6 +1,7 @@
 workspace: terraform-gitops
 version: v2
 defaultRuntime: python3
+defaultTs: bun
 
 includes:
   - "**"
@@ -9,8 +10,10 @@ excludes: []
 
 gitBranches:
   - main
+  - feat/windmill-migration
 
 # Default to Python for all scripts
 codebases:
   - relativePath: "."
     defaultRuntime: python3
+    defaultTs: bun

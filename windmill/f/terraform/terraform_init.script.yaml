@@ -5,5 +5,28 @@ kind: script
 schema:
   $schema: 'https://json-schema.org/draft/2020-12/schema'
   type: object
-  properties: {}
-  required: []
+  properties:
+    module_path:
+      type: string
+      description: ''
+      default: null
+      originalType: string
+    s3:
+      type: object
+      description: ''
+      default: null
+      format: resource-s3
+    s3_bucket_prefix:
+      type: string
+      description: ''
+      default: ''
+      originalType: string
+    workspace_path:
+      type: string
+      description: ''
+      default: null
+      originalType: string
+  required:
+    - workspace_path
+    - module_path
+    - s3

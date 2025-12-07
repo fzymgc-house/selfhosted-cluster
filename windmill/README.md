@@ -52,7 +52,15 @@ windmill/
 
 ### Initial Setup
 
-1. **Sync variables from Vault to Windmill**:
+1. **Create Vault token for Terraform operations**:
+   ```bash
+   ./scripts/create-vault-terraform-token.sh
+   ```
+
+   This generates an orphan Vault token with the `admin` policy and stores it in Vault.
+   The token is used by Terraform workflows to authenticate to Vault when managing Vault itself.
+
+2. **Sync variables from Vault to Windmill**:
    ```bash
    ./scripts/sync-vault-to-windmill-vars.sh
    ```
@@ -68,14 +76,15 @@ windmill/
    - `g/all/s3_bucket_prefix`
    - `g/all/s3_endpoint`
    - `g/all/github_token`
+   - `g/all/vault_terraform_token`
 
-2. **Push workspace files to Windmill**:
+3. **Push workspace files to Windmill**:
    ```bash
    cd windmill/
    npx windmill-cli sync push
    ```
 
-3. **Verify integrations**:
+4. **Verify integrations**:
    ```bash
    npx windmill-cli script run f/terraform/test_configuration \
      -d '{

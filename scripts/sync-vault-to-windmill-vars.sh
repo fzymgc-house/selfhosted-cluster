@@ -24,6 +24,7 @@ S3_BUCKET=$(vault kv get -field=s3_bucket secret/fzymgc-house/cluster/windmill 2
 S3_BUCKET_PREFIX=$(vault kv get -field=s3_bucket_prefix secret/fzymgc-house/cluster/windmill 2>/dev/null || echo "windmill/terraform-gitops")
 S3_ENDPOINT=$(vault kv get -field=s3_endpoint secret/fzymgc-house/cluster/windmill 2>/dev/null || echo "")
 GITHUB_TOKEN=$(vault kv get -field=windmill_actions_runner_token secret/fzymgc-house/cluster/github 2>/dev/null || echo "")
+VAULT_TERRAFORM_TOKEN=$(vault kv get -field=vault_terraform_token secret/fzymgc-house/cluster/windmill 2>/dev/null || echo "")
 
 echo "✅ Secrets retrieved (some may be empty if not configured)"
 echo ""
@@ -76,6 +77,7 @@ echo "📝 Updating Windmill variables..."
 update_variable "s3_bucket_prefix" "$S3_BUCKET_PREFIX" false "S3 bucket prefix for shared bucket organization"
 [ -n "$S3_ENDPOINT" ] && update_variable "s3_endpoint" "$S3_ENDPOINT" false "S3 endpoint URL" || echo "⚠️  Skipping s3_endpoint (not in Vault)"
 [ -n "$GITHUB_TOKEN" ] && update_variable "github_token" "$GITHUB_TOKEN" true "GitHub token for repo access" || echo "⚠️  Skipping github_token (not in Vault)"
+[ -n "$VAULT_TERRAFORM_TOKEN" ] && update_variable "vault_terraform_token" "$VAULT_TERRAFORM_TOKEN" true "Vault token for Terraform operations" || echo "⚠️  Skipping vault_terraform_token (not in Vault)"
 
 echo ""
 echo "✅ Variables synced (configured secrets only)!"

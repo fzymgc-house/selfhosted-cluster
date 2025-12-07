@@ -65,7 +65,7 @@ spec:
                 containerSecurityContext: {}
 
                 # -- Affinity rules to apply to the pods
-                affinity: 
+                affinity:
                   podAntiAffinity:
                     preferredDuringSchedulingIgnoredDuringExecution:
                       - weight: 100

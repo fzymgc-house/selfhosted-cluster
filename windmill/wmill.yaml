@@ -8,6 +8,23 @@ includes:
 
 excludes: []
 
+# Sync configuration - sync everything except workspace encryption key
+skipVariables: false
+skipResources: false
+skipResourceTypes: false
+skipSecrets: false
+skipScripts: false
+skipFlows: false
+skipApps: false
+skipFolders: false
+
+includeSchedules: false
+includeTriggers: false
+includeUsers: false
+includeGroups: false
+includeSettings: false
+includeKey: false  # Don't sync workspace encryption key
+
 gitBranches:
   - main
   - feat/windmill-migration

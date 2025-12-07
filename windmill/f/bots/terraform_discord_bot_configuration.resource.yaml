@@ -1,5 +1,6 @@
-description: ''
+description: Discord bot configuration for Terraform notifications
 value:
-  application_id: '1447228782611136587'
-  public_key: '$var:f/bots/terraform_discord_bot_configuration'
+  application_id: '$var:discord_application_id'
+  bot_token: '$var:discord_bot_token'
+  public_key: '$var:discord_public_key'
 resource_type: discord_bot_configuration

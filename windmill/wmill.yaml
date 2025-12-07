@@ -21,8 +21,8 @@ skipFolders: false
 
 includeSchedules: true
 includeTriggers: true
-includeUsers: false
-includeGroups: false
+includeUsers: true
+includeGroups: true
 includeSettings: true
 includeKey: false  # Don't sync workspace encryption key
 

@@ -1,0 +1,11 @@
+resource_type: s3
+path: u/admin/terraform_s3_storage
+description: Storj S3 storage for Terraform artifacts
+value:
+  bucket: "$var:s3_bucket"
+  region: us-east-1
+  endPoint: "$var:s3_endpoint"
+  accessKey: "$var:s3_access_key"
+  secretKey: "$var:s3_secret_key"
+  useSSL: true
+  pathStyle: false

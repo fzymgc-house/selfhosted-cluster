@@ -1,0 +1,47 @@
+{
+  "discord_bot_token": {
+    "value": "",
+    "is_secret": true,
+    "description": "Discord bot token from Vault"
+  },
+  "discord_application_id": {
+    "value": "",
+    "is_secret": false,
+    "description": "Discord application ID"
+  },
+  "discord_public_key": {
+    "value": "",
+    "is_secret": true,
+    "description": "Discord public key for signature verification"
+  },
+  "discord_channel_id": {
+    "value": "",
+    "is_secret": false,
+    "description": "Discord channel ID for notifications"
+  },
+  "s3_bucket": {
+    "value": "windmill-storage",
+    "is_secret": false,
+    "description": "S3 bucket name"
+  },
+  "s3_endpoint": {
+    "value": "https://gateway.storjshare.io",
+    "is_secret": false,
+    "description": "S3 endpoint URL"
+  },
+  "s3_access_key": {
+    "value": "",
+    "is_secret": true,
+    "description": "S3 access key"
+  },
+  "s3_secret_key": {
+    "value": "",
+    "is_secret": true,
+    "description": "S3 secret key"
+  },
+  "github_token": {
+    "value": "",
+    "is_secret": true,
+    "description": "GitHub token for repo access"
+  }
+}

@@ -1,0 +1,16 @@
+workspace: terraform-gitops
+version: v2
+defaultRuntime: python3
+
+includes:
+  - "**"
+
+excludes: []
+
+gitBranches:
+  - main
+
+# Default to Python for all scripts
+codebases:
+  - relativePath: "."
+    defaultRuntime: python3

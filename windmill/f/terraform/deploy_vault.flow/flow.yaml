@@ -1,0 +1,151 @@
+summary: Deploy Vault Terraform module with approval
+description: |
+  Automated deployment flow for tf/vault module:
+  1. Clone repository
+  2. Initialize Terraform
+  3. Run plan and send to Discord for approval
+  4. Wait for manual approval
+  5. Apply changes
+  6. Send completion notification
+
+value:
+  modules:
+    - id: git-clone
+      value:
+        type: script
+        path: f/terraform/git_clone
+        input_transforms:
+          github:
+            type: javascript
+            expr: wmill.getResource('u/admin/github_token')
+          repository:
+            type: static
+            value: fzymgc-house/selfhosted-cluster
+          branch:
+            type: static
+            value: main
+          workspace_dir:
+            type: static
+            value: /tmp/terraform-workspace
+
+    - id: terraform-init
+      value:
+        type: script
+        path: f/terraform/terraform_init
+        input_transforms:
+          workspace_path:
+            type: javascript
+            expr: results['git-clone'].workspace_path
+          module_path:
+            type: static
+            value: tf/vault
+          s3:
+            type: javascript
+            expr: wmill.getResource('u/admin/terraform_s3_storage')
+
+    - id: terraform-plan
+      value:
+        type: script
+        path: f/terraform/terraform_plan
+        input_transforms:
+          module_dir:
+            type: javascript
+            expr: results['terraform-init'].module_dir
+          vault_addr:
+            type: static
+            value: https://vault.fzymgc.house
+          vault_token:
+            type: javascript
+            expr: wmill.getVariable('vault_terraform_token')
+
+    - id: notify-approval
+      value:
+        type: script
+        path: f/terraform/notify_approval
+        skip_if:
+          expr: results['terraform-plan'].has_changes == false
+          label: Skip if no changes
+        input_transforms:
+          discord:
+            type: javascript
+            expr: wmill.getResource('u/admin/terraform_discord_bot')
+          module:
+            type: static
+            value: tf/vault
+          plan_summary:
+            type: javascript
+            expr: results['terraform-plan'].plan_summary
+          plan_details:
+            type: javascript
+            expr: results['terraform-plan'].plan_details
+          run_id:
+            type: javascript
+            expr: flow.id
+
+    - id: approval
+      value:
+        type: approval
+        skip_if:
+          expr: results['terraform-plan'].has_changes == false
+          label: Skip if no changes
+        timeout: 86400  # 24 hours
+        approvers:
+          - u/admin
+
+    - id: terraform-apply
+      value:
+        type: script
+        path: f/terraform/terraform_apply
+        skip_if:
+          expr: results['terraform-plan'].has_changes == false
+          label: Skip if no changes
+        input_transforms:
+          module_dir:
+            type: javascript
+            expr: results['terraform-init'].module_dir
+          vault_addr:
+            type: static
+            value: https://vault.fzymgc.house
+          vault_token:
+            type: javascript
+            expr: wmill.getVariable('vault_terraform_token')
+
+    - id: notify-success
+      value:
+        type: script
+        path: f/terraform/notify_status
+        skip_if:
+          expr: results['terraform-plan'].has_changes == false
+          label: Skip if no changes
+        input_transforms:
+          discord:
+            type: javascript
+            expr: wmill.getResource('u/admin/terraform_discord_bot')
+          module:
+            type: static
+            value: tf/vault
+          status:
+            type: static
+            value: success
+          details:
+            type: static
+            value: Terraform apply completed successfully
+
+  failure_module:
+    id: notify-failure
+    value:
+      type: script
+      path: f/terraform/notify_status
+      input_transforms:
+        discord:
+          type: javascript
+          expr: wmill.getResource('u/admin/terraform_discord_bot')
+        module:
+          type: static
+          value: tf/vault
+        status:
+          type: static
+          value: failed
+        details:
+          type: javascript
+          expr: error.message

@@ -35,14 +35,14 @@ Migrate from a single-workspace manual deployment model to Windmill's recommende
 
 ### Two-Workspace Architecture
 
-**Workspace 1: `staging`** (Development/Testing)
+**Workspace 1: `terraform-gitops-staging`** (Development/Testing)
 - Purpose: Development and testing of Terraform automation workflows
 - Git Sync Mode: **Sync Mode** (auto-commits on deploy)
 - Git Branch: `staging` branch
 - Access: Developers have full access
 - Promotion: Creates branches targeting `main` via Promotion Mode
 
-**Workspace 2: `prod`** (Production)
+**Workspace 2: `terraform-gitops-prod`** (Production)
 - Purpose: Production Terraform deployments
 - Git Sync Mode: **Pull Mode** (receives deployments via GitHub Actions)
 - Git Branch: `main` branch
@@ -111,7 +111,7 @@ git push -u origin staging
 #### 1.2 Create Staging Workspace in Windmill
 
 1. Navigate to Windmill UI: https://windmill.fzymgc.house
-2. Create new workspace: `staging`
+2. Create new workspace: `terraform-gitops-staging`
 3. Configure workspace settings:
    - Default runtime: Python 3
    - Default TS: Bun
@@ -122,7 +122,7 @@ git push -u origin staging
 Update `windmill/wmill.yaml`:
 
 ```yaml
-workspace: staging  # Changed from terraform-gitops
+workspace: terraform-gitops-staging  # Changed from terraform-gitops
 version: v2
 defaultRuntime: python3
 defaultTs: bun
@@ -159,7 +159,7 @@ codebases:
 
 ```bash
 cd windmill
-npx wmill workspace add staging staging https://windmill.fzymgc.house <token>
+npx wmill workspace add terraform-gitops-staging terraform-gitops-staging https://windmill.fzymgc.house <token>
 npx wmill sync push
 ```
 
@@ -198,11 +198,12 @@ Store in repository settings → Secrets and variables → Actions:
 
 ```
 WMILL_TOKEN_PROD: <prod-workspace-token>
-WMILL_URL: https://windmill.fzymgc.house
 ```
 
+**Note:** `WMILL_URL` is hardcoded in the workflow environment variables, not stored as a secret.
+
 To get prod workspace token:
-1. Create `prod` workspace in Windmill
+1. Create `terraform-gitops-prod` workspace in Windmill
 2. Generate token: Settings → Tokens → Create Token
 3. Token permissions: Admin access for sync operations
 
@@ -296,10 +297,9 @@ jobs:
       - name: Configure Windmill workspace
         env:
           WMILL_TOKEN: ${{ secrets.WMILL_TOKEN_PROD }}
-          WMILL_URL: ${{ secrets.WMILL_URL }}
         run: |
           cd windmill
-          wmill workspace add prod prod "$WMILL_URL" "$WMILL_TOKEN"
+          wmill workspace add ${{ env.WINDMILL_WORKSPACE }} ${{ env.WINDMILL_WORKSPACE }} "${{ env.WINDMILL_URL }}" "$WMILL_TOKEN"
 
       - name: Deploy to production
         run: |
@@ -319,7 +319,7 @@ jobs:
 #### 4.1 Create Production Workspace
 
 1. Navigate to Windmill UI
-2. Create workspace: `prod`
+2. Create workspace: `terraform-gitops-prod`
 3. Configure identical settings to staging (default runtime, etc.)
 4. **Important**: Do NOT enable Git sync on prod workspace
 
@@ -329,7 +329,7 @@ jobs:
 cd windmill
 
 # Configure prod workspace
-npx wmill workspace add prod prod https://windmill.fzymgc.house <token>
+npx wmill workspace add terraform-gitops-prod terraform-gitops-prod https://windmill.fzymgc.house <token>
 
 # Deploy current state to prod
 npx wmill sync push
@@ -395,7 +395,7 @@ Once deployed to prod, test the fixed approval workflow:
    git checkout main -- .github/workflows/windmill-*.yaml
    # Deploy manually to prod
    cd windmill
-   wmill workspace add prod prod https://windmill.fzymgc.house <token>
+   wmill workspace add terraform-gitops-prod terraform-gitops-prod https://windmill.fzymgc.house <token>
    wmill sync push
    ```
 

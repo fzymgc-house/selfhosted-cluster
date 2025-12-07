@@ -51,9 +51,22 @@ jobs:
 
       - name: Validate deployment
         run: |
+          cd windmill
           echo "Validating workspace deployment..."
-          wmill workspace list | grep -q "${{ env.WINDMILL_WORKSPACE }}" || exit 1
-          echo "✅ Workspace ${{ env.WINDMILL_WORKSPACE }} is available"
+
+          # Check workspace exists
+          wmill workspace list | grep -q "${{ env.WINDMILL_WORKSPACE }}" || {
+            echo "❌ Workspace ${{ env.WINDMILL_WORKSPACE }} not found"
+            exit 1
+          }
+          echo "✅ Workspace exists"
+
+          # Test workspace access by listing flows
+          wmill flow list --show-archived || {
+            echo "❌ Cannot access workspace resources"
+            exit 1
+          }
+          echo "✅ Workspace is accessible and functional"
 
       - name: Comment on PR
         if: success()

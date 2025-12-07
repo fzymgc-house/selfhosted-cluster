@@ -46,6 +46,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.check-pr.outputs.count == '0'
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CHANGED_FILES: ${{ steps.changes.outputs.files }}

@@ -35,7 +35,7 @@ jobs:
           WMILL_URL: ${{ secrets.WMILL_URL }}
         run: |
           cd windmill
-          wmill workspace add prod prod "${WMILL_URL}" "${WMILL_TOKEN}"
+          wmill workspace add terraform-gitops-prod terraform-gitops-prod "${WMILL_URL}" "${WMILL_TOKEN}"
 
       - name: Deploy to production
         run: |

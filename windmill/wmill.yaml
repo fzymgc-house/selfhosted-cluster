@@ -1,4 +1,4 @@
-workspace: staging
+workspace: terraform-gitops-staging
 version: v2
 defaultRuntime: python3
 defaultTs: bun

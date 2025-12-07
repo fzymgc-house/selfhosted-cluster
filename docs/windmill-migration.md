@@ -46,17 +46,39 @@ kubectl --context fzymgc-house get pods -n argo-workflows
 
 ---
 
-### Phase 1: Set up Infrastructure 🚧 IN PROGRESS
+### Phase 1: Set up Infrastructure ✅ COMPLETE
 
-**Status**: In Progress
+**Status**: Completed 2025-12-07 (awaiting manual configuration)
 
 **Issues**: #128, #129, #130, #131
 
-**Tasks**:
-- [ ] Create Windmill workspace (#128)
-- [ ] Deploy actions-runner-controller (#129)
-- [ ] Configure Storj S3 for Windmill (#130)
-- [ ] Set up Discord webhook for notifications (#131)
+**Completed Tasks**:
+- ✅ Created workspace setup script and documentation (#128)
+  - Script: `scripts/create-windmill-workspace.sh`
+  - Manual workspace creation required via UI
+- ✅ Created actions-runner-controller deployment (#129)
+  - ArgoCD app: `argocd/cluster-app/templates/actions-runner-controller.yaml`
+  - Runner config: `argocd/app-configs/actions-runner-controller/`
+  - Awaiting GitHub token in Vault
+- ✅ Documented Storj S3 configuration (#130)
+  - Guide: `docs/windmill-s3-setup.md`
+  - Workspace-level S3 resource setup
+- ✅ Documented Discord webhook integration (#131)
+  - Guide: `docs/windmill-discord-setup.md`
+  - Notification script examples
+
+**Manual Steps Required**:
+1. Create Windmill workspace `terraform-gitops`
+2. Generate and store GitHub Actions token in Vault
+3. Create Discord webhook and store in Vault
+4. Configure S3 resource in Windmill workspace
+5. Configure Discord resource in Windmill workspace
+
+**Documentation**:
+- `scripts/create-windmill-workspace.sh`
+- `docs/windmill-s3-setup.md`
+- `docs/windmill-discord-setup.md`
+- `argocd/app-configs/actions-runner-controller/README.md`
 
 ---
 

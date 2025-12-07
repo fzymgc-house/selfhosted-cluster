@@ -24,7 +24,7 @@ Before deployment, configure the GitHub token in Vault:
 # - admin:org (if using org-level runners)
 
 vault kv put secret/fzymgc-house/cluster/github \
-  actions_runner_token=<github-pat-or-app-token>
+  windmill_actions_runner_token=<github-pat-or-app-token>
 ```
 
 ### GitHub Token Requirements

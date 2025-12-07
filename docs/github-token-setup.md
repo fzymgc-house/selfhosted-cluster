@@ -75,7 +75,7 @@ vault token lookup
 
 # Store the token
 vault kv put secret/fzymgc-house/cluster/github \
-  actions_runner_token="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  windmill_actions_runner_token="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
 **Verify it was stored:**
@@ -85,7 +85,7 @@ vault kv put secret/fzymgc-house/cluster/github \
 vault kv get secret/fzymgc-house/cluster/github
 
 # To see the actual token value (if needed for debugging)
-vault kv get -field=actions_runner_token secret/fzymgc-house/cluster/github
+vault kv get -field=windmill_actions_runner_token secret/fzymgc-house/cluster/github
 ```
 
 ## Verify Runner Deployment
@@ -124,7 +124,7 @@ Since tokens expire, you'll need to rotate them periodically:
 2. Update Vault:
    ```bash
    vault kv patch secret/fzymgc-house/cluster/github \
-     actions_runner_token="<new-token>"
+     windmill_actions_runner_token="<new-token>"
    ```
 3. ExternalSecret will automatically sync the new token
 4. Runner pods will automatically use the new token
@@ -159,7 +159,7 @@ kubectl --context fzymgc-house describe externalsecret github-token -n actions-r
 
 # Common issues:
 # - Vault path wrong: Should be secret/fzymgc-house/cluster/github
-# - Vault key wrong: Should be actions_runner_token
+# - Vault key wrong: Should be windmill_actions_runner_token
 # - ClusterSecretStore not configured: Check vault-backend
 ```
 

@@ -1,6 +1,6 @@
 # Windmill S3 Storage Configuration
 
-Guide for configuring Storj S3 storage for Windmill workflows.
+Guide for configuring Cloudflare R2 S3-compatible storage for Windmill workflows.
 
 ## Overview
 
@@ -15,32 +15,30 @@ Windmill uses **workspace-level S3 resources** configured through the UI, not He
 
 ## Configuration Steps
 
-### 1. Prepare Storj Credentials
+### 1. Prepare Cloudflare R2 Credentials
 
-The same Storj credentials used by Argo Workflows can be reused, or create a separate bucket:
+Create a Cloudflare R2 bucket and API token for Windmill:
 
-**Option A: Reuse Argo Workflows credentials**
+**Step 1: Create R2 Bucket**
+1. Login to Cloudflare Dashboard
+2. Navigate to **R2** → **Create bucket**
+3. Create bucket: `windmill-terraform-artifacts`
+4. Note the bucket endpoint (e.g., `https://<account-id>.r2.cloudflarestorage.com`)
+
+**Step 2: Generate R2 API Token**
+1. Go to **R2** → **Manage R2 API Tokens**
+2. Create API Token with:
+   - **Permissions**: Read & Write
+   - **Bucket**: `windmill-terraform-artifacts`
+3. Note the Access Key ID and Secret Access Key
+
+**Step 3: Store in Vault**
 ```bash
-# Credentials already exist in Vault
-vault kv get secret/fzymgc-house/cluster/argo-workflow
-
-# Keys:
-# - artifact_storage_access_key
-# - artifact_storage_secret_key
-# - Bucket: argo-workflows
-# - Endpoint: https://gateway.storjshare.io
-```
-
-**Option B: Create separate Windmill bucket (Recommended)**
-```bash
-# 1. Create new bucket in Storj dashboard: windmill-storage
-# 2. Generate access credentials
-# 3. Store in Vault:
 vault kv put secret/fzymgc-house/cluster/windmill \
-  s3_access_key="<access-key>" \
-  s3_secret_key="<secret-key>" \
-  s3_bucket="windmill-storage" \
-  s3_endpoint="https://gateway.storjshare.io"
+  s3_access_key="<r2-access-key-id>" \
+  s3_secret_key="<r2-secret-access-key>" \
+  s3_bucket="windmill-terraform-artifacts" \
+  s3_endpoint="https://<account-id>.r2.cloudflarestorage.com"
 ```
 
 ### 2. Create S3 Resource in Windmill
@@ -51,26 +49,28 @@ After the `terraform-gitops` workspace is created:
 2. Navigate to the `terraform-gitops` workspace
 3. Go to **Resources** → **Add a resource**
 4. Select **S3/R2** type
-5. Configure with Storj credentials:
+5. Configure with Cloudflare R2 credentials:
 
 ```json
 {
-  "endpoint": "gateway.storjshare.io",
-  "region": "us-east-1",
+  "endpoint": "<account-id>.r2.cloudflarestorage.com",
+  "region": "auto",
   "useSSL": true,
-  "bucket": "windmill-storage",
+  "bucket": "windmill-terraform-artifacts",
   "accessKey": "<from-vault>",
   "secretKey": "<from-vault>",
   "pathStyle": false
 }
 ```
 
-6. Save as resource: `u/admin/terraform_storage`
+**Note**: Cloudflare R2 uses `region: "auto"` instead of a specific region.
+
+6. Save as resource: `f/resources/s3`
 
 ### 3. Configure Workspace Default Storage
 
 1. Go to **Workspace Settings** → **S3 Storage**
-2. Select the `u/admin/terraform_storage` resource
+2. Select the `f/resources/s3` resource
 3. Click **Save**
 
 This enables:
@@ -91,7 +91,7 @@ import * as wmill from "windmill-client"
 
 export async function main() {
   // S3 resource is automatically available
-  const s3 = wmill.getResource("u/admin/terraform_storage")
+  const s3 = wmill.getResource("f/resources/s3")
 
   // Upload terraform plan output
   await wmill.writeS3File(
@@ -119,10 +119,10 @@ steps:
 
 ## Storage Organization
 
-Recommended S3 bucket structure:
+Recommended R2 bucket structure:
 
 ```
-windmill-storage/
+windmill-terraform-artifacts/
 ├── terraform/
 │   ├── vault/
 │   │   ├── plans/        # Terraform plan outputs
@@ -143,7 +143,7 @@ Test S3 configuration:
 
 1. Create a test script in Windmill
 2. Use S3 file picker to select/upload a file
-3. Verify file appears in Storj bucket
+3. Verify file appears in Cloudflare R2 bucket
 4. Check Windmill logs for any S3 errors
 
 ```bash
@@ -163,10 +163,11 @@ kubectl --context fzymgc-house exec -n windmill deployment/windmill-app -- \
 
 ### Bucket Access Errors
 
-Ensure Storj credentials have:
-- Read/Write access to bucket
-- Bucket exists in Storj
+Ensure Cloudflare R2 credentials have:
+- Read/Write permissions on the R2 API token
+- Bucket exists in Cloudflare R2
 - Endpoint is correct (no https:// prefix in resource config)
+- Region is set to `auto` (required for R2)
 
 ## Enterprise Features
 
@@ -188,4 +189,5 @@ Workflows will need to explicitly use S3 resources rather than automatic artifac
 ## References
 
 - Windmill S3 Documentation: https://www.windmill.dev/docs/core_concepts/object_storage_in_windmill
-- Storj Gateway Documentation: https://docs.storj.io/dcs/api-reference/s3-compatible-gateway
+- Cloudflare R2 Documentation: https://developers.cloudflare.com/r2/
+- Cloudflare R2 S3 API Compatibility: https://developers.cloudflare.com/r2/api/s3/api/

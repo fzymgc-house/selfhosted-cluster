@@ -1,4 +1,4 @@
-workspace: terraform-gitops
+workspace: terraform-gitops-prod
 version: v2
 defaultRuntime: python3
 defaultTs: bun
@@ -8,8 +8,8 @@ includes:
 
 excludes: []
 
-# Sync configuration - sync everything except workspace encryption key and variables
-# Variables are managed by the sync-vault-to-windmill-vars.sh script
+# Sync configuration - sync everything except workspace encryption key
+# This is the production workspace configuration
 skipVariables: false
 skipResources: false
 skipResourceTypes: false

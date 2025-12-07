@@ -133,7 +133,7 @@ value:
           expr: error.message
         discord:
           type: javascript
-          expr: wmill.getResource('u/admin/terraform_discord_bot')
+          expr: wmill.getResource('f/resources/discord_bot')
         module:
           type: static
           value: tf/vault

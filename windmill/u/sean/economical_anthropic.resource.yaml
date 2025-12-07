@@ -1,0 +1,4 @@
+description: ''
+value:
+  apiKey: '$var:u/sean/economical_anthropic'
+resource_type: anthropic

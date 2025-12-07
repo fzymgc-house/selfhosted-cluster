@@ -1,5 +1,4 @@
-resource_type: github
-path: f/resources/github
 description: GitHub token for repository operations
 value:
-  token: "$var:github_token"
+  token: '$var:github_token'
+resource_type: github

@@ -1,0 +1,4 @@
+description: ''
+value:
+  api_key: '$var:u/sean/gutsy_googleai'
+resource_type: googleai

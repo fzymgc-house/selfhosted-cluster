@@ -1,8 +1,7 @@
-resource_type: discord_bot
-path: f/resources/discord_bot
 description: Discord bot for Terraform approval notifications
 value:
-  bot_token: "$var:discord_bot_token"
-  application_id: "$var:discord_application_id"
-  public_key: "$var:discord_public_key"
-  channel_id: "$var:discord_channel_id"
+  application_id: '$var:discord_application_id'
+  bot_token: '$var:discord_bot_token'
+  channel_id: '$var:discord_channel_id'
+  public_key: '$var:discord_public_key'
+resource_type: discord_bot

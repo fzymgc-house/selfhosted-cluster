@@ -10,7 +10,7 @@ spec:
   sources:
     - chart: windmill
       repoURL: https://windmill-labs.github.io/windmill-helm-charts/
-      targetRevision: "2.0.488"
+      targetRevision: "3.0.60"
       helm:
         releaseName: windmill
         valuesObject:

@@ -56,12 +56,12 @@ resource "vault_jwt_auth_backend_role" "reader" {
   role_name       = "reader"
   user_claim      = "sub"
   bound_audiences = [local.authentik_url, data.vault_kv_secret_v2.authentik.data["vault_oidc_client_id"]]
-  token_ttl       = 3600
-  token_max_ttl   = 86400
+  token_ttl       = 64800 # 18 hours
+  token_max_ttl   = 86400 # 24 hours
   token_policies  = ["default", "reader"]
   groups_claim    = "groups"
   # Note: groups claim is included in profile scope per Authentik docs
-  oidc_scopes     = ["openid", "email", "profile"]
+  oidc_scopes = ["openid", "email", "profile"]
   allowed_redirect_uris = [
     "https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback",
     "https://vault.fzymgc.house/oidc/callback",
@@ -75,12 +75,12 @@ resource "vault_jwt_auth_backend_role" "admin" {
   role_name       = "admin"
   user_claim      = "sub"
   bound_audiences = [local.authentik_url, data.vault_kv_secret_v2.authentik.data["vault_oidc_client_id"]]
-  token_ttl       = 3600
-  token_max_ttl   = 86400
+  token_ttl       = 64800 # 18 hours
+  token_max_ttl   = 86400 # 24 hours
   token_policies  = ["default", "admin"]
   groups_claim    = "groups"
   # Note: groups claim is included in profile scope per Authentik docs
-  oidc_scopes     = ["openid", "email", "profile"]
+  oidc_scopes = ["openid", "email", "profile"]
   allowed_redirect_uris = [
     "https://vault.fzymgc.house/ui/vault/auth/oidc/oidc/callback",
     "https://vault.fzymgc.house/oidc/callback",
@@ -97,7 +97,7 @@ resource "authentik_provider_oauth2" "vault" {
   # Vault uses explicit consent authorization flow
   authorization_flow    = data.authentik_flow.default_provider_authorization_explicit_consent.id
   invalidation_flow     = data.authentik_flow.default_provider_invalidation_flow.id
-  access_token_validity = "minutes=5"
+  access_token_validity = "hours=18"
 
   allowed_redirect_uris = [
     {

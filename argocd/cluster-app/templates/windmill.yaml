@@ -22,6 +22,7 @@ spec:
           minio:
             enabled: false
           windmill:
+            image: ghcr.io/windmill-labs/windmill-ee
             cookieDomain: "fzymgc.house"
             baseDomain: windmill.fzymgc.house
             baseProtocol: https

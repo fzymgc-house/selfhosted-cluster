@@ -2,12 +2,34 @@
 import requests
 import subprocess
 from pathlib import Path
+from typing import TypedDict
+
+
+class DiscordBotResource(TypedDict):
+    bot_token: str
+    application_id: str
+    public_key: str
+    channel_id: str
+
+
+class GithubResource(TypedDict):
+    token: str
+
+
+class S3Resource(TypedDict):
+    bucket: str
+    region: str
+    endPoint: str
+    accessKey: str
+    secretKey: str
+    useSSL: bool
+    pathStyle: bool
 
 
 def main(
-    discord: dict,
-    github: dict,
-    s3: dict
+    discord: DiscordBotResource,
+    github: GithubResource,
+    s3: S3Resource
 ):
     """
     Test all configured resources and integrations.

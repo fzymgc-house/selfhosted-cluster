@@ -2,12 +2,23 @@
 import subprocess
 import os
 from pathlib import Path
+from typing import TypedDict
+
+
+class S3Resource(TypedDict):
+    bucket: str
+    region: str
+    endPoint: str
+    accessKey: str
+    secretKey: str
+    useSSL: bool
+    pathStyle: bool
 
 
 def main(
     workspace_path: str,
     module_path: str,
-    s3: dict
+    s3: S3Resource
 ):
     """
     Initialize Terraform module.

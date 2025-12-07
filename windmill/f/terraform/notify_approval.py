@@ -1,10 +1,18 @@
 """Send approval notification to Discord."""
 import requests
 from datetime import datetime
+from typing import TypedDict
+
+
+class DiscordBotResource(TypedDict):
+    bot_token: str
+    application_id: str
+    public_key: str
+    channel_id: str
 
 
 def main(
-    discord: dict,
+    discord: DiscordBotResource,
     module: str,
     plan_summary: str,
     plan_details: str,

@@ -2,10 +2,15 @@
 import subprocess
 import os
 from pathlib import Path
+from typing import TypedDict
+
+
+class GithubResource(TypedDict):
+    token: str
 
 
 def main(
-    github: dict,
+    github: GithubResource,
     repository: str = "fzymgc-house/selfhosted-cluster",
     branch: str = "main",
     workspace_dir: str = "/tmp/terraform-workspace"

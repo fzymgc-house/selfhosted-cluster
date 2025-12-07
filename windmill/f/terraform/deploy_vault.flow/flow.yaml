@@ -85,13 +85,27 @@ value:
           label: Skip if no changes
     - id: approval
       value:
-        type: approval
-        approvers:
-          - u/admin
-        skip_if:
-          expr: 'results[''terraform-plan''].has_changes == false'
-          label: Skip if no changes
+        type: script
+        input_transforms:
+          module:
+            type: static
+            value: tf/vault
+          plan_summary:
+            type: javascript
+            expr: 'results[''terraform-plan''].plan_summary'
+          plan_details:
+            type: javascript
+            expr: 'results[''terraform-plan''].plan_details'
+          run_id:
+            type: javascript
+            expr: flow.id
+        path: f/terraform/terraform_approval
+      suspend:
+        required_events: 1
         timeout: 86400
+      skip_if:
+        expr: 'results[''terraform-plan''].has_changes == false'
+        label: Skip if no changes
     - id: terraform-apply
       value:
         type: script

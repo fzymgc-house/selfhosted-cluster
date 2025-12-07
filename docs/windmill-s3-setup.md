@@ -37,9 +37,12 @@ Create a Cloudflare R2 bucket and API token for Windmill:
 vault kv put secret/fzymgc-house/cluster/windmill \
   s3_access_key="<r2-access-key-id>" \
   s3_secret_key="<r2-secret-access-key>" \
-  s3_bucket="windmill-terraform-artifacts" \
+  s3_bucket="<shared-bucket-name>" \
+  s3_bucket_prefix="windmill/terraform-gitops" \
   s3_endpoint="https://<account-id>.r2.cloudflarestorage.com"
 ```
+
+**Note**: The `s3_bucket_prefix` allows sharing a bucket with other services by organizing objects under a specific path prefix (e.g., `windmill/terraform-gitops/terraform/vault/terraform.tfstate`).
 
 ### 2. Create S3 Resource in Windmill
 
@@ -119,23 +122,24 @@ steps:
 
 ## Storage Organization
 
-Recommended R2 bucket structure:
+Recommended R2 bucket structure with prefix for shared bucket:
 
 ```
-windmill-terraform-artifacts/
-├── terraform/
-│   ├── vault/
-│   │   ├── plans/        # Terraform plan outputs
-│   │   └── logs/         # Execution logs
-│   ├── grafana/
-│   │   ├── plans/
-│   │   └── logs/
-│   └── authentik/
-│       ├── plans/
-│       └── logs/
-└── workflows/
-    └── artifacts/        # General workflow artifacts
+<shared-bucket-name>/
+└── windmill/
+    └── terraform-gitops/           # s3_bucket_prefix
+        ├── terraform/
+        │   ├── vault/
+        │   │   └── terraform.tfstate
+        │   ├── grafana/
+        │   │   └── terraform.tfstate
+        │   └── authentik/
+        │       └── terraform.tfstate
+        └── workflows/
+            └── artifacts/          # General workflow artifacts
 ```
+
+The prefix `windmill/terraform-gitops` allows this workspace to coexist with other services in the same bucket.
 
 ## Verification
 

@@ -18,7 +18,8 @@ class s3(TypedDict):
 def main(
     workspace_path: str,
     module_path: str,
-    s3: s3
+    s3: s3,
+    s3_bucket_prefix: str = ""
 ):
     """
     Initialize Terraform module.
@@ -27,6 +28,7 @@ def main(
         workspace_path: Path to cloned repository
         module_path: Relative path to Terraform module (e.g., "tf/vault")
         s3: S3 resource for state storage
+        s3_bucket_prefix: Optional prefix path within the bucket (e.g., "windmill/terraform-gitops")
 
     Returns:
         dict with init status and module info
@@ -36,10 +38,14 @@ def main(
     if not module_dir.exists():
         raise ValueError(f"Module directory does not exist: {module_dir}")
 
-    # Configure backend
+    # Configure backend with bucket prefix
+    # Prefix allows sharing a bucket with other services
+    prefix = s3_bucket_prefix.strip('/') if s3_bucket_prefix else ""
+    state_key = f"{prefix}/terraform/{module_path}/terraform.tfstate" if prefix else f"terraform/{module_path}/terraform.tfstate"
+
     backend_config = [
         f"-backend-config=bucket={s3['bucket']}",
-        f"-backend-config=key=terraform/{module_path}/terraform.tfstate",
+        f"-backend-config=key={state_key}",
         f"-backend-config=region={s3['region']}",
         f"-backend-config=endpoint={s3['endPoint']}",
         f"-backend-config=access_key={s3['accessKey']}",

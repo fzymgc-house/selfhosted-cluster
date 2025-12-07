@@ -20,8 +20,9 @@ DISCORD_PUBLIC_KEY=$(vault kv get -field=discord_public_key secret/fzymgc-house/
 DISCORD_CHANNEL_ID=$(vault kv get -field=discord_channel_id secret/fzymgc-house/cluster/windmill 2>/dev/null || echo "")
 S3_ACCESS_KEY=$(vault kv get -field=s3_access_key secret/fzymgc-house/cluster/windmill 2>/dev/null || echo "")
 S3_SECRET_KEY=$(vault kv get -field=s3_secret_key secret/fzymgc-house/cluster/windmill 2>/dev/null || echo "")
-S3_BUCKET=$(vault kv get -field=s3_bucket secret/fzymgc-house/cluster/windmill 2>/dev/null || echo "windmill-storage")
-S3_ENDPOINT=$(vault kv get -field=s3_endpoint secret/fzymgc-house/cluster/windmill 2>/dev/null || echo "https://gateway.storjshare.io")
+S3_BUCKET=$(vault kv get -field=s3_bucket secret/fzymgc-house/cluster/windmill 2>/dev/null || echo "")
+S3_BUCKET_PREFIX=$(vault kv get -field=s3_bucket_prefix secret/fzymgc-house/cluster/windmill 2>/dev/null || echo "windmill/terraform-gitops")
+S3_ENDPOINT=$(vault kv get -field=s3_endpoint secret/fzymgc-house/cluster/windmill 2>/dev/null || echo "")
 GITHUB_TOKEN=$(vault kv get -field=windmill_actions_runner_token secret/fzymgc-house/cluster/github 2>/dev/null || echo "")
 
 echo "✅ Secrets retrieved (some may be empty if not configured)"
@@ -68,8 +69,9 @@ echo "📝 Updating Windmill variables..."
 [ -n "$DISCORD_CHANNEL_ID" ] && update_variable "discord_channel_id" "$DISCORD_CHANNEL_ID" false "Discord channel ID for notifications" || echo "⚠️  Skipping discord_channel_id (not in Vault)"
 [ -n "$S3_ACCESS_KEY" ] && update_variable "s3_access_key" "$S3_ACCESS_KEY" true "S3 access key" || echo "⚠️  Skipping s3_access_key (not in Vault)"
 [ -n "$S3_SECRET_KEY" ] && update_variable "s3_secret_key" "$S3_SECRET_KEY" true "S3 secret key" || echo "⚠️  Skipping s3_secret_key (not in Vault)"
-update_variable "s3_bucket" "$S3_BUCKET" false "S3 bucket name"
-update_variable "s3_endpoint" "$S3_ENDPOINT" false "S3 endpoint URL"
+[ -n "$S3_BUCKET" ] && update_variable "s3_bucket" "$S3_BUCKET" false "S3 bucket name" || echo "⚠️  Skipping s3_bucket (not in Vault)"
+update_variable "s3_bucket_prefix" "$S3_BUCKET_PREFIX" false "S3 bucket prefix for shared bucket organization"
+[ -n "$S3_ENDPOINT" ] && update_variable "s3_endpoint" "$S3_ENDPOINT" false "S3 endpoint URL" || echo "⚠️  Skipping s3_endpoint (not in Vault)"
 [ -n "$GITHUB_TOKEN" ] && update_variable "github_token" "$GITHUB_TOKEN" true "GitHub token for repo access" || echo "⚠️  Skipping github_token (not in Vault)"
 
 echo ""

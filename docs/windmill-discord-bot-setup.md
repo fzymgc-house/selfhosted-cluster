@@ -119,145 +119,141 @@ After workspace creation (#128):
 
 **Script Path**: `terraform/notify-approval`
 
-```typescript
-type DiscordBot = {
-  bot_token: string
-  application_id: string
-  public_key: string
-  channel_id: string
-}
+```python
+import requests
+from datetime import datetime
 
-export async function main(
-  discord: DiscordBot,
-  module: string,
-  planSummary: string,
-  runId: string
-) {
-  // Create message with interactive buttons
-  const payload = {
-    embeds: [{
-      title: "🚨 Terraform Apply Approval Required",
-      description: `Module: **${module}**`,
-      color: 0xFFA500, // Orange
-      fields: [
-        {
-          name: "Plan Summary",
-          value: `\`\`\`\n${planSummary.substring(0, 1000)}\n\`\`\``,
-          inline: false
-        },
-        {
-          name: "Run ID",
-          value: runId,
-          inline: true
-        }
-      ],
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: "Windmill Terraform GitOps"
-      }
-    }],
-    components: [{
-      type: 1, // Action Row
-      components: [
-        {
-          type: 2, // Button
-          style: 3, // Success (green)
-          label: "✅ Approve",
-          custom_id: `approve_${runId}`
-        },
-        {
-          type: 2, // Button
-          style: 4, // Danger (red)
-          label: "❌ Reject",
-          custom_id: `reject_${runId}`
-        },
-        {
-          type: 2, // Button
-          style: 5, // Link
-          label: "View Details",
-          url: `https://windmill.fzymgc.house/runs/${runId}`
-        }
-      ]
-    }]
-  }
+def main(
+    discord: dict,
+    module: str,
+    plan_summary: str,
+    run_id: str
+):
+    """Send approval notification with interactive buttons to Discord."""
 
-  const response = await fetch(
-    `https://discord.com/api/v10/channels/${discord.channel_id}/messages`,
-    {
-      method: "POST",
-      headers: {
-        "Authorization": `Bot ${discord.bot_token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
+    # Create message with interactive buttons
+    payload = {
+        "embeds": [{
+            "title": "🚨 Terraform Apply Approval Required",
+            "description": f"Module: **{module}**",
+            "color": 0xFFA500,  # Orange
+            "fields": [
+                {
+                    "name": "Plan Summary",
+                    "value": f"```\n{plan_summary[:1000]}\n```",
+                    "inline": False
+                },
+                {
+                    "name": "Run ID",
+                    "value": run_id,
+                    "inline": True
+                }
+            ],
+            "timestamp": datetime.utcnow().isoformat(),
+            "footer": {
+                "text": "Windmill Terraform GitOps"
+            }
+        }],
+        "components": [{
+            "type": 1,  # Action Row
+            "components": [
+                {
+                    "type": 2,  # Button
+                    "style": 3,  # Success (green)
+                    "label": "✅ Approve",
+                    "custom_id": f"approve_{run_id}"
+                },
+                {
+                    "type": 2,  # Button
+                    "style": 4,  # Danger (red)
+                    "label": "❌ Reject",
+                    "custom_id": f"reject_{run_id}"
+                },
+                {
+                    "type": 2,  # Button
+                    "style": 5,  # Link
+                    "label": "View Details",
+                    "url": f"https://windmill.fzymgc.house/runs/{run_id}"
+                }
+            ]
+        }]
     }
-  )
 
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Discord failed: ${response.statusText} - ${error}`)
-  }
+    response = requests.post(
+        f"https://discord.com/api/v10/channels/{discord['channel_id']}/messages",
+        headers={
+            "Authorization": f"Bot {discord['bot_token']}",
+            "Content-Type": "application/json"
+        },
+        json=payload
+    )
 
-  const message = await response.json()
-  return { message_id: message.id, notified: true }
-}
+    if not response.ok:
+        raise Exception(f"Discord API failed: {response.status_code} - {response.text}")
+
+    message = response.json()
+    return {
+        "message_id": message["id"],
+        "notified": True
+    }
 ```
 
 ### Send Status Update (No Buttons)
 
 **Script Path**: `terraform/notify-status`
 
-```typescript
-type DiscordBot = {
-  bot_token: string
-  channel_id: string
-}
+```python
+import requests
+from datetime import datetime
 
-export async function main(
-  discord: DiscordBot,
-  module: string,
-  status: "success" | "failed",
-  details: string
-) {
-  const config = {
-    success: {
-      title: "✅ Terraform Apply Complete",
-      color: 0x00FF00 // Green
-    },
-    failed: {
-      title: "❌ Terraform Apply Failed",
-      color: 0xFF0000 // Red
+def main(
+    discord: dict,
+    module: str,
+    status: str,  # "success" or "failed"
+    details: str
+):
+    """Send status notification to Discord."""
+
+    config = {
+        "success": {
+            "title": "✅ Terraform Apply Complete",
+            "color": 0x00FF00  # Green
+        },
+        "failed": {
+            "title": "❌ Terraform Apply Failed",
+            "color": 0xFF0000  # Red
+        }
     }
-  }
 
-  const { title, color } = config[status]
+    status_config = config.get(status, config["failed"])
 
-  const payload = {
-    embeds: [{
-      title,
-      description: `Module: **${module}**`,
-      color,
-      fields: [{
-        name: "Details",
-        value: details.substring(0, 1000),
-        inline: false
-      }],
-      timestamp: new Date().toISOString()
-    }]
-  }
-
-  await fetch(
-    `https://discord.com/api/v10/channels/${discord.channel_id}/messages`,
-    {
-      method: "POST",
-      headers: {
-        "Authorization": `Bot ${discord.bot_token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
+    payload = {
+        "embeds": [{
+            "title": status_config["title"],
+            "description": f"Module: **{module}**",
+            "color": status_config["color"],
+            "fields": [{
+                "name": "Details",
+                "value": details[:1000],
+                "inline": False
+            }],
+            "timestamp": datetime.utcnow().isoformat()
+        }]
     }
-  )
-}
+
+    response = requests.post(
+        f"https://discord.com/api/v10/channels/{discord['channel_id']}/messages",
+        headers={
+            "Authorization": f"Bot {discord['bot_token']}",
+            "Content-Type": "application/json"
+        },
+        json=payload
+    )
+
+    if not response.ok:
+        raise Exception(f"Discord API failed: {response.status_code} - {response.text}")
+
+    return {"notified": True}
 ```
 
 ## Example Flow Integration
@@ -361,26 +357,29 @@ Details: Error: Failed to create vault_policy.terraform
 
 Test the bot integration:
 
-```typescript
-export async function testBot() {
-  const discord = wmill.getResource("u/admin/terraform_discord_bot")
+```python
+import requests
+import wmill
 
-  const response = await fetch(
-    `https://discord.com/api/v10/channels/${discord.channel_id}/messages`,
-    {
-      method: "POST",
-      headers: {
-        "Authorization": `Bot ${discord.bot_token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        content: "✅ Discord bot test successful!"
-      })
+def main():
+    """Test Discord bot connection."""
+    discord = wmill.get_resource("u/admin/terraform_discord_bot")
+
+    response = requests.post(
+        f"https://discord.com/api/v10/channels/{discord['channel_id']}/messages",
+        headers={
+            "Authorization": f"Bot {discord['bot_token']}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "content": "✅ Discord bot test successful!"
+        }
+    )
+
+    return {
+        "success": response.ok,
+        "status_code": response.status_code
     }
-  )
-
-  return { success: response.ok }
-}
 ```
 
 ## Complete Vault Configuration

@@ -1,0 +1,33 @@
+summary: ''
+description: ''
+lock: '!inline f/terraform/test_configuration.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    discord:
+      type: object
+      description: ''
+      default: null
+      format: resource-discord_bot_configuration
+    discord_bot_token:
+      type: object
+      description: ''
+      default: null
+      format: resource-c_discord_bot_token_configuration
+    github:
+      type: object
+      description: ''
+      default: null
+      format: resource-github
+    s3:
+      type: object
+      description: ''
+      default: null
+      format: resource-s3
+  required:
+    - discord
+    - discord_bot_token
+    - github
+    - s3

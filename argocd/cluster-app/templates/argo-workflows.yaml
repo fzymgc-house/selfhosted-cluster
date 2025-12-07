@@ -60,7 +60,7 @@ spec:
                 readOnly: true
           artifactRepository:
             archiveLogs: false
-            s3: 
+            s3:
               # Note the `key` attribute is not the actual secret, it's the PATH to
               # the contents in the associated secret, as defined by the `name` attribute.
               accessKeySecret:
@@ -95,5 +95,3 @@ spec:
         - .spec.data[].remoteRef.conversionStrategy
         - .spec.data[].remoteRef.decodingStrategy
         - .spec.data[].remoteRef.metadataPolicy
-
-

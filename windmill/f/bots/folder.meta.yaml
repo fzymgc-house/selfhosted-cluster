@@ -1,0 +1,6 @@
+summary: All Bots
+display_name: bots
+extra_perms:
+  u/sean: true
+owners:
+  - u/sean

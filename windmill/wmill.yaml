@@ -1,0 +1,37 @@
+workspace: terraform-gitops
+version: v2
+defaultRuntime: python3
+defaultTs: bun
+
+includes:
+  - "**"
+
+excludes: []
+
+# Sync configuration - sync everything except workspace encryption key and variables
+# Variables are managed by the sync-vault-to-windmill-vars.sh script
+skipVariables: true
+skipResources: false
+skipResourceTypes: false
+skipSecrets: false
+skipScripts: false
+skipFlows: false
+skipApps: false
+skipFolders: false
+
+includeSchedules: false
+includeTriggers: false
+includeUsers: false
+includeGroups: false
+includeSettings: false
+includeKey: false  # Don't sync workspace encryption key
+
+gitBranches:
+  - main
+  - feat/windmill-migration
+
+# Default to Python for all scripts
+codebases:
+  - relativePath: "."
+    defaultRuntime: python3
+    defaultTs: bun

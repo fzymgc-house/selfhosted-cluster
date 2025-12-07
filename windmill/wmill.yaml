@@ -8,8 +8,9 @@ includes:
 
 excludes: []
 
-# Sync configuration - sync everything except workspace encryption key
-skipVariables: false
+# Sync configuration - sync everything except workspace encryption key and variables
+# Variables are managed by the sync-vault-to-windmill-vars.sh script
+skipVariables: true
 skipResources: false
 skipResourceTypes: false
 skipSecrets: false

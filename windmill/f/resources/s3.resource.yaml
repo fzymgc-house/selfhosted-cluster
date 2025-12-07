@@ -1,10 +1,10 @@
 description: Cloudflare R2 storage for Terraform artifacts
 value:
-  accessKey: '$var:s3_access_key'
-  bucket: '$var:s3_bucket'
-  endPoint: '$var:s3_endpoint'
+  accessKey: '$var:g/all/s3_access_key'
+  bucket: '$var:g/all/s3_bucket'
+  endPoint: '$var:g/all/s3_endpoint'
   pathStyle: false
   region: auto
-  secretKey: '$var:s3_secret_key'
+  secretKey: '$var:g/all/s3_secret_key'
   useSSL: true
 resource_type: s3

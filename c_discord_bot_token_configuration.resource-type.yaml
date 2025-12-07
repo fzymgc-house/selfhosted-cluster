@@ -1,0 +1,22 @@
+description: ''
+format_extension: null
+schema:
+  type: object
+  additionalProperties: false
+  order:
+    - token
+    - channel_id
+  properties:
+    channel_id:
+      type: string
+      description: ''
+      default: ''
+    token:
+      type: string
+      description: Bot Token
+      default: ''
+      nullable: false
+      password: true
+  required:
+    - token
+    - channel_id

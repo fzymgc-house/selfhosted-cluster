@@ -1,0 +1,30 @@
+summary: ''
+description: ''
+lock: '!inline f/terraform/git_clone.script.lock'
+kind: script
+schema:
+  $schema: 'https://json-schema.org/draft/2020-12/schema'
+  type: object
+  properties:
+    branch:
+      type: string
+      description: ''
+      default: main
+      originalType: string
+    github:
+      type: object
+      description: ''
+      default: null
+      format: resource-github
+    repository:
+      type: string
+      description: ''
+      default: fzymgc-house/selfhosted-cluster
+      originalType: string
+    workspace_dir:
+      type: string
+      description: ''
+      default: /tmp/terraform-workspace
+      originalType: string
+  required:
+    - github

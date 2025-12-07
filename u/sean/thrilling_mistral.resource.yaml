@@ -1,0 +1,4 @@
+description: ''
+value:
+  apiKey: '$var:u/sean/thrilling_mistral'
+resource_type: mistral

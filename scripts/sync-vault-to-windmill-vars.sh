@@ -35,14 +35,17 @@ update_variable() {
     local is_secret=$3
     local description=$4
 
-    echo "🔄 Updating variable: $var_name"
+    # Prepend g/all/ for global variables accessible from all folders
+    local var_path="g/all/${var_name}"
+
+    echo "🔄 Updating variable: $var_path"
 
     curl -s -X POST \
         "${WINDMILL_URL}/api/w/${WORKSPACE}/variables/create" \
         -H "Authorization: Bearer ${WINDMILL_TOKEN}" \
         -H "Content-Type: application/json" \
         -d "{
-            \"path\": \"${var_name}\",
+            \"path\": \"${var_path}\",
             \"value\": \"${var_value}\",
             \"is_secret\": ${is_secret},
             \"description\": \"${description}\"
@@ -50,7 +53,7 @@ update_variable() {
 
     # If create failed (already exists), try update
     curl -s -X POST \
-        "${WINDMILL_URL}/api/w/${WORKSPACE}/variables/update/${var_name}" \
+        "${WINDMILL_URL}/api/w/${WORKSPACE}/variables/update/${var_path}" \
         -H "Authorization: Bearer ${WINDMILL_TOKEN}" \
         -H "Content-Type: application/json" \
         -d "{

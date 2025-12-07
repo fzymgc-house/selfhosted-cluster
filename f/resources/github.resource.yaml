@@ -1,4 +1,4 @@
 description: GitHub API token for repository access
 value:
-  token: '$var:g/all/github_token'
+  token: '$var:github_token'
 resource_type: github

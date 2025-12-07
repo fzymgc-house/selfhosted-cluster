@@ -10,7 +10,7 @@ excludes: []
 
 # Sync configuration - sync everything except workspace encryption key and variables
 # Variables are managed by the sync-vault-to-windmill-vars.sh script
-skipVariables: true
+skipVariables: false
 skipResources: false
 skipResourceTypes: false
 skipSecrets: false
@@ -19,16 +19,12 @@ skipFlows: false
 skipApps: false
 skipFolders: false
 
-includeSchedules: false
-includeTriggers: false
+includeSchedules: true
+includeTriggers: true
 includeUsers: false
 includeGroups: false
-includeSettings: false
+includeSettings: true
 includeKey: false  # Don't sync workspace encryption key
-
-gitBranches:
-  - main
-  - feat/windmill-migration
 
 # Default to Python for all scripts
 codebases:

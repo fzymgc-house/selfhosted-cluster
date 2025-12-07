@@ -10,6 +10,10 @@ on:
     paths:
       - 'windmill/**'
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   open-pr:
     runs-on: ubuntu-latest
@@ -31,7 +35,10 @@ jobs:
         id: changes
         if: steps.check-pr.outputs.count == '0'
         run: |
-          CHANGED_FILES=$(git diff --name-only origin/main...origin/staging -- windmill/ || echo "Unable to determine changed files")
+          if ! CHANGED_FILES=$(git diff --name-only origin/main...origin/staging -- windmill/); then
+            echo "Error: Failed to determine changed files" >&2
+            exit 1
+          fi
           # Use multiline output format for safety
           echo "files<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" >> $GITHUB_OUTPUT

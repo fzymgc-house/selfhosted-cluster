@@ -11,6 +11,14 @@ on:
     paths:
       - 'windmill/**'
 
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  WINDMILL_WORKSPACE: terraform-gitops-prod
+  WINDMILL_URL: https://windmill.fzymgc.house
+
 jobs:
   deploy:
     if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'windmill')
@@ -32,20 +40,35 @@ jobs:
       - name: Configure Windmill workspace
         env:
           WMILL_TOKEN: ${{ secrets.WMILL_TOKEN_PROD }}
-          WMILL_URL: ${{ secrets.WMILL_URL }}
         run: |
           cd windmill
-          wmill workspace add terraform-gitops-prod terraform-gitops-prod "${WMILL_URL}" "${WMILL_TOKEN}"
+          wmill workspace add ${{ env.WINDMILL_WORKSPACE }} ${{ env.WINDMILL_WORKSPACE }} "${{ env.WINDMILL_URL }}" "${WMILL_TOKEN}"
 
       - name: Deploy to production
         run: |
           cd windmill
           wmill sync push --fail-on-error
 
+      - name: Validate deployment
+        run: |
+          echo "Validating workspace deployment..."
+          wmill workspace list | grep -q "${{ env.WINDMILL_WORKSPACE }}" || exit 1
+          echo "✅ Workspace ${{ env.WINDMILL_WORKSPACE }} is available"
+
       - name: Comment on PR
+        if: success()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           gh pr comment "${PR_NUMBER}" \
-            --body "✅ Successfully deployed to production workspace"
+            --body "✅ Successfully deployed to production workspace **${{ env.WINDMILL_WORKSPACE }}**"
+
+      - name: Comment on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr comment "${PR_NUMBER}" \
+            --body "❌ Production deployment failed. Check [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."

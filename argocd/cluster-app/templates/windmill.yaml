@@ -225,7 +225,7 @@ spec:
             ingress:
               enabled: false
             enterprise:
-              enabled: false
+              enabled: true
             hub:
               enabled: false
     - repoURL: https://github.com/fzymgc-house/selfhosted-cluster

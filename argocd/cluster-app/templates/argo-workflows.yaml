@@ -80,9 +80,10 @@ spec:
     server: https://kubernetes.default.svc
     namespace: argo-workflows
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+    # DISABLED: Migrating to Windmill - see issues #127-#150
+    # automated:
+    #   prune: true
+    #   selfHeal: true
     syncOptions:
       - ServerSideApply=true
       - CreateNamespace=true

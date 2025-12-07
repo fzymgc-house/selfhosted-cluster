@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TypedDict
 
 
-class S3Resource(TypedDict):
+class s3(TypedDict):
     bucket: str
     region: str
     endPoint: str
@@ -18,7 +18,7 @@ class S3Resource(TypedDict):
 def main(
     workspace_path: str,
     module_path: str,
-    s3: S3Resource
+    s3: s3
 ):
     """
     Initialize Terraform module.

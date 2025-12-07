@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import TypedDict
 
 
-class GithubResource(TypedDict):
+class github(TypedDict):
     token: str
 
 
 def main(
-    github: GithubResource,
+    github: github,
     repository: str = "fzymgc-house/selfhosted-cluster",
     branch: str = "main",
     workspace_dir: str = "/tmp/terraform-workspace"

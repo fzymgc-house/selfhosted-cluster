@@ -1,5 +1,5 @@
 resource_type: s3
-path: u/admin/terraform_s3_storage
+path: f/resources/s3
 description: Storj S3 storage for Terraform artifacts
 value:
   bucket: "$var:s3_bucket"

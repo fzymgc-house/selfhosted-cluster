@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import TypedDict
 
 
-class DiscordBotResource(TypedDict):
+class discord_bot(TypedDict):
     bot_token: str
     application_id: str
     public_key: str
@@ -12,7 +12,7 @@ class DiscordBotResource(TypedDict):
 
 
 def main(
-    discord: DiscordBotResource,
+    discord: discord_bot,
     module: str,
     plan_summary: str,
     plan_details: str,

@@ -17,7 +17,7 @@ value:
         input_transforms:
           github:
             type: javascript
-            expr: wmill.getResource('u/admin/github_token')
+            expr: wmill.getResource('f/resources/github')
           repository:
             type: static
             value: fzymgc-house/selfhosted-cluster
@@ -41,7 +41,7 @@ value:
             value: tf/vault
           s3:
             type: javascript
-            expr: wmill.getResource('u/admin/terraform_s3_storage')
+            expr: wmill.getResource('f/resources/s3')
 
     - id: terraform-plan
       value:
@@ -68,7 +68,7 @@ value:
         input_transforms:
           discord:
             type: javascript
-            expr: wmill.getResource('u/admin/terraform_discord_bot')
+            expr: wmill.getResource('f/resources/discord_bot')
           module:
             type: static
             value: tf/vault
@@ -120,7 +120,7 @@ value:
         input_transforms:
           discord:
             type: javascript
-            expr: wmill.getResource('u/admin/terraform_discord_bot')
+            expr: wmill.getResource('f/resources/discord_bot')
           module:
             type: static
             value: tf/vault

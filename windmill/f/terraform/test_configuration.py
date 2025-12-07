@@ -5,18 +5,18 @@ from pathlib import Path
 from typing import TypedDict
 
 
-class DiscordBotResource(TypedDict):
+class discord_bot(TypedDict):
     bot_token: str
     application_id: str
     public_key: str
     channel_id: str
 
 
-class GithubResource(TypedDict):
+class github(TypedDict):
     token: str
 
 
-class S3Resource(TypedDict):
+class s3(TypedDict):
     bucket: str
     region: str
     endPoint: str
@@ -27,9 +27,9 @@ class S3Resource(TypedDict):
 
 
 def main(
-    discord: DiscordBotResource,
-    github: GithubResource,
-    s3: S3Resource
+    discord: discord_bot,
+    github: github,
+    s3: s3
 ):
     """
     Test all configured resources and integrations.

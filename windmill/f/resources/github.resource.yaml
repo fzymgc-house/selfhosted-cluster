@@ -1,5 +1,5 @@
 resource_type: github
-path: u/admin/github_token
+path: f/resources/github
 description: GitHub token for repository operations
 value:
   token: "$var:github_token"

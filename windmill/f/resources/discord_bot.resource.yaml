@@ -1,5 +1,5 @@
-resource_type: discord_bot_configuration
-path: u/admin/terraform_discord_bot
+resource_type: discord_bot
+path: f/resources/discord_bot
 description: Discord bot for Terraform approval notifications
 value:
   bot_token: "$var:discord_bot_token"

@@ -1,5 +1,0 @@
-description: Discord bot token and channel for Terraform notifications
-value:
-  channel_id: '$var:discord_channel_id'
-  token: '$var:discord_bot_token'
-resource_type: c_discord_bot_token_configuration

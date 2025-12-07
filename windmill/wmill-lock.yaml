@@ -2,4 +2,4 @@ version: v2
 locks:
   f/terraform/notify_approval: 5c981a6be1f5d29686f04932886d9c78fb7c71036a2c64c1d7cb6821f1f2c2b4
   f/terraform/notify_status: 95324bcbd895107636af90964267794297b5460a6619aabbcc3577c02abe5a59
-  f/terraform/test_configuration: 5e4ca4ef56b18c53ba170fe303e3d911abc37d91cb24807fb7a8b1e36446b300
+  f/terraform/test_configuration: 9ce35b2313495bfc3d5b9c68e2b83db4309d0e23800f3e2bb396aaa59d1b14ea

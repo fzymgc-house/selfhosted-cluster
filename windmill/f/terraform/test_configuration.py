@@ -1,14 +1,18 @@
 """Test Windmill configuration and integrations."""
+
 import requests
 import subprocess
 from pathlib import Path
 from typing import TypedDict
 
 
-class discord_bot(TypedDict):
-    bot_token: str
+class discord_bot_configuration(TypedDict):
     application_id: str
     public_key: str
+
+
+class c_discord_bot_token_configuration(TypedDict):
+    token: str
     channel_id: str
 
 
@@ -27,9 +31,10 @@ class s3(TypedDict):
 
 
 def main(
-    discord: discord_bot,
+    discord: discord_bot_configuration,
+    discord_bot_token: c_discord_bot_token_configuration,
     github: github,
-    s3: s3
+    s3: s3,
 ):
     """
     Test all configured resources and integrations.
@@ -45,7 +50,7 @@ def main(
     results = {
         "discord": {"tested": False, "success": False, "error": None},
         "github": {"tested": False, "success": False, "error": None},
-        "s3": {"tested": False, "success": False, "error": None}
+        "s3": {"tested": False, "success": False, "error": None},
     }
 
     # Test 1: Discord Bot
@@ -55,19 +60,21 @@ def main(
         }
 
         response = requests.post(
-            f"https://discord.com/api/v10/channels/{discord['channel_id']}/messages",
+            f"https://discord.com/api/v10/channels/{discord_bot_token['channel_id']}/messages",
             headers={
-                "Authorization": f"Bot {discord['bot_token']}",
-                "Content-Type": "application/json"
+                "Authorization": f"Bot {discord_bot_token['token']}",
+                "Content-Type": "application/json",
             },
             json=payload,
-            timeout=10
+            timeout=10,
         )
 
         results["discord"]["tested"] = True
         results["discord"]["success"] = response.ok
         if not response.ok:
-            results["discord"]["error"] = f"HTTP {response.status_code}: {response.text}"
+            results["discord"]["error"] = (
+                f"HTTP {response.status_code}: {response.text}"
+            )
     except Exception as e:
         results["discord"]["tested"] = True
         results["discord"]["error"] = str(e)
@@ -78,9 +85,9 @@ def main(
             "https://api.github.com/repos/fzymgc-house/selfhosted-cluster",
             headers={
                 "Authorization": f"token {github['token']}",
-                "Accept": "application/vnd.github.v3+json"
+                "Accept": "application/vnd.github.v3+json",
             },
-            timeout=10
+            timeout=10,
         )
 
         results["github"]["tested"] = True
@@ -101,15 +108,24 @@ def main(
         env = {
             "AWS_ACCESS_KEY_ID": s3["accessKey"],
             "AWS_SECRET_ACCESS_KEY": s3["secretKey"],
-            "AWS_DEFAULT_REGION": s3["region"]
+            "AWS_DEFAULT_REGION": s3["region"],
         }
 
-        result = subprocess.run([
-            "aws", "s3", "cp",
-            str(test_file),
-            f"s3://{s3['bucket']}/test/windmill-test.txt",
-            "--endpoint-url", s3["endPoint"]
-        ], env=env, capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            [
+                "aws",
+                "s3",
+                "cp",
+                str(test_file),
+                f"s3://{s3['bucket']}/test/windmill-test.txt",
+                "--endpoint-url",
+                s3["endPoint"],
+            ],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
 
         results["s3"]["tested"] = True
         results["s3"]["success"] = result.returncode == 0
@@ -129,6 +145,6 @@ def main(
         "overall_success": all_success,
         "results": results,
         "summary": f"Discord: {'✅' if results['discord']['success'] else '❌'}, "
-                   f"GitHub: {'✅' if results['github']['success'] else '❌'}, "
-                   f"S3: {'✅' if results['s3']['success'] else '❌'}"
+        f"GitHub: {'✅' if results['github']['success'] else '❌'}, "
+        f"S3: {'✅' if results['s3']['success'] else '❌'}",
     }

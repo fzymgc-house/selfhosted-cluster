@@ -1,0 +1,5 @@
+description: ''
+value:
+  channel_id: 931753611535466500
+  token: '$var:f/bots/terraform_discord_bot_token_configuration'
+resource_type: c_discord_bot_token_configuration

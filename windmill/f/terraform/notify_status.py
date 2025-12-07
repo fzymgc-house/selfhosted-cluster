@@ -4,15 +4,19 @@ from datetime import datetime
 from typing import TypedDict
 
 
-class discord_bot(TypedDict):
-    bot_token: str
+class discord_bot_configuration(TypedDict):
     application_id: str
     public_key: str
+
+
+class c_discord_bot_token_configuration(TypedDict):
+    token: str
     channel_id: str
 
 
 def main(
-    discord: discord_bot,
+    discord: discord_bot_configuration,
+    discord_bot_token: c_discord_bot_token_configuration,
     module: str,
     status: str,
     details: str
@@ -21,7 +25,8 @@ def main(
     Send status notification to Discord.
 
     Args:
-        discord: Discord bot resource
+        discord: Discord bot configuration resource
+        discord_bot_token: Discord bot token and channel configuration
         module: Terraform module name
         status: Status ("success" or "failed")
         details: Status details/message
@@ -63,9 +68,9 @@ def main(
     }
 
     response = requests.post(
-        f"https://discord.com/api/v10/channels/{discord['channel_id']}/messages",
+        f"https://discord.com/api/v10/channels/{discord_bot_token['channel_id']}/messages",
         headers={
-            "Authorization": f"Bot {discord['bot_token']}",
+            "Authorization": f"Bot {discord_bot_token['token']}",
             "Content-Type": "application/json"
         },
         json=payload

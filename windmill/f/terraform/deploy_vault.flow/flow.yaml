@@ -60,7 +60,10 @@ value:
         input_transforms:
           discord:
             type: javascript
-            expr: wmill.getResource('f/resources/discord_bot')
+            expr: wmill.getResource('f/bots/terraform_discord_bot_configuration')
+          discord_bot_token:
+            type: javascript
+            expr: wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
           module:
             type: static
             value: tf/vault
@@ -112,7 +115,10 @@ value:
             value: Terraform apply completed successfully
           discord:
             type: javascript
-            expr: wmill.getResource('f/resources/discord_bot')
+            expr: wmill.getResource('f/bots/terraform_discord_bot_configuration')
+          discord_bot_token:
+            type: javascript
+            expr: wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
           module:
             type: static
             value: tf/vault
@@ -133,7 +139,10 @@ value:
           expr: error.message
         discord:
           type: javascript
-          expr: wmill.getResource('f/resources/discord_bot')
+          expr: wmill.getResource('f/bots/terraform_discord_bot_configuration')
+        discord_bot_token:
+          type: javascript
+          expr: wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
         module:
           type: static
           value: tf/vault

@@ -1,4 +1,6 @@
-summary: Shared Resources
+summary: null
 display_name: resources
-extra_perms: {}
-owners: []
+extra_perms:
+  u/sean: true
+owners:
+  - u/sean

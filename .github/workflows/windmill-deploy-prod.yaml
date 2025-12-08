@@ -42,7 +42,7 @@ jobs:
           WMILL_TOKEN: ${{ secrets.WMILL_TOKEN_PROD }}
         run: |
           cd windmill
-          wmill workspace add ${{ env.WINDMILL_WORKSPACE }} ${{ env.WINDMILL_WORKSPACE }} "${{ env.WINDMILL_URL }}" "${WMILL_TOKEN}"
+          wmill workspace add ${{ env.WINDMILL_WORKSPACE }} ${{ env.WINDMILL_WORKSPACE }} "${{ env.WINDMILL_URL }}" --token "${WMILL_TOKEN}"
 
       - name: Deploy to production
         run: |

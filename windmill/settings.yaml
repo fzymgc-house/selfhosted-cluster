@@ -61,25 +61,25 @@ git_sync:
       group_by_folder: true
       script_path: hub/28081/sync-script-to-git-repo-windmill
       settings:
-        exclude_path: []
-        extra_include_path: []
         include_path:
-          - f/**
-          - u/**
+          - '**'
         include_type:
           - script
           - flow
           - app
           - folder
+          - variable
+          - resource
           - resourcetype
+          - secret
           - schedule
+          - trigger
+          - user
           - group
           - settings
-          - resource
-          - user
-          - trigger
       use_individual_branch: true
 operator_settings:
+  assets: false
   audit_logs: true
   folders: true
   groups: true

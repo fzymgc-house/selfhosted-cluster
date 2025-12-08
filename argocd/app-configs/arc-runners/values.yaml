@@ -20,10 +20,10 @@ runnerGroup: "Default"
 # Listener metrics (required in 0.13.0 for listener to start)
 listenerMetrics: {}
 
-# Ephemeral runners (destroyed after each job)
+# Non-ephemeral runners (for debugging connectivity)
 template:
   spec:
-    ephemeral: true
+    ephemeral: false
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest

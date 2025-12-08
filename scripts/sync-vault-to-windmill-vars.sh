@@ -2,10 +2,37 @@
 # Sync secrets from Vault to Windmill workspace variables
 set -euo pipefail
 
-WORKSPACE="terraform-gitops"
+WORKSPACE="terraform-gitops-staging"
 WINDMILL_URL="https://windmill.fzymgc.house"
+DRY_RUN=false
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --dry-run|-n)
+            DRY_RUN=true
+            shift
+            ;;
+        --help|-h)
+            echo "Usage: $0 [--dry-run|-n]"
+            echo ""
+            echo "Options:"
+            echo "  --dry-run, -n  Show what would be updated without making changes"
+            echo "  --help, -h     Show this help message"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
 
 echo "=== Sync Vault Secrets to Windmill Variables ==="
+if $DRY_RUN; then
+    echo ">>> DRY RUN MODE - No changes will be made <<<"
+fi
 echo ""
 
 # Get Windmill token
@@ -38,6 +65,17 @@ update_variable() {
 
     # Prepend g/all/ for global variables accessible from all folders
     local var_path="g/all/${var_name}"
+
+    if $DRY_RUN; then
+        local display_value
+        if [ "$is_secret" = "true" ]; then
+            display_value="[REDACTED]"
+        else
+            display_value="$var_value"
+        fi
+        echo "🔍 Would update: $var_path (secret=$is_secret) = $display_value"
+        return
+    fi
 
     echo "🔄 Updating variable: $var_path"
 

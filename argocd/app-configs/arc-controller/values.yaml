@@ -1,0 +1,21 @@
+# Minimal configuration - controller runs cluster-wide
+replicaCount: 1
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Pod security for homelab cluster
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Metrics for Prometheus scraping
+metrics:
+  controllerManagerAddr: ":8080"
+  listenerAddr: ":8080"
+  listenerEndpoint: "/metrics"

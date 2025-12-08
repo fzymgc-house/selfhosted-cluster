@@ -2,8 +2,8 @@ description: >-
   Repository https://github.com/fzymgc-house/selfhosted-cluster with permissions
   fetched using Windmill Github App. 
 value:
-  branch: main
-  folder: windmill
+  branch: windmill-staging
+  folder: ''
   is_github_app: true
   url: 'https://github.com/fzymgc-house/selfhosted-cluster'
 resource_type: git_repository

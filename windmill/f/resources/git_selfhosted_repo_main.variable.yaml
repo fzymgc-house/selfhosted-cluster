@@ -1,4 +1,4 @@
-value: null
+value: ''
 is_secret: false
 description: GitHub App installation ID for main branch promotion
 is_oauth: false

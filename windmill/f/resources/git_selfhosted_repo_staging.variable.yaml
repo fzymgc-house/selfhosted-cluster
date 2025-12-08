@@ -1,4 +1,4 @@
-value: null
+value: ''
 is_secret: false
 description: GitHub App installation ID for windmill-staging branch sync
 is_oauth: false

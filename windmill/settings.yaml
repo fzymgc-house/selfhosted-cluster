@@ -33,7 +33,7 @@ error_handler_muted_on_cancel: false
 git_sync:
   repositories:
     - exclude_types_override: []
-      git_repo_resource_path: '$res:u/sean/indebted_git_repository'
+      git_repo_resource_path: '$res:f/resources/git_selfhosted_repo_staging'
       group_by_folder: false
       script_path: hub/28081/sync-script-to-git-repo-windmill
       settings:

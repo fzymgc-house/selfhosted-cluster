@@ -1,0 +1,46 @@
+# GitHub configuration
+githubConfigUrl: "https://github.com/fzymgc-house"
+githubConfigSecret: github-token
+
+# Runner scale set name (visible in GitHub UI)
+runnerScaleSetName: "fzymgc-house-cluster-runners"
+
+# Autoscaling configuration
+minRunners: 0
+maxRunners: 3
+
+# Runner labels for workflow targeting
+runnerGroup: "default"
+labels:
+  - fzymgc-house
+  - self-hosted-cluster
+  - windmill-sync
+
+# Ephemeral runners (destroyed after each job)
+template:
+  spec:
+    ephemeral: true
+    containers:
+      - name: runner
+        image: ghcr.io/actions/actions-runner:latest
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            cpu: "2"
+            memory: 4Gi
+          requests:
+            cpu: "1"
+            memory: 2Gi
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+
+# Pod security
+containerMode:
+  type: "kubernetes"
+  kubernetesModeWorkVolumeClaim:
+    accessModes: ["ReadWriteOnce"]
+    storageClassName: "longhorn"
+    resources:
+      requests:
+        storage: 10Gi

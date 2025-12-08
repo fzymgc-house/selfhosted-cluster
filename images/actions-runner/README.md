@@ -84,14 +84,14 @@ A root CA change is a significant event requiring:
 
 ## ARC Runner Configuration
 
-After building a new image, update `argocd/app-configs/arc-runners/values.yaml`:
+After building a new image, update `argocd/app-configs/arc-runners/values.yaml` with the full image tag from the workflow output:
 
 ```yaml
 template:
   spec:
     containers:
       - name: runner
-        image: ghcr.io/fzymgc-house/actions-runner:2.330.0
+        image: ghcr.io/fzymgc-house/actions-runner:2.330.0-abc1234  # Use actual tag from build
         command: ["/home/runner/run.sh"]
         env:
           # Node.js doesn't use system CA store by default
@@ -107,11 +107,14 @@ With this custom image, the following volume mounts become unnecessary and can b
 
 ## Version Compatibility
 
-The image version corresponds to the upstream `ghcr.io/actions/actions-runner` version. When upgrading:
+Image tags follow the format `{runner_version}-{git_short_sha}` (e.g., `2.330.0-abc1234`), combining the upstream runner version with the commit hash for traceability.
+
+When upgrading:
 
 1. Check [actions/runner releases](https://github.com/actions/runner/releases)
 2. Trigger manual workflow with new version
-3. Update ARC runner configuration to use new tag
+3. Note the full image tag from the workflow output (e.g., `2.330.0-abc1234`)
+4. Update `argocd/app-configs/arc-runners/values.yaml` with the new tag
 
 ## Troubleshooting
 

@@ -12,14 +12,14 @@ on:
   workflow_dispatch:
     inputs:
       runner_version:
-        description: 'Actions runner version (e.g., 2.320.0)'
+        description: 'Actions runner version (e.g., 2.330.0)'
         required: false
-        default: '2.320.0'
+        default: '2.330.0'
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository_owner }}/actions-runner
-  RUNNER_VERSION: ${{ inputs.runner_version || '2.320.0' }}
+  RUNNER_VERSION: ${{ inputs.runner_version || '2.330.0' }}
 
 permissions:
   contents: read
@@ -32,9 +32,15 @@ jobs:
       - runner=4cpu-linux-x64
       - image=ubuntu24-full-x64
       - spot=lowest-price
+    outputs:
+      image_tag: ${{ steps.vars.outputs.image_tag }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set image tag with short SHA
+        id: vars
+        run: echo "image_tag=${{ env.RUNNER_VERSION }}-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -51,7 +57,7 @@ jobs:
           build-args: |
             RUNNER_VERSION=${{ env.RUNNER_VERSION }}
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.RUNNER_VERSION }}-amd64
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.image_tag }}-amd64
 
   build-arm64:
     runs-on:
@@ -62,6 +68,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set image tag with short SHA
+        id: vars
+        run: echo "image_tag=${{ env.RUNNER_VERSION }}-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -78,11 +88,13 @@ jobs:
           build-args: |
             RUNNER_VERSION=${{ env.RUNNER_VERSION }}
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.RUNNER_VERSION }}-arm64
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.image_tag }}-arm64
 
   create-manifest:
     needs: [build-amd64, build-arm64]
     runs-on: ubuntu-latest
+    env:
+      IMAGE_TAG: ${{ needs.build-amd64.outputs.image_tag }}
     steps:
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -93,15 +105,16 @@ jobs:
 
       - name: Create and push multi-arch manifest
         run: |
-          docker manifest create "${REGISTRY}/${IMAGE_NAME}:${RUNNER_VERSION}" \
-            "${REGISTRY}/${IMAGE_NAME}:${RUNNER_VERSION}-amd64" \
-            "${REGISTRY}/${IMAGE_NAME}:${RUNNER_VERSION}-arm64"
-
-          docker manifest push "${REGISTRY}/${IMAGE_NAME}:${RUNNER_VERSION}"
+          # Create versioned tag with short SHA (e.g., 2.330.0-abc1234)
+          docker manifest create "${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}" \
+            "${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}-amd64" \
+            "${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}-arm64"
+          docker manifest push "${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
 
           # Also tag as latest
           docker manifest create "${REGISTRY}/${IMAGE_NAME}:latest" \
-            "${REGISTRY}/${IMAGE_NAME}:${RUNNER_VERSION}-amd64" \
-            "${REGISTRY}/${IMAGE_NAME}:${RUNNER_VERSION}-arm64"
-
+            "${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}-amd64" \
+            "${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}-arm64"
           docker manifest push "${REGISTRY}/${IMAGE_NAME}:latest"
+
+          echo "✅ Published image: ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"

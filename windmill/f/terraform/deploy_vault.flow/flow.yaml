@@ -85,13 +85,13 @@ value:
           label: Skip if no changes
     - id: approval
       value:
-        type: approval
-        approvers:
-          - u/admin
+        type: identity
+        suspend:
+          required_events: 1
+          timeout: 86400
         skip_if:
           expr: 'results[''terraform-plan''].has_changes == false'
           label: Skip if no changes
-        timeout: 86400
     - id: terraform-apply
       value:
         type: script

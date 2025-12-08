@@ -56,6 +56,29 @@ git_sync:
           - group
           - settings
       use_individual_branch: false
+    - exclude_types_override: []
+      git_repo_resource_path: '$res:f/resources/git_selfhosted_repo_main'
+      group_by_folder: true
+      script_path: hub/28081/sync-script-to-git-repo-windmill
+      settings:
+        exclude_path: []
+        extra_include_path: []
+        include_path:
+          - f/**
+          - u/**
+        include_type:
+          - script
+          - flow
+          - app
+          - folder
+          - resourcetype
+          - schedule
+          - group
+          - settings
+          - resource
+          - user
+          - trigger
+      use_individual_branch: true
 operator_settings:
   audit_logs: true
   folders: true

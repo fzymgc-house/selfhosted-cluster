@@ -25,19 +25,14 @@ containerMode:
   type: "dind"
 
 # Runner pod template customization
+# Uses custom image with internal CA certs and tools (vault, jq, gh) pre-installed
+# See: images/actions-runner/README.md
 template:
   spec:
     containers:
       - name: runner
-        image: ghcr.io/actions/actions-runner:latest
+        image: ghcr.io/fzymgc-house/actions-runner:2.320.0
         command: ["/home/runner/run.sh"]
-        env:
-          # Trust the cluster's root CA for Node.js actions (e.g., hashicorp/vault-action)
-          - name: NODE_EXTRA_CA_CERTS
-            value: /etc/ssl/certs/fzymgc-root-ca.crt
-          # Trust the cluster's root CA for vault CLI
-          - name: VAULT_CACERT
-            value: /etc/ssl/certs/fzymgc-root-ca.crt
         resources:
           limits:
             cpu: "2"
@@ -45,12 +40,3 @@ template:
           requests:
             cpu: "500m"
             memory: 1Gi
-        volumeMounts:
-          - name: fzymgc-root-ca
-            mountPath: /etc/ssl/certs/fzymgc-root-ca.crt
-            subPath: ca.crt
-            readOnly: true
-    volumes:
-      - name: fzymgc-root-ca
-        secret:
-          secretName: fzymgc-root-ca

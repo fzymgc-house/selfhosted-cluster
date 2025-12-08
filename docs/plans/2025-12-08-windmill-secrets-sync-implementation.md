@@ -10,41 +10,34 @@
 
 ---
 
-## Task 1: Create Windmill GitOps Tokens in Vault
+## Task 1: Create Windmill GitOps Token in Vault
+
+> **UPDATE:** During implementation, we discovered that Windmill tokens are **per-user, not per-workspace**. A single token with access to both workspaces is sufficient. The implementation uses `windmill_gitops_token` instead of workspace-specific tokens.
 
 **Files:**
 - None (manual Vault/Windmill operations)
 
-**Step 1: Create staging workspace token in Windmill**
+**Step 1: Create token in Windmill**
 
 1. Go to https://windmill.fzymgc.house
-2. Navigate to workspace `terraform-gitops-staging`
-3. Settings → Tokens → Create Token
-4. Name: `gitops-sync`, Permissions: write access
-5. Copy the token value
-
-**Step 2: Create prod workspace token in Windmill**
-
-1. Navigate to workspace `terraform-gitops-prod`
-2. Settings → Tokens → Create Token
-3. Name: `gitops-sync`, Permissions: write access
+2. User Settings → Tokens → Create Token
+3. Name: `gitops-sync`, ensure access to both workspaces
 4. Copy the token value
 
-**Step 3: Store tokens in Vault**
+**Step 2: Store token in Vault**
 
 ```bash
 vault kv patch secret/fzymgc-house/cluster/windmill \
-  windmill_gitops_staging_token="wm_<staging-token>" \
-  windmill_gitops_prod_token="wm_<prod-token>"
+  windmill_gitops_token="<token>"
 ```
 
-**Step 4: Verify tokens stored**
+**Step 3: Verify token stored**
 
 ```bash
-vault kv get secret/fzymgc-house/cluster/windmill | grep windmill_gitops
+vault kv get secret/fzymgc-house/cluster/windmill | grep windmill_gitops_token
 ```
 
-Expected: Both `windmill_gitops_staging_token` and `windmill_gitops_prod_token` listed.
+Expected: `windmill_gitops_token` is listed.
 
 ---
 
@@ -215,11 +208,9 @@ fi
 case "$WORKSPACE" in
     staging)
         WINDMILL_WORKSPACE="terraform-gitops-staging"
-        VAULT_TOKEN_KEY="windmill_gitops_staging_token"
         ;;
     prod)
         WINDMILL_WORKSPACE="terraform-gitops-prod"
-        VAULT_TOKEN_KEY="windmill_gitops_prod_token"
         ;;
     *)
         echo "Error: workspace must be 'staging' or 'prod'"
@@ -234,9 +225,9 @@ if $DRY_RUN; then
 fi
 echo ""
 
-# Get Windmill token from Vault based on workspace
+# Get Windmill token from Vault (single token works for all workspaces - tokens are per-user)
 echo "📦 Getting Windmill token from Vault..."
-WINDMILL_TOKEN=$(vault kv get -field="$VAULT_TOKEN_KEY" secret/fzymgc-house/cluster/windmill)
+WINDMILL_TOKEN=$(vault kv get -field=windmill_gitops_token secret/fzymgc-house/cluster/windmill)
 ```
 
 **Step 2: Add variable state detection function**

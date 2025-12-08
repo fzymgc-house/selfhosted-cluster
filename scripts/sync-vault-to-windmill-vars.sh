@@ -2,6 +2,14 @@
 # Sync secrets from Vault to Windmill workspace variables
 set -euo pipefail
 
+# Check required dependencies
+for cmd in vault curl jq; do
+    if ! command -v "$cmd" &> /dev/null; then
+        echo "❌ Required command not found: $cmd"
+        exit 1
+    fi
+done
+
 WINDMILL_URL="https://windmill.fzymgc.house"
 DRY_RUN=false
 WORKSPACE=""

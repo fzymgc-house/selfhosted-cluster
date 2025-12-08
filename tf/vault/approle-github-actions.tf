@@ -1,12 +1,9 @@
 # -*- coding: utf-8; mode: terraform -*-
 # SPDX-License-Identifier: MIT
 
-# Import existing AppRole auth backend if it exists
-import {
-  to = vault_auth_backend.approle
-  id = "approle"
-}
-
+# NOTE: If AppRole auth backend already exists in Vault, import it first:
+#   terraform import vault_auth_backend.approle approle
+#
 # Enable AppRole auth backend
 resource "vault_auth_backend" "approle" {
   type            = "approle"

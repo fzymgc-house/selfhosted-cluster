@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: arc-runner-external-secrets
+  namespace: arc-runners
+  annotations:
+    vault.hashicorp.com/role: arc-runners

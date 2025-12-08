@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: arc-controller
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration
+        - /status
+        - /spec/preserveUnknownFields
+  sources:
+    - repoURL: ghcr.io/actions/actions-runner-controller-charts
+      chart: gha-runner-scale-set-controller
+      targetRevision: 0.13.0
+      helm:
+        valueFiles:
+          - $values/argocd/app-configs/arc-controller/values.yaml
+    - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
+      targetRevision: HEAD
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: arc-systems
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

@@ -1,0 +1,36 @@
+name: Test ARC Runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: fzymgc-house-cluster-runners
+    steps:
+      - name: Test runner info
+        run: |
+          echo "Runner hostname: $(hostname)"
+          echo "Runner OS: $(uname -a)"
+          echo "Runner working directory: $(pwd)"
+
+      - name: Verify Docker is running
+        run: |
+          echo "Checking Docker daemon..."
+          docker info
+          echo "Docker version:"
+          docker version
+
+      - name: Pull test container
+        run: |
+          echo "Pulling alpine:latest..."
+          docker pull alpine:latest
+          echo "Pull successful!"
+
+      - name: Run container command
+        run: |
+          echo "Running hello world in container..."
+          docker run --rm alpine:latest echo "Hello from Docker container!"
+          echo "Container execution successful!"
+
+      - name: Test complete
+        run: echo "All tests passed!"

@@ -1,0 +1,40 @@
+# GitHub configuration
+githubConfigUrl: "https://github.com/fzymgc-house"
+githubConfigSecret: github-token
+
+# Controller service account (in arc-systems namespace)
+controllerServiceAccount:
+  name: arc-controller-gha-rs-controller
+  namespace: arc-systems
+
+# Runner scale set name (visible in GitHub UI)
+runnerScaleSetName: "fzymgc-house-cluster-runners"
+
+# Autoscaling configuration
+minRunners: 0
+maxRunners: 3
+
+# Runner group configuration
+runnerGroup: "Default"
+
+# Listener metrics (required in 0.13.0 for listener to start)
+listenerMetrics: {}
+
+# Docker-in-Docker mode - use built-in configuration
+containerMode:
+  type: "dind"
+
+# Runner pod template customization
+template:
+  spec:
+    containers:
+      - name: runner
+        image: ghcr.io/actions/actions-runner:latest
+        command: ["/home/runner/run.sh"]
+        resources:
+          limits:
+            cpu: "2"
+            memory: 4Gi
+          requests:
+            cpu: "500m"
+            memory: 1Gi

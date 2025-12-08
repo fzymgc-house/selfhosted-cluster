@@ -137,34 +137,6 @@
 # - External Secrets Operator
 # - cert-manager
 # - ArgoCD
-#
-# Previous Ansible tasks commented out below:
-#
-# # Install Prometheus Operator CRDs early so subsequent charts can create ServiceMonitors, etc.
-# - name: Install Prometheus Operator CRDs
-#   ansible.builtin.import_tasks: prometheus-crds.yml
-#   tags:
-#     - k8s-prometheus-crds
-#
-# - name: Install Longhorn
-#   ansible.builtin.import_tasks: longhorn.yml
-#   tags:
-#     - k8s-longhorn
-#
-# - name: Install External Secrets Operator
-#   ansible.builtin.import_tasks: external-secrets-operator.yml
-#   tags:
-#     - k8s-external-secrets
-#
-# - name: Install Cert Manager
-#   ansible.builtin.import_tasks: cert-manager.yml
-#   tags:
-#     - k8s-cert-manager
-#
-# - name: Install Argo CD
-#   ansible.builtin.import_tasks: argocd.yml
-#   tags:
-#     - k8s-argocd
 
 - name: Edit local kube config to set the server to the api lb
   ansible.builtin.lineinfile:

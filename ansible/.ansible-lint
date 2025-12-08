@@ -26,7 +26,6 @@ warn_list:
 mock_modules:
   - community.hashi_vault.vault_read
   - community.hashi_vault.vault_write
-  - community.general.onepassword
   - community.general.timezone
 
 # Mock roles if needed

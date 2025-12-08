@@ -7,5 +7,3 @@ resources:
   - kubernetes-overview.yaml
   - loki-logs-overview.yaml
   - argocd.yaml
-
-

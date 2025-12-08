@@ -44,5 +44,3 @@ spec:
           port: 9090
   tls:
     secretName: wildcard-fzymgc-house-tls
-
-

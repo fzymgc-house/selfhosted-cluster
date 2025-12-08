@@ -40,8 +40,13 @@ jobs:
               echo "Skipping Jinja2 template: $file"
               continue
             fi
+            # Skip ansible files (handled by ansible-lint in pre-commit)
+            if [[ "$file" == ansible/** ]]; then
+              echo "Skipping ansible file: $file"
+              continue
+            fi
             echo "Linting $file"
-            yamllint -d "{extends: default, rules: {line-length: disable, indentation: disable}}" "$file"
+            yamllint -c .yamllint.yaml "$file"
           done
 
   label:

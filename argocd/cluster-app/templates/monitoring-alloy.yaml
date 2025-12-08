@@ -106,5 +106,3 @@ spec:
       - ServerSideApply=true
       - CreateNamespace=true
       - RespectIgnoreDifferences=true
-
-

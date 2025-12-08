@@ -88,8 +88,10 @@ spec:
             - name: grafana-init
               image: chainguard/bash:latest
               imagePullPolicy: Always
-              command: ["/bin/bash", "-vxc", 
-                "mkdir -p /var/lib/grafana/plugins && chown -R 1001:1001 /var/lib/grafana && chmod 770 /var/lib/grafana /var/lib/grafana/plugins"]
+              command:
+                - "/bin/bash"
+                - "-vxc"
+                - "mkdir -p /var/lib/grafana/plugins && chown -R 1001:1001 /var/lib/grafana && chmod 770 /var/lib/grafana /var/lib/grafana/plugins"
               securityContext:
                 privileged: true
                 runAsNonRoot: false
@@ -128,5 +130,3 @@ spec:
         - hosts:
             - grafana.fzymgc.house
           secretName: grafana-tls
-
-

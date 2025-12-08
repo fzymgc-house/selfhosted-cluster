@@ -4,4 +4,3 @@ kind: Kustomization
 resources:
   - https://raw.githubusercontent.com/mittwald/kubernetes-replicator/master/deploy/rbac.yaml
   - https://raw.githubusercontent.com/mittwald/kubernetes-replicator/master/deploy/deployment.yaml
-

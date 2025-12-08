@@ -2,35 +2,35 @@
 
 documentation:
   - changed-files:
-    - any-glob-to-any-file: '**/*.md'
+      - any-glob-to-any-file: '**/*.md'
 
 kubernetes:
   - changed-files:
-    - any-glob-to-any-file:
-      - 'k8s/**/*'
-      - '**/kustomization.yaml'
-      - '**/kustomization.yml'
+      - any-glob-to-any-file:
+          - 'k8s/**/*'
+          - '**/kustomization.yaml'
+          - '**/kustomization.yml'
 
 terraform:
   - changed-files:
-    - any-glob-to-any-file: 'tf/**/*'
+      - any-glob-to-any-file: 'tf/**/*'
 
 ansible:
   - changed-files:
-    - any-glob-to-any-file:
-      - 'ansible/**/*'
-      - '**/*.yml'
-      - '**/*.yaml'
+      - any-glob-to-any-file:
+          - 'ansible/**/*'
+          - '**/*.yml'
+          - '**/*.yaml'
 
 github-actions:
   - changed-files:
-    - any-glob-to-any-file: '.github/workflows/**/*'
+      - any-glob-to-any-file: '.github/workflows/**/*'
 
 dependencies:
   - changed-files:
-    - any-glob-to-any-file:
-      - 'package.json'
-      - 'package-lock.json'
-      - 'go.mod'
-      - 'go.sum'
-      - 'requirements.txt'
+      - any-glob-to-any-file:
+          - 'package.json'
+          - 'package-lock.json'
+          - 'go.mod'
+          - 'go.sum'
+          - 'requirements.txt'

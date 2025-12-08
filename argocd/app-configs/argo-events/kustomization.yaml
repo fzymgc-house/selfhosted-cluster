@@ -9,6 +9,3 @@ resources:
   - github-event-source.yaml
   - ingress.yaml
   - rbac.yaml
-
-
-

@@ -42,5 +42,3 @@ spec:
     name: vault-issuer
     kind: ClusterIssuer
   commonName: "streaming_replica"
-
-

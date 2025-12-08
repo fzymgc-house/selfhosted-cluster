@@ -16,5 +16,3 @@ spec:
     url: http://loki-gateway.loki.svc.cluster.local
     jsonData:
       tlsSkipVerify: true
-
-

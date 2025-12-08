@@ -5,4 +5,3 @@ resources:
   - ./certificate.yaml
   - ./ingressroutes.yaml
   - ./node-exporter-dashboard.yaml
-

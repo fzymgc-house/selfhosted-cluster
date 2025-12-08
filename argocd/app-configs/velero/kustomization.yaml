@@ -6,5 +6,3 @@ resources:
   - secrets.yaml
   - backup-schedule.yaml
   - monitoring/grafana-dashboard.yaml
-
-

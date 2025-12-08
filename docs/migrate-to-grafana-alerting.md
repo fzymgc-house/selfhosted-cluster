@@ -296,5 +296,3 @@ References
 - `monitoring/alertmanager-discord/*`
 - `grafana-operator/*`
 - `grafana/*`
-
-

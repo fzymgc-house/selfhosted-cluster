@@ -15,5 +15,3 @@ spec:
           port: 80
   tls:
     secretName: authentik-public-tls
-
-

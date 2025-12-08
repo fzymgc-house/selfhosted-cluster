@@ -9,7 +9,7 @@ spec:
     container:
       env:
         - name: LOG_LEVEL
-          value: info    
+          value: info
   dependencies:
     - name: github-event-source
       eventSourceName: github
@@ -194,4 +194,3 @@ spec:
                       value: "main"
                     - name: tf_path
                       value: "tf/grafana"
-      

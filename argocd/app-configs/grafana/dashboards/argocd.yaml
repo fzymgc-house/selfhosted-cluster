@@ -11,5 +11,3 @@ spec:
       dashboards: grafana
   folder: ArgoCD
   url: https://grafana.com/api/dashboards/14584/revisions/1/download
-
-

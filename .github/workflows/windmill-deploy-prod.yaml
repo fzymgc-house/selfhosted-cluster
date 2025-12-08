@@ -33,6 +33,7 @@ jobs:
   deploy:
     needs: sync-secrets
     # Run if sync-secrets succeeded, or evaluate our condition independently if sync-secrets was skipped
+    # yamllint disable-line rule:line-length
     if: always() && (needs.sync-secrets.result == 'success' || (needs.sync-secrets.result == 'skipped' && github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'windmill')))
     runs-on: fzymgc-house-cluster-runners
     steps:

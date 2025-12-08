@@ -9,7 +9,7 @@ This document summarizes the Windmill application setup created for the selfhost
 1. **`namespace.yaml`** - Creates the windmill namespace
 2. **`secrets.yaml`** - External secrets configuration for:
    - Database connection string
-   - PostgreSQL user credentials  
+   - PostgreSQL user credentials
    - Windmill admin password
    - OIDC client credentials
 3. **`certificate.yaml`** - TLS certificate from Vault issuer for windmill.fzymgc.house
@@ -74,7 +74,7 @@ vault kv put fzymgc-house/cluster/postgres/users/main-windmill \
   username=windmill \
   password=<secure-password>
 
-# Application secrets  
+# Application secrets
 vault kv put fzymgc-house/cluster/windmill \
   admin_password=<admin-password> \
   oidc_client_id=<authentik-client-id> \

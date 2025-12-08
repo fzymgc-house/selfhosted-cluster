@@ -16,16 +16,16 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 
 class Colors:
     """ANSI color codes for terminal output"""
-    RED = '\033[0;31m'
-    GREEN = '\033[0;32m'
-    YELLOW = '\033[1;33m'
-    BLUE = '\033[0;34m'
-    NC = '\033[0m'  # No Color
+
+    RED = "\033[0;31m"
+    GREEN = "\033[0;32m"
+    YELLOW = "\033[1;33m"
+    BLUE = "\033[0;34m"
+    NC = "\033[0m"  # No Color
 
 
 def log_info(message: str) -> None:
@@ -48,7 +48,7 @@ def log_step(message: str) -> None:
     print(f"{Colors.BLUE}[STEP]{Colors.NC} {message}")
 
 
-def run_command(cmd: List[str], capture_output: bool = True, check: bool = False) -> Tuple[int, str, str]:
+def run_command(cmd: list[str], capture_output: bool = True, check: bool = False) -> tuple[int, str, str]:
     """
     Run a shell command and return exit code, stdout, stderr
 
@@ -61,12 +61,7 @@ def run_command(cmd: List[str], capture_output: bool = True, check: bool = False
         Tuple of (exit_code, stdout, stderr)
     """
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=capture_output,
-            text=True,
-            check=check
-        )
+        result = subprocess.run(cmd, capture_output=capture_output, text=True, check=check)
         return result.returncode, result.stdout, result.stderr
     except subprocess.CalledProcessError as e:
         return e.returncode, e.stdout, e.stderr
@@ -140,11 +135,7 @@ def create_vault_policy(repo_root: Path) -> bool:
         return False
 
     log_info(f"Creating policy from {policy_file}...")
-    exit_code, _, stderr = run_command([
-        "vault", "policy", "write",
-        "infrastructure-developer",
-        str(policy_file)
-    ])
+    exit_code, _, stderr = run_command(["vault", "policy", "write", "infrastructure-developer", str(policy_file)])
 
     if exit_code == 0:
         log_info("✓ Created infrastructure-developer policy")
@@ -154,7 +145,7 @@ def create_vault_policy(repo_root: Path) -> bool:
         return True  # Don't fail the entire script if policy already exists
 
 
-def extract_secrets(repo_root: Path) -> Dict[str, Optional[str]]:
+def extract_secrets(repo_root: Path) -> dict[str, str | None]:
     """Extract secrets from .envrc and 1Password"""
     log_step("Extracting secrets from current sources...")
 
@@ -198,13 +189,7 @@ def extract_secrets(repo_root: Path) -> Dict[str, Optional[str]]:
     if exit_code == 0:
         log_info("Extracting secrets from 1Password...")
 
-        exit_code, stdout, _ = run_command([
-            "op", "item", "get",
-            "--vault", "fzymgc-house",
-            "cloudflare-api-token",
-            "--fields", "password",
-            "--reveal"
-        ])
+        exit_code, stdout, _ = run_command(["op", "item", "get", "--vault", "fzymgc-house", "cloudflare-api-token", "--fields", "password", "--reveal"])
 
         if exit_code == 0 and stdout.strip():
             secrets["CLOUDFLARE_TOKEN"] = stdout.strip()
@@ -217,7 +202,7 @@ def extract_secrets(repo_root: Path) -> Dict[str, Optional[str]]:
     return secrets
 
 
-def create_vault_secrets(secrets: Dict[str, Optional[str]]) -> List[str]:
+def create_vault_secrets(secrets: dict[str, str | None]) -> list[str]:
     """
     Create secrets in Vault
 
@@ -233,11 +218,7 @@ def create_vault_secrets(secrets: Dict[str, Optional[str]]) -> List[str]:
     # Create BMC secrets
     if secrets["TPI_ALPHA_BMC"]:
         log_info("Creating secret/fzymgc-house/infrastructure/bmc/tpi-alpha...")
-        exit_code, _, stderr = run_command([
-            "vault", "kv", "put",
-            "secret/fzymgc-house/infrastructure/bmc/tpi-alpha",
-            f"password={secrets['TPI_ALPHA_BMC']}"
-        ])
+        exit_code, _, stderr = run_command(["vault", "kv", "put", "secret/fzymgc-house/infrastructure/bmc/tpi-alpha", f"password={secrets['TPI_ALPHA_BMC']}"])
         if exit_code == 0:
             created_secrets.append("secret/fzymgc-house/infrastructure/bmc/tpi-alpha")
             created += 1
@@ -249,11 +230,7 @@ def create_vault_secrets(secrets: Dict[str, Optional[str]]) -> List[str]:
 
     if secrets["TPI_BETA_BMC"]:
         log_info("Creating secret/fzymgc-house/infrastructure/bmc/tpi-beta...")
-        exit_code, _, stderr = run_command([
-            "vault", "kv", "put",
-            "secret/fzymgc-house/infrastructure/bmc/tpi-beta",
-            f"password={secrets['TPI_BETA_BMC']}"
-        ])
+        exit_code, _, stderr = run_command(["vault", "kv", "put", "secret/fzymgc-house/infrastructure/bmc/tpi-beta", f"password={secrets['TPI_BETA_BMC']}"])
         if exit_code == 0:
             created_secrets.append("secret/fzymgc-house/infrastructure/bmc/tpi-beta")
             created += 1
@@ -266,11 +243,7 @@ def create_vault_secrets(secrets: Dict[str, Optional[str]]) -> List[str]:
     # Create Cloudflare secret
     if secrets["CLOUDFLARE_TOKEN"]:
         log_info("Creating secret/fzymgc-house/infrastructure/cloudflare/api-token...")
-        exit_code, _, stderr = run_command([
-            "vault", "kv", "put",
-            "secret/fzymgc-house/infrastructure/cloudflare/api-token",
-            f"token={secrets['CLOUDFLARE_TOKEN']}"
-        ])
+        exit_code, _, stderr = run_command(["vault", "kv", "put", "secret/fzymgc-house/infrastructure/cloudflare/api-token", f"token={secrets['CLOUDFLARE_TOKEN']}"])
         if exit_code == 0:
             created_secrets.append("secret/fzymgc-house/infrastructure/cloudflare/api-token")
             created += 1
@@ -288,16 +261,13 @@ def create_vault_secrets(secrets: Dict[str, Optional[str]]) -> List[str]:
     return created_secrets
 
 
-def verify_secrets(created_secrets: List[str]) -> bool:
+def verify_secrets(created_secrets: list[str]) -> bool:
     """Verify that created secrets can be read from Vault"""
     log_step("Verifying secrets in Vault...")
 
     print()
     print("Secrets in Vault:")
-    exit_code, stdout, _ = run_command([
-        "vault", "kv", "list",
-        "secret/fzymgc-house/infrastructure/"
-    ])
+    exit_code, stdout, _ = run_command(["vault", "kv", "list", "secret/fzymgc-house/infrastructure/"])
     if exit_code == 0:
         print(stdout)
     print()
@@ -310,10 +280,7 @@ def verify_secrets(created_secrets: List[str]) -> bool:
 
     # Test reading the first created secret to verify access
     test_secret = created_secrets[0]
-    exit_code, _, stderr = run_command([
-        "vault", "kv", "get",
-        test_secret
-    ])
+    exit_code, _, stderr = run_command(["vault", "kv", "get", test_secret])
 
     if exit_code == 0:
         log_info("✓ Successfully verified secret access")

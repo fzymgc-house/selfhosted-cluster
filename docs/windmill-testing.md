@@ -228,4 +228,3 @@ kubectl --context fzymgc-house logs -n windmill -l app=windmill-workers --tail=1
 - S3 Storage Setup: `docs/windmill-s3-setup.md`
 - GitHub Token Setup: `docs/github-token-setup.md`
 - Variable Sync Script: `scripts/sync-vault-to-windmill-vars.sh`
-

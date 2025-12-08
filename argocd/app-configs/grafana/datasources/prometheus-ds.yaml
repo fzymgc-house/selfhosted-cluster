@@ -15,5 +15,3 @@ spec:
     access: proxy
     url: http://prometheus-operated.prometheus.svc.cluster.local:9090
     isDefault: true
-
-

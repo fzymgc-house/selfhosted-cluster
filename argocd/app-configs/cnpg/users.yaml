@@ -63,5 +63,3 @@ spec:
       remoteRef:
         key: fzymgc-house/cluster/postgres/users/main-admin
         property: password
-
-

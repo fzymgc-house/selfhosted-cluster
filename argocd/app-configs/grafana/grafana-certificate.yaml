@@ -12,5 +12,3 @@ spec:
     - grafana.fzymgc.house
   usages:
     - server auth
-
-

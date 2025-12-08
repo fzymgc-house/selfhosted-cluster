@@ -85,5 +85,3 @@ spec:
           port: 80
   tls:
     secretName: whoami-tls
-
-

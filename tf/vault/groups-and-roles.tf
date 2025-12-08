@@ -24,4 +24,3 @@ resource "vault_identity_group_member_entity_ids" "admin" {
   group_id          = vault_identity_group.admin.id
   member_entity_ids = [vault_identity_entity.sean.id]
 }
-

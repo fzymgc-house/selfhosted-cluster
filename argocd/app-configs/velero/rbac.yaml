@@ -80,5 +80,3 @@ subjects:
   - kind: ServiceAccount
     name: velero
     namespace: velero
-
-

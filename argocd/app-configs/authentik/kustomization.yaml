@@ -7,5 +7,3 @@ resources:
   - ingress-route.yaml
   - traefik-middleware.yaml
   - whoami.yaml
-
-

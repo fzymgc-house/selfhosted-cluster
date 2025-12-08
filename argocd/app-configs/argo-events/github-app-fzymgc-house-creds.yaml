@@ -16,7 +16,7 @@ spec:
       data:
         private_key: "{{ .private_key }}"
         github_webhook_secret: "{{ .github_webhook_secret }}"
-  
+
   data:
     - secretKey: private_key
       remoteRef:

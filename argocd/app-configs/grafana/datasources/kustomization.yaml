@@ -3,5 +3,3 @@ kind: Kustomization
 resources:
   - loki-ds.yaml
   - prometheus-ds.yaml
-
-

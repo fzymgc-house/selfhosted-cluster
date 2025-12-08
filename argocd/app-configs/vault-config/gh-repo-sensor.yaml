@@ -9,7 +9,7 @@ spec:
     container:
       env:
         - name: LOG_LEVEL
-          value: info    
+          value: info
   dependencies:
     - name: github-event-source
       eventSourceName: github
@@ -196,4 +196,3 @@ spec:
                       value: "main-cluster-vault"
                     - name: tf_path
                       value: "tf/vault"
-      

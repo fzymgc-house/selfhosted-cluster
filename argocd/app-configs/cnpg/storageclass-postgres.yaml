@@ -11,5 +11,3 @@ parameters:
   fsType: ext4
   dataLocality: best-effort
   dataEngine: v1
-
-

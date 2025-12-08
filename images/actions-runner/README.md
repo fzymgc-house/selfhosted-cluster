@@ -107,3 +107,49 @@ The image version corresponds to the upstream `ghcr.io/actions/actions-runner` v
 1. Check [actions/runner releases](https://github.com/actions/runner/releases)
 2. Trigger manual workflow with new version
 3. Update ARC runner configuration to use new tag
+
+## Troubleshooting
+
+### TLS Certificate Errors
+
+**Symptom**: `certificate signed by unknown authority` or `unable to verify the first certificate`
+
+**Cause**: The runner pod is using an older image without current CA certificates.
+
+**Solution**:
+1. Verify the image tag in `argocd/app-configs/arc-runners/values.yaml` matches the latest build
+2. Check if CA certificates need updating: `./images/actions-runner/scripts/update-ca-certs.sh`
+3. Force a pod restart: `kubectl --context fzymgc-house rollout restart deployment -n arc-runners`
+
+### Vault Authentication Failures
+
+**Symptom**: `vault-action` step fails with connection or auth errors
+
+**Cause**: Vault CLI can't connect to `vault.fzymgc.house` or AppRole credentials are invalid.
+
+**Solution**:
+1. Verify CA trust: `curl -v https://vault.fzymgc.house/v1/sys/health` from a runner
+2. Check AppRole secrets are configured in GitHub repository settings
+3. Verify Vault policies allow the AppRole to access required paths
+
+### Tools Not Found
+
+**Symptom**: `command not found: vault` or `command not found: jq`
+
+**Cause**: Workflow is running on a different runner (not the custom image) or image pull failed.
+
+**Solution**:
+1. Confirm workflow uses `runs-on: fzymgc-house-cluster-runners`
+2. Check runner pod logs: `kubectl --context fzymgc-house logs -n arc-runners -l app=arc-runner`
+3. Verify image pull succeeded: `kubectl --context fzymgc-house describe pod -n arc-runners -l app=arc-runner`
+
+### Image Pull Failures
+
+**Symptom**: Runner pods stuck in `ImagePullBackOff` or `ErrImagePull`
+
+**Cause**: GHCR authentication issues or image doesn't exist.
+
+**Solution**:
+1. Verify image exists: `gh api /user/packages/container/actions-runner/versions --jq '.[0].metadata.container.tags'`
+2. Check GHCR pull secret: `kubectl --context fzymgc-house get secret -n arc-runners ghcr-login-secret`
+3. Trigger a manual image build if the tag doesn't exist

@@ -47,7 +47,7 @@ jobs:
       - name: Deploy to production
         run: |
           cd windmill
-          wmill sync push --yes
+          wmill sync push --yes --workspace ${{ env.WINDMILL_WORKSPACE }}
 
       - name: Validate deployment
         run: |
@@ -62,7 +62,7 @@ jobs:
           echo "✅ Workspace exists"
 
           # Test workspace access by listing flows
-          wmill flow list --show-archived || {
+          wmill flow list --show-archived --workspace ${{ env.WINDMILL_WORKSPACE }} || {
             echo "❌ Cannot access workspace resources"
             exit 1
           }

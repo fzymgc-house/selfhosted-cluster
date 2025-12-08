@@ -33,6 +33,11 @@ template:
       - name: runner
         image: ghcr.io/fzymgc-house/actions-runner:2.330.0
         command: ["/home/runner/run.sh"]
+        env:
+          # Node.js doesn't use system CA store by default - point to system bundle
+          # Required for vault-action and other Node.js-based GitHub Actions
+          - name: NODE_EXTRA_CA_CERTS
+            value: /etc/ssl/certs/ca-certificates.crt
         resources:
           limits:
             cpu: "2"

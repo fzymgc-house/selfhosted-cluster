@@ -1,0 +1,3 @@
+description: S3 bucket prefix for shared bucket organization
+value: windmill-terraform
+is_secret: false

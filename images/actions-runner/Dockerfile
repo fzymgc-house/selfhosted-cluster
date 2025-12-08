@@ -14,13 +14,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg \
     lsb-release \
     jq \
+    libcap2-bin \
     && rm -rf /var/lib/apt/lists/*
 
 # Install HashiCorp Vault CLI
+# Note: setcap -r removes IPC_LOCK capability that causes "Operation not permitted" in containers
 RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg \
     && echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
       | tee /etc/apt/sources.list.d/hashicorp.list \
     && apt-get update && apt-get install -y vault \
+    && setcap -r /usr/bin/vault \
     && rm -rf /var/lib/apt/lists/*
 
 # Install GitHub CLI

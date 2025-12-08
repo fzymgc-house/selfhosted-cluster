@@ -1,7 +1,3 @@
+description: GitHub App installation ID for main branch promotion
 value: ''
 is_secret: false
-description: GitHub App installation ID for main branch promotion
-is_oauth: false
-is_expired: false
-is_refreshed: false
-is_linked: false

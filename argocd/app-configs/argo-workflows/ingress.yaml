@@ -36,4 +36,3 @@ spec:
           port: 2746
   tls:
     secretName: argo-workflows-tls
-

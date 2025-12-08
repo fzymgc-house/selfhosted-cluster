@@ -42,5 +42,3 @@ spec:
   ensure: present
   name: authentik
   owner: authentik
-
-

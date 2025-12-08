@@ -50,13 +50,13 @@ resource "kubernetes_secret" "argocd_selfhosted_repo" {
   type = "Opaque"
 
   data = {
-    name                     = "selfhosted-cluster"
-    project                  = "default"
-    type                     = "git"
-    url                      = "https://github.com/fzymgc-house/selfhosted-cluster"
-    githubAppID              = "1759545"
-    githubAppInstallationID  = "80236294"
-    githubAppPrivateKey      = base64decode(data.vault_kv_secret_v2.argocd_config.data["github_app_private_key"])
+    name                    = "selfhosted-cluster"
+    project                 = "default"
+    type                    = "git"
+    url                     = "https://github.com/fzymgc-house/selfhosted-cluster"
+    githubAppID             = "1759545"
+    githubAppInstallationID = "80236294"
+    githubAppPrivateKey     = base64decode(data.vault_kv_secret_v2.argocd_config.data["github_app_private_key"])
   }
 
   depends_on = [helm_release.external_secrets_operator]
@@ -146,7 +146,7 @@ resource "helm_release" "argocd" {
     }
     configs = {
       cm = {
-        url = "https://argocd.${var.cluster_domain}"
+        url          = "https://argocd.${var.cluster_domain}"
         "dex.config" = <<-EOT
           connectors:
             - type: oidc

@@ -42,4 +42,3 @@ spec:
           port: 12000
   tls:
     secretName: argo-events-tls
-

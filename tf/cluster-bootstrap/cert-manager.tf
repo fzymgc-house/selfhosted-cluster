@@ -25,9 +25,9 @@ resource "helm_release" "cert_manager" {
     crds = {
       enabled = true
     }
-    replicaCount = 2
-    dns01RecursiveNameservers      = "https://1.1.1.1/dns-query"
-    dns01RecursiveNameserversOnly  = true
+    replicaCount                  = 2
+    dns01RecursiveNameservers     = "https://1.1.1.1/dns-query"
+    dns01RecursiveNameserversOnly = true
     podDisruptionBudget = {
       enabled = true
     }

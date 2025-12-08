@@ -11,5 +11,3 @@ spec:
       dashboards: grafana
   folder: Prometheus
   url: https://raw.githubusercontent.com/rfmoz/grafana-dashboards/refs/heads/master/prometheus/node-exporter-full.json
-
-

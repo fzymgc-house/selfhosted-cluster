@@ -1,6 +1,6 @@
 """Initialize Terraform workspace."""
+
 import subprocess
-import os
 from pathlib import Path
 from typing import TypedDict
 
@@ -15,12 +15,7 @@ class s3(TypedDict):
     pathStyle: bool
 
 
-def main(
-    workspace_path: str,
-    module_path: str,
-    s3: s3,
-    s3_bucket_prefix: str = ""
-):
+def main(workspace_path: str, module_path: str, s3: s3, s3_bucket_prefix: str = ""):
     """
     Initialize Terraform module.
 
@@ -40,7 +35,7 @@ def main(
 
     # Configure backend with bucket prefix
     # Prefix allows sharing a bucket with other services
-    prefix = s3_bucket_prefix.strip('/') if s3_bucket_prefix else ""
+    prefix = s3_bucket_prefix.strip("/") if s3_bucket_prefix else ""
     state_key = f"{prefix}/terraform/{module_path}/terraform.tfstate" if prefix else f"terraform/{module_path}/terraform.tfstate"
 
     backend_config = [
@@ -53,22 +48,11 @@ def main(
         "-backend-config=skip_credentials_validation=true",
         "-backend-config=skip_metadata_api_check=true",
         "-backend-config=skip_region_validation=true",
-        "-backend-config=use_path_style=false"
+        "-backend-config=use_path_style=false",
     ]
 
     # Run terraform init
     cmd = ["terraform", "init"] + backend_config
-    result = subprocess.run(
-        cmd,
-        cwd=str(module_dir),
-        capture_output=True,
-        text=True,
-        check=True
-    )
+    result = subprocess.run(cmd, cwd=str(module_dir), capture_output=True, text=True, check=True)
 
-    return {
-        "module_path": module_path,
-        "module_dir": str(module_dir),
-        "initialized": True,
-        "output": result.stdout
-    }
+    return {"module_path": module_path, "module_dir": str(module_dir), "initialized": True, "output": result.stdout}

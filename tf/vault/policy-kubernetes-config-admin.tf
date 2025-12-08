@@ -37,4 +37,3 @@ path "sys/mounts/auth/kubernetes" {
 }
 EOT
 }
-

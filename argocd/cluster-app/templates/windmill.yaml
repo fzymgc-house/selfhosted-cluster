@@ -85,6 +85,7 @@ spec:
                 # -- Extra environment variables to apply to the pods
                 extraEnv:
                   - name: INIT_SCRIPT
+                    # yamllint disable rule:line-length
                     value: |
                       curl -fsSL https://apt.releases.hashicorp.com/gpg \
                         | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg \
@@ -93,6 +94,7 @@ spec:
                       && apt update  -q \
                       && apt install -qy vault \
                       && setcap -r /usr/bin/vault
+                    # yamllint enable rule:line-length
                 # -- Extra sidecar containers
                 extraContainers: []
                 mode: "worker"

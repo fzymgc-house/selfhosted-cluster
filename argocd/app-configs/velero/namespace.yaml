@@ -5,5 +5,3 @@ metadata:
   labels:
     app.kubernetes.io/name: velero
     app.kubernetes.io/instance: velero
-
-

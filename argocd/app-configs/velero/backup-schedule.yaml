@@ -66,5 +66,3 @@ spec:
       - certificates
     storageLocation: default
     ttl: 2160h  # 90 days
-
-

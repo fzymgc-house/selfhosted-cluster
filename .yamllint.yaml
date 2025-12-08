@@ -1,0 +1,52 @@
+---
+extends: default
+
+rules:
+  # Enforce consistent indentation (allow 2 or 4 spaces, but must be consistent)
+  indentation:
+    spaces: consistent
+    indent-sequences: consistent
+    check-multi-line-strings: false
+
+  # Allow longer lines for Kubernetes manifests and URLs
+  line-length:
+    max: 200
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+
+  # Document start marker (not required - too many existing files without it)
+  document-start: disable
+
+  # Allow inline comments
+  comments:
+    require-starting-space: true
+    ignore-shebangs: true
+    min-spaces-from-content: 1
+
+  # Truthy values - be explicit
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no']
+    check-keys: false
+
+  # Braces and brackets spacing (allow 0-1 spaces for flexibility)
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+
+  # Empty lines
+  empty-lines:
+    max: 2
+    max-start: 0
+    max-end: 0
+
+ignore:
+  # Skip Jinja2 templates (contain {{ }} which fails validation)
+  - "**/*.j2"
+  # Skip vendored/generated files
+  - ".venv/**"
+  - "vendor/**"
+  # Skip Ansible files (use ansible-lint instead - different indentation conventions)
+  - "ansible/**"

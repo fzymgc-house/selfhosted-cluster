@@ -1,7 +1,9 @@
 """Send status notification to Discord."""
-import requests
+
 from datetime import datetime
 from typing import TypedDict
+
+import requests
 
 
 class discord_bot_configuration(TypedDict):
@@ -14,13 +16,7 @@ class c_discord_bot_token_configuration(TypedDict):
     channel_id: str
 
 
-def main(
-    discord: discord_bot_configuration,
-    discord_bot_token: c_discord_bot_token_configuration,
-    module: str,
-    status: str,
-    details: str
-):
+def main(discord: discord_bot_configuration, discord_bot_token: c_discord_bot_token_configuration, module: str, status: str, details: str):
     """
     Send status notification to Discord.
 
@@ -37,12 +33,12 @@ def main(
     config = {
         "success": {
             "title": "✅ Terraform Apply Complete",
-            "color": 0x00FF00  # Green
+            "color": 0x00FF00,  # Green
         },
         "failed": {
             "title": "❌ Terraform Apply Failed",
-            "color": 0xFF0000  # Red
-        }
+            "color": 0xFF0000,  # Red
+        },
     }
 
     status_config = config.get(status, config["failed"])
@@ -51,29 +47,22 @@ def main(
     truncated_details = details[:1000] + "..." if len(details) > 1000 else details
 
     payload = {
-        "embeds": [{
-            "title": status_config["title"],
-            "description": f"Module: **{module}**",
-            "color": status_config["color"],
-            "fields": [{
-                "name": "Details",
-                "value": f"```\n{truncated_details}\n```",
-                "inline": False
-            }],
-            "timestamp": datetime.utcnow().isoformat(),
-            "footer": {
-                "text": "Windmill Terraform GitOps"
+        "embeds": [
+            {
+                "title": status_config["title"],
+                "description": f"Module: **{module}**",
+                "color": status_config["color"],
+                "fields": [{"name": "Details", "value": f"```\n{truncated_details}\n```", "inline": False}],
+                "timestamp": datetime.utcnow().isoformat(),
+                "footer": {"text": "Windmill Terraform GitOps"},
             }
-        }]
+        ]
     }
 
     response = requests.post(
         f"https://discord.com/api/v10/channels/{discord_bot_token['channel_id']}/messages",
-        headers={
-            "Authorization": f"Bot {discord_bot_token['token']}",
-            "Content-Type": "application/json"
-        },
-        json=payload
+        headers={"Authorization": f"Bot {discord_bot_token['token']}", "Content-Type": "application/json"},
+        json=payload,
     )
 
     if not response.ok:

@@ -44,5 +44,3 @@ spec:
   ensure: present
   name: grafana
   owner: grafana
-
-

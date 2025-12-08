@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
       targetRevision: HEAD
-      path: argocd/app-configs/shared-resources      
+      path: argocd/app-configs/shared-resources
   destination:
     server: https://kubernetes.default.svc
     namespace: shared-resources
@@ -20,4 +20,3 @@ spec:
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
-

@@ -16,7 +16,7 @@ spec:
       data:
         access_key: "{{ .access_key | b64enc }}"
         secret_key: "{{ .secret_key | b64enc }}"
-  
+
   data:
     - secretKey: access_key
       remoteRef:

@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
       targetRevision: HEAD
-      path: argocd/app-configs/gateway-api      
+      path: argocd/app-configs/gateway-api
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system
@@ -20,4 +20,3 @@ spec:
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
-  

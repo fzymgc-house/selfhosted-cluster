@@ -48,4 +48,3 @@ spec:
     app.kubernetes.io/instance: vault
     app.kubernetes.io/name: vault
     apps.kubernetes.io/pod-index: "2"
-

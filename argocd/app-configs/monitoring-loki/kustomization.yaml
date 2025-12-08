@@ -5,5 +5,3 @@ namespace: loki
 
 resources:
   - ./external-secret-s3.yaml
-  
-

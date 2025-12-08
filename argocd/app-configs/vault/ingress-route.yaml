@@ -26,5 +26,3 @@ spec:
           port: 8200
   tls:
     passthrough: true
-
-

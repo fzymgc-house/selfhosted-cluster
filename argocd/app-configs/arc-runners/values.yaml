@@ -11,7 +11,7 @@ controllerServiceAccount:
 runnerScaleSetName: "fzymgc-house-cluster-runners"
 
 # Autoscaling configuration
-minRunners: 0
+minRunners: 1
 maxRunners: 3
 
 # Runner labels for workflow targeting

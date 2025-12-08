@@ -7,6 +7,11 @@ metadata:
     argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration
   sources:
     - repoURL: ghcr.io/actions/actions-runner-controller-charts
       chart: gha-runner-scale-set-controller

@@ -1,0 +1,107 @@
+# SPDX-License-Identifier: MIT
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow
+---
+name: Build Actions Runner Image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'images/actions-runner/**'
+  workflow_dispatch:
+    inputs:
+      runner_version:
+        description: 'Actions runner version (e.g., 2.320.0)'
+        required: false
+        default: '2.320.0'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/actions-runner
+  RUNNER_VERSION: ${{ inputs.runner_version || '2.320.0' }}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-amd64:
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=4cpu-linux-x64
+      - image=ubuntu24-full-x64
+      - spot=lowest-price
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push amd64 image
+        uses: docker/build-push-action@v6
+        with:
+          context: images/actions-runner
+          push: true
+          build-args: |
+            RUNNER_VERSION=${{ env.RUNNER_VERSION }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.RUNNER_VERSION }}-amd64
+
+  build-arm64:
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=4cpu-linux-arm64
+      - image=ubuntu24-full-arm64
+      - spot=lowest-price
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push arm64 image
+        uses: docker/build-push-action@v6
+        with:
+          context: images/actions-runner
+          push: true
+          build-args: |
+            RUNNER_VERSION=${{ env.RUNNER_VERSION }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.RUNNER_VERSION }}-arm64
+
+  create-manifest:
+    needs: [build-amd64, build-arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push multi-arch manifest
+        run: |
+          docker manifest create "${REGISTRY}/${IMAGE_NAME}:${RUNNER_VERSION}" \
+            "${REGISTRY}/${IMAGE_NAME}:${RUNNER_VERSION}-amd64" \
+            "${REGISTRY}/${IMAGE_NAME}:${RUNNER_VERSION}-arm64"
+
+          docker manifest push "${REGISTRY}/${IMAGE_NAME}:${RUNNER_VERSION}"
+
+          # Also tag as latest
+          docker manifest create "${REGISTRY}/${IMAGE_NAME}:latest" \
+            "${REGISTRY}/${IMAGE_NAME}:${RUNNER_VERSION}-amd64" \
+            "${REGISTRY}/${IMAGE_NAME}:${RUNNER_VERSION}-arm64"
+
+          docker manifest push "${REGISTRY}/${IMAGE_NAME}:latest"

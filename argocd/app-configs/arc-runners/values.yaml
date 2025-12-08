@@ -29,6 +29,9 @@ template:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
         imagePullPolicy: IfNotPresent
+        env:
+          - name: ACTIONS_RUNNER_REQUIRE_JOB_CONTAINER
+            value: "false"
         resources:
           limits:
             cpu: "2"

@@ -432,3 +432,4 @@ Defined in `ansible/inventory/`:
 - When interacting with Authentik, the API documentation is here: https://api.goauthentik.io
  The auth token is in vault, the secret is: fzymgc-house/cluster/authentik , the key: terraform_token
 - Do not attempt to use the devcontainer, it's for engineers to use manually
+- You MUST NOT delete the windmill-staging branch

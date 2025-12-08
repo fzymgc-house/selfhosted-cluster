@@ -7,6 +7,11 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
+  ignoreDifferences:
+    - group: actions.github.com
+      kind: AutoscalingRunnerSet
+      jsonPointers:
+        - /spec/template/spec/ephemeral
   sources:
     - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
       targetRevision: HEAD

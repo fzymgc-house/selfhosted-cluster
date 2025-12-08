@@ -25,6 +25,9 @@ listenerMetrics: {}
 # Based on k8s >= 1.29 sidecar container pattern
 template:
   spec:
+    # Pod-level security context - add docker group (123) for socket access
+    securityContext:
+      supplementalGroups: [123]
     initContainers:
       - name: init-dind-externals
         image: ghcr.io/actions/actions-runner:latest

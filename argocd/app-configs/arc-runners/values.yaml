@@ -2,6 +2,11 @@
 githubConfigUrl: "https://github.com/fzymgc-house"
 githubConfigSecret: github-token
 
+# Controller service account (in arc-systems namespace)
+controllerServiceAccount:
+  name: arc-controller-gha-rs-controller
+  namespace: arc-systems
+
 # Runner scale set name (visible in GitHub UI)
 runnerScaleSetName: "fzymgc-house-cluster-runners"
 

@@ -6,6 +6,10 @@ WINDMILL_URL="https://windmill.fzymgc.house"
 DRY_RUN=false
 WORKSPACE=""
 
+# Create temp file for API responses (cleaned up on exit)
+TEMP_RESPONSE=$(mktemp)
+trap 'rm -f "$TEMP_RESPONSE"' EXIT
+
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -61,9 +65,14 @@ if $DRY_RUN; then
 fi
 echo ""
 
-# Get Windmill token from Vault (single token works for all workspaces)
+# Get Windmill token from Vault (single token works for all workspaces - tokens are per-user)
 echo "📦 Getting Windmill token from Vault..."
-WINDMILL_TOKEN=$(vault kv get -field=windmill_gitops_token secret/fzymgc-house/cluster/windmill)
+if ! WINDMILL_TOKEN=$(vault kv get -field=windmill_gitops_token secret/fzymgc-house/cluster/windmill 2>&1); then
+    echo "❌ Failed to get Windmill token from Vault"
+    echo "   Error: $WINDMILL_TOKEN"
+    echo "   Ensure VAULT_TOKEN is set and has access to secret/fzymgc-house/cluster/windmill"
+    exit 1
+fi
 
 # Get all secrets from Vault
 echo "📦 Retrieving secrets from Vault..."
@@ -90,19 +99,21 @@ get_variable_state() {
 
     # Try to GET the variable from Windmill
     local http_code
-    http_code=$(curl -s -w "%{http_code}" -o /tmp/var_response.json \
+    http_code=$(curl -s -w "%{http_code}" -o "$TEMP_RESPONSE" \
         "${WINDMILL_URL}/api/w/${WINDMILL_WORKSPACE}/variables/get/${var_path}" \
         -H "Authorization: Bearer ${WINDMILL_TOKEN}" 2>/dev/null)
 
     if [ "$http_code" = "404" ]; then
         echo "missing"
+    elif [ "$http_code" != "200" ]; then
+        echo "error"
     elif [ "$is_secret" = "true" ]; then
         # Can't compare secret values - report exists
         echo "exists"
     else
         # Compare non-secret values
         local current
-        current=$(jq -r '.value // empty' /tmp/var_response.json 2>/dev/null)
+        current=$(jq -r '.value // empty' "$TEMP_RESPONSE" 2>/dev/null)
         if [ "$current" = "$new_value" ]; then
             echo "same"
         else
@@ -145,6 +156,9 @@ update_variable() {
             exists)
                 echo "🔍 $var_path: EXISTS (secret) - would update"
                 ;;
+            error)
+                echo "🔍 $var_path: ERROR checking state - would attempt create"
+                ;;
         esac
         return
     fi
@@ -157,9 +171,10 @@ update_variable() {
 
     echo "🔄 Updating variable: $var_path ($state)"
 
-    if [ "$state" = "missing" ]; then
+    local http_code
+    if [ "$state" = "missing" ] || [ "$state" = "error" ]; then
         # Create new variable
-        curl -s -X POST \
+        http_code=$(curl -s -w "%{http_code}" -o "$TEMP_RESPONSE" -X POST \
             "${WINDMILL_URL}/api/w/${WINDMILL_WORKSPACE}/variables/create" \
             -H "Authorization: Bearer ${WINDMILL_TOKEN}" \
             -H "Content-Type: application/json" \
@@ -168,10 +183,23 @@ update_variable() {
                 \"value\": \"${var_value}\",
                 \"is_secret\": ${is_secret},
                 \"description\": \"${description}\"
-            }" > /dev/null
+            }")
+        if [ "$http_code" != "200" ] && [ "$http_code" != "201" ]; then
+            echo "   ⚠️  Create failed (HTTP $http_code), trying update..."
+            # Fall through to update
+            http_code=$(curl -s -w "%{http_code}" -o "$TEMP_RESPONSE" -X POST \
+                "${WINDMILL_URL}/api/w/${WINDMILL_WORKSPACE}/variables/update/${var_path}" \
+                -H "Authorization: Bearer ${WINDMILL_TOKEN}" \
+                -H "Content-Type: application/json" \
+                -d "{
+                    \"value\": \"${var_value}\",
+                    \"is_secret\": ${is_secret},
+                    \"description\": \"${description}\"
+                }")
+        fi
     else
         # Update existing variable
-        curl -s -X POST \
+        http_code=$(curl -s -w "%{http_code}" -o "$TEMP_RESPONSE" -X POST \
             "${WINDMILL_URL}/api/w/${WINDMILL_WORKSPACE}/variables/update/${var_path}" \
             -H "Authorization: Bearer ${WINDMILL_TOKEN}" \
             -H "Content-Type: application/json" \
@@ -179,7 +207,11 @@ update_variable() {
                 \"value\": \"${var_value}\",
                 \"is_secret\": ${is_secret},
                 \"description\": \"${description}\"
-            }" > /dev/null
+            }")
+    fi
+
+    if [ "$http_code" != "200" ] && [ "$http_code" != "201" ]; then
+        echo "   ❌ Failed to update $var_path (HTTP $http_code)"
     fi
 }
 

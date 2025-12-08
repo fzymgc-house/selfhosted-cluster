@@ -20,17 +20,14 @@ runnerGroup: "Default"
 # Listener metrics (required in 0.13.0 for listener to start)
 listenerMetrics: {}
 
-# Non-ephemeral runners (for debugging connectivity)
+# Runner pod template - simplified without kubernetes containerMode
+# Jobs will run directly on the runner pod
 template:
   spec:
-    ephemeral: false
     containers:
       - name: runner
         image: ghcr.io/actions/actions-runner:latest
         imagePullPolicy: IfNotPresent
-        env:
-          - name: ACTIONS_RUNNER_REQUIRE_JOB_CONTAINER
-            value: "false"
         resources:
           limits:
             cpu: "2"
@@ -41,13 +38,3 @@ template:
         securityContext:
           runAsNonRoot: true
           runAsUser: 1000
-
-# Pod security
-containerMode:
-  type: "kubernetes"
-  kubernetesModeWorkVolumeClaim:
-    accessModes: ["ReadWriteOnce"]
-    storageClassName: "local-path"
-    resources:
-      requests:
-        storage: 10Gi

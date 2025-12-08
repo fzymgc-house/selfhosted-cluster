@@ -11,6 +11,18 @@ This guide documents the migration from 1Password-based secrets to HashiCorp Vau
 - Terraform modules (removing onepassword provider)
 - Development environment (.envrc, devcontainer)
 
+## Completed Migrations
+
+### Ansible (Completed 2025-12-08)
+
+All 1Password references have been removed from Ansible:
+- Dead task files deleted (argocd, cert-manager, external-secrets, longhorn, metallb, prometheus-crds)
+- Associated files directories deleted (cert-manager/, traefik/, vault/, gateway-api-setup/)
+- Orphaned variables removed (cloudflare_api_token duplicate, tailscale_auth_key)
+
+The only Ansible secret lookup now uses Vault:
+- `cloudflare_api_token` in `inventory/group_vars/tp_cluster_nodes.yml`
+
 ## Secret Inventory
 
 ### Secrets to Migrate

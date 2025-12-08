@@ -2,7 +2,7 @@
 # Custom GitHub Actions runner with internal CA certificates and pre-installed tools
 # https://github.com/fzymgc-house/selfhosted-cluster/issues/220
 
-ARG RUNNER_VERSION=2.320.0
+ARG RUNNER_VERSION=2.330.0
 FROM ghcr.io/actions/actions-runner:${RUNNER_VERSION}
 
 USER root

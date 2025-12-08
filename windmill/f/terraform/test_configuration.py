@@ -141,7 +141,7 @@ def main(
     # Summary
     all_success = all(r["success"] for r in results.values() if r["tested"])
 
-    # Done
+    # Finito
     return {
         "overall_success": all_success,
         "results": results,

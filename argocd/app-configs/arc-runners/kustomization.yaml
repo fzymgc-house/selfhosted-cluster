@@ -5,6 +5,7 @@ namespace: arc-runners
 
 resources:
   - namespace.yaml
+  - rbac.yaml
   - github-token-secret.yaml
 
 # Helm values will be referenced by ArgoCD application

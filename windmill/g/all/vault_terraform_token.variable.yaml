@@ -1,0 +1,4 @@
+description: Vault token for Terraform operations
+value: >-
+  7Q1A87pYDbUhKUmZLgddlXwnCtGzq6cXPVB3G2R4KCAlvFtsI5Osee06UmluxRpVDSzOFCP0OQLBRaWTGFpOgsTQrjpzyFj5DqPPFoUR4GdAA81U47N+tOLaOjGmF1S8
+is_secret: true

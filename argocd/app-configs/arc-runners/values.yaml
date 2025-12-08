@@ -35,6 +35,9 @@ template:
           # Trust the cluster's root CA for Node.js actions (e.g., hashicorp/vault-action)
           - name: NODE_EXTRA_CA_CERTS
             value: /etc/ssl/certs/fzymgc-root-ca.crt
+          # Trust the cluster's root CA for vault CLI
+          - name: VAULT_CACERT
+            value: /etc/ssl/certs/fzymgc-root-ca.crt
         resources:
           limits:
             cpu: "2"

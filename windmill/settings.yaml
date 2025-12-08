@@ -2,7 +2,7 @@ name: terraform-gitops-staging
 auto_invite_as: developer
 auto_invite_enabled: false
 auto_invite_mode: invite
-color: '#e89697'
+color: '#3cf6f1'
 default_scripts:
   order:
     - python3
@@ -64,22 +64,24 @@ git_sync:
         exclude_path: []
         extra_include_path: []
         include_path:
-          - f/**
-          - u/**
+          - '**'
         include_type:
           - script
           - flow
           - app
           - folder
+          - variable
+          - resource
           - resourcetype
+          - secret
           - schedule
+          - trigger
+          - user
           - group
           - settings
-          - resource
-          - user
-          - trigger
       use_individual_branch: true
 operator_settings:
+  assets: false
   audit_logs: true
   folders: true
   groups: true

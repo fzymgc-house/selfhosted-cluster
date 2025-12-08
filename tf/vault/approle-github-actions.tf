@@ -1,3 +1,4 @@
+# -*- coding: utf-8; mode: terraform -*-
 # SPDX-License-Identifier: MIT
 
 # Enable AppRole auth backend
@@ -15,7 +16,7 @@ resource "vault_approle_auth_backend_role" "github_actions" {
   token_ttl     = 600  # 10 minutes
   token_max_ttl = 1800 # 30 minutes
 
-  # Non-expiring for GitHub secrets storage
+  # Non-expiring secret_id for storage in GitHub Actions secrets
   secret_id_ttl      = 0
   secret_id_num_uses = 0
 }

@@ -1,0 +1,87 @@
+# SPDX-License-Identifier: MIT
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow
+
+name: Windmill - Deploy to Production
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+    paths:
+      - 'windmill/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  WINDMILL_WORKSPACE: terraform-gitops-prod
+  WINDMILL_URL: https://windmill.fzymgc.house
+
+jobs:
+  deploy:
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'windmill')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Windmill CLI
+        run: npm install -g windmill-cli
+
+      - name: Configure Windmill workspace
+        env:
+          WMILL_TOKEN: ${{ secrets.WMILL_TOKEN_PROD }}
+        run: |
+          cd windmill
+          wmill workspace add ${{ env.WINDMILL_WORKSPACE }} ${{ env.WINDMILL_WORKSPACE }} "${{ env.WINDMILL_URL }}" "${WMILL_TOKEN}"
+
+      - name: Deploy to production
+        run: |
+          cd windmill
+          wmill sync push --fail-on-error
+
+      - name: Validate deployment
+        run: |
+          cd windmill
+          echo "Validating workspace deployment..."
+
+          # Check workspace exists
+          wmill workspace list | grep -q "${{ env.WINDMILL_WORKSPACE }}" || {
+            echo "❌ Workspace ${{ env.WINDMILL_WORKSPACE }} not found"
+            exit 1
+          }
+          echo "✅ Workspace exists"
+
+          # Test workspace access by listing flows
+          wmill flow list --show-archived || {
+            echo "❌ Cannot access workspace resources"
+            exit 1
+          }
+          echo "✅ Workspace is accessible and functional"
+
+      - name: Comment on PR
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr comment "${PR_NUMBER}" \
+            --body "✅ Successfully deployed to production workspace **${{ env.WINDMILL_WORKSPACE }}**"
+
+      - name: Comment on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr comment "${PR_NUMBER}" \
+            --body "❌ Production deployment failed. Check [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."

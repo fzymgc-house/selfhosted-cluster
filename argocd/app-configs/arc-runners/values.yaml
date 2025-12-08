@@ -14,12 +14,8 @@ runnerScaleSetName: "fzymgc-house-cluster-runners"
 minRunners: 0
 maxRunners: 3
 
-# Runner labels for workflow targeting
+# Runner group configuration
 runnerGroup: "Default"
-labels:
-  - fzymgc-house
-  - self-hosted-cluster
-  - windmill-sync
 
 # Ephemeral runners (destroyed after each job)
 template:

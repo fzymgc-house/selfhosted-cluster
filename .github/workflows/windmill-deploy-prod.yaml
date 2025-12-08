@@ -54,19 +54,12 @@ jobs:
           cd windmill
           echo "Validating workspace deployment..."
 
-          # Check workspace exists
-          wmill workspace list | grep -q "${{ env.WINDMILL_WORKSPACE }}" || {
-            echo "❌ Workspace ${{ env.WINDMILL_WORKSPACE }} not found"
+          # Verify workspace authentication
+          wmill workspace whoami --workspace ${{ env.WINDMILL_WORKSPACE }} || {
+            echo "❌ Cannot authenticate to workspace ${{ env.WINDMILL_WORKSPACE }}"
             exit 1
           }
-          echo "✅ Workspace exists"
-
-          # Test workspace access by listing flows
-          wmill flow list --show-archived --workspace ${{ env.WINDMILL_WORKSPACE }} || {
-            echo "❌ Cannot access workspace resources"
-            exit 1
-          }
-          echo "✅ Workspace is accessible and functional"
+          echo "✅ Workspace is accessible and authenticated"
 
       - name: Comment on PR
         if: success()

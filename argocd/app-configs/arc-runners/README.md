@@ -21,6 +21,8 @@ ARC uses a two-component architecture:
 
 ### Docker-in-Docker (dind) Mode
 
+> **Note**: The `arc-runners` namespace requires `privileged` PodSecurity policy because the dind sidecar container requires `securityContext.privileged: true` to run Docker-in-Docker.
+
 We use **manual dind configuration** instead of the built-in `containerMode.type: "dind"` for the following reasons:
 
 1. **Custom Storage Class**: The built-in dind mode uses `emptyDir` for all volumes. Our manual configuration allows us to use `longhorn` storage for the work volume, providing better reliability and observability.
@@ -132,6 +134,14 @@ kubectl --context fzymgc-house describe externalsecret github-token -n arc-runne
 - Vault path incorrect
 - Secret keys don't match expected names
 - ClusterSecretStore not configured
+
+### Runner Pod Fails with PodSecurity Violation
+
+**Symptom**: Runner pod fails to create with error: `violates PodSecurity "baseline:latest": privileged`
+
+**Cause**: The namespace has `baseline` PodSecurity policy, but dind requires `privileged`.
+
+**Solution**: Ensure namespace has `pod-security.kubernetes.io/enforce: privileged` label.
 
 ### Runners Not Registering with GitHub
 

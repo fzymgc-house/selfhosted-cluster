@@ -13,6 +13,9 @@ spec:
       jsonPointers:
         - /spec/template/spec/ephemeral
   sources:
+    - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
+      targetRevision: HEAD
+      path: argocd/app-configs/arc-runners
     - repoURL: ghcr.io/actions/actions-runner-controller-charts
       chart: gha-runner-scale-set
       targetRevision: 0.9.3

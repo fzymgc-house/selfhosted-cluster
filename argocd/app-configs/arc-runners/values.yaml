@@ -31,7 +31,7 @@ template:
   spec:
     containers:
       - name: runner
-        image: ghcr.io/fzymgc-house/actions-runner:2.320.0
+        image: ghcr.io/fzymgc-house/actions-runner:2.330.0
         command: ["/home/runner/run.sh"]
         resources:
           limits:

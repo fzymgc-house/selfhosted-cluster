@@ -1,0 +1,15 @@
+name: Test ARC Runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: [self-hosted, windmill-sync]
+    steps:
+      - name: Test runner
+        run: |
+          echo "Runner hostname: $(hostname)"
+          echo "Runner OS: $(uname -a)"
+          echo "Runner working directory: $(pwd)"
+          echo "Test successful!"

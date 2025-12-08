@@ -21,15 +21,12 @@ ARC uses a two-component architecture:
 
 ### Docker-in-Docker (dind) Mode
 
-> **Note**: The `arc-runners` namespace requires `privileged` PodSecurity policy because the dind sidecar container requires `securityContext.privileged: true` to run Docker-in-Docker.
+We use the **built-in `containerMode.type: "dind"`** which automatically configures:
+- Docker daemon sidecar container
+- Shared volumes for docker socket and work directory
+- Proper security context for privileged operations
 
-We use **manual dind configuration** instead of the built-in `containerMode.type: "dind"` for the following reasons:
-
-1. **Custom Storage Class**: The built-in dind mode uses `emptyDir` for all volumes. Our manual configuration allows us to use `longhorn` storage for the work volume, providing better reliability and observability.
-
-2. **Resource Customization**: Manual configuration allows us to set specific resource limits on the runner container.
-
-3. **Sidecar Pattern (k8s >= 1.29)**: Our cluster runs k8s v1.34.x, so we use the sidecar container pattern where dind runs as an init container with `restartPolicy: Always`.
+> **Note**: The `arc-runners` namespace requires `privileged` PodSecurity policy because the dind sidecar container requires `securityContext.privileged: true`.
 
 ### Authentication
 
@@ -53,9 +50,7 @@ Credentials stored in Vault at `secret/fzymgc-house/cluster/github`:
 
 ### Storage
 
-- **Work Volume**: 50Gi `longhorn` PVC (ephemeral, created per runner pod)
-- **dind-sock**: `emptyDir` (Docker socket)
-- **dind-externals**: `emptyDir` (Container hooks)
+Built-in dind mode uses `emptyDir` volumes for simplicity and reliability.
 
 ## Important Implementation Notes
 
@@ -101,7 +96,6 @@ controllerServiceAccount:
 | `github-token-secret.yaml` | ExternalSecret for GitHub App credentials |
 | `kustomization.yaml` | Kustomize configuration |
 | `namespace.yaml` | Namespace definition |
-| `rbac.yaml` | RBAC configuration (if needed) |
 
 ## Troubleshooting
 
@@ -177,5 +171,4 @@ kubectl --context fzymgc-house get autoscalingrunnerset -n arc-runners
 ## Related Documentation
 
 - [GitHub ARC Documentation](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners-with-actions-runner-controller)
-- [Migration Plan](../actions-runner-controller/ARC_MIGRATION_PLAN.md)
 - [ARC Helm Chart Values](https://github.com/actions/actions-runner-controller/blob/master/charts/gha-runner-scale-set/values.yaml)

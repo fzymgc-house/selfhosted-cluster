@@ -51,7 +51,7 @@ Credentials stored in Vault at `secret/fzymgc-house/cluster/github`:
 
 ### Storage
 
-- **Work Volume**: 10Gi `longhorn` PVC (ephemeral, created per runner pod)
+- **Work Volume**: 50Gi `longhorn` PVC (ephemeral, created per runner pod)
 - **dind-sock**: `emptyDir` (Docker socket)
 - **dind-externals**: `emptyDir` (Container hooks)
 

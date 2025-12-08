@@ -62,7 +62,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git checkout windmill-staging
+          git checkout -B windmill-staging origin/windmill-staging
           git merge origin/main --no-edit -m "chore: Sync main to windmill-staging
 
           Auto-sync non-windmill changes from main branch.

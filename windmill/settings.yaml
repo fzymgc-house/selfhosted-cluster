@@ -2,7 +2,7 @@ name: terraform-gitops-staging
 auto_invite_as: developer
 auto_invite_enabled: false
 auto_invite_mode: invite
-color: '#e89697'
+color: '#3cf6f1'
 default_scripts:
   order:
     - python3

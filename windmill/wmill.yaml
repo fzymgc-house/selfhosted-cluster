@@ -1,4 +1,4 @@
-workspace: terraform-gitops-staging
+workspace: terraform-gitops-prod
 version: v2
 defaultRuntime: python3
 defaultTs: bun
@@ -9,7 +9,7 @@ includes:
 excludes: []
 
 # Sync configuration - sync everything except workspace encryption key
-# This is the staging workspace configuration
+# This is the production workspace configuration
 skipVariables: false
 skipResources: false
 skipResourceTypes: false

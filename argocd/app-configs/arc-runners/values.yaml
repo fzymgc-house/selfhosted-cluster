@@ -17,6 +17,9 @@ maxRunners: 3
 # Runner group configuration
 runnerGroup: "Default"
 
+# Listener metrics (required in 0.13.0 for listener to start)
+listenerMetrics: {}
+
 # Ephemeral runners (destroyed after each job)
 template:
   spec:

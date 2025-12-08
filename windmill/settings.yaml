@@ -1,0 +1,68 @@
+name: terraform-gitops-staging
+auto_invite_as: developer
+auto_invite_enabled: false
+auto_invite_mode: invite
+color: '#e89697'
+default_scripts:
+  order:
+    - python3
+    - bun
+    - deno
+    - bash
+    - go
+    - nativets
+    - bunnative
+    - postgresql
+    - mysql
+    - bigquery
+    - oracledb
+    - snowflake
+    - mssql
+    - graphql
+    - powershell
+    - php
+    - rust
+    - ansible
+    - csharp
+    - docker
+    - nu
+    - java
+    - duckdb
+    - ruby
+error_handler_muted_on_cancel: false
+git_sync:
+  repositories:
+    - exclude_types_override: []
+      git_repo_resource_path: '$res:u/sean/indebted_git_repository'
+      group_by_folder: false
+      script_path: hub/28081/sync-script-to-git-repo-windmill
+      settings:
+        exclude_path: []
+        extra_include_path: []
+        include_path:
+          - '**'
+        include_type:
+          - script
+          - flow
+          - app
+          - folder
+          - variable
+          - resource
+          - resourcetype
+          - secret
+          - schedule
+          - trigger
+          - user
+          - group
+          - settings
+      use_individual_branch: false
+operator_settings:
+  audit_logs: true
+  folders: true
+  groups: true
+  resources: true
+  runs: true
+  schedules: true
+  triggers: true
+  variables: true
+  workers: true

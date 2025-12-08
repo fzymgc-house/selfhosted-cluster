@@ -5,7 +5,7 @@ on:
 
 jobs:
   test:
-    runs-on: [self-hosted, windmill-sync]
+    runs-on: fzymgc-house-cluster-runners
     steps:
       - name: Test runner
         run: |

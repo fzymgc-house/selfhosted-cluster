@@ -13,6 +13,7 @@ spec:
       jsonPointers:
         - /metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration
         - /status
+        - /spec/preserveUnknownFields
   sources:
     - repoURL: ghcr.io/actions/actions-runner-controller-charts
       chart: gha-runner-scale-set-controller

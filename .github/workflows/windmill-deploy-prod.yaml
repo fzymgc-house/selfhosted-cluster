@@ -22,7 +22,7 @@ env:
 jobs:
   deploy:
     if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'windmill')
-    runs-on: ubuntu-latest
+    runs-on: fzymgc-house-cluster-runners
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

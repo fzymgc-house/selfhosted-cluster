@@ -91,13 +91,18 @@ template:
   spec:
     containers:
       - name: runner
-        image: ghcr.io/fzymgc-house/actions-runner:2.320.0
+        image: ghcr.io/fzymgc-house/actions-runner:2.330.0
         command: ["/home/runner/run.sh"]
+        env:
+          # Node.js doesn't use system CA store by default
+          - name: NODE_EXTRA_CA_CERTS
+            value: /etc/ssl/certs/ca-certificates.crt
 ```
 
-With this custom image, the following environment variables and volume mounts become unnecessary and can be removed:
-- `NODE_EXTRA_CA_CERTS`
-- `VAULT_CACERT`
+**Important**: While the custom image includes CA certificates in the system trust store, Node.js-based GitHub Actions (like `hashicorp/vault-action`) don't use the system store by default. The `NODE_EXTRA_CA_CERTS` environment variable is required for these actions.
+
+With this custom image, the following volume mounts become unnecessary and can be removed:
+- `VAULT_CACERT` (vault CLI uses system store)
 - `fzymgc-root-ca` volume mount
 
 ## Version Compatibility
@@ -112,14 +117,15 @@ The image version corresponds to the upstream `ghcr.io/actions/actions-runner` v
 
 ### TLS Certificate Errors
 
-**Symptom**: `certificate signed by unknown authority` or `unable to verify the first certificate`
+**Symptom**: `certificate signed by unknown authority` or `unable to verify the first certificate` or `unable to get local issuer certificate`
 
-**Cause**: The runner pod is using an older image without current CA certificates.
+**Cause**: Either the runner pod is using an older image without current CA certificates, or Node.js-based actions don't have `NODE_EXTRA_CA_CERTS` set.
 
 **Solution**:
 1. Verify the image tag in `argocd/app-configs/arc-runners/values.yaml` matches the latest build
 2. Check if CA certificates need updating: `./images/actions-runner/scripts/update-ca-certs.sh`
-3. Force a pod restart: `kubectl --context fzymgc-house rollout restart deployment -n arc-runners`
+3. Ensure `NODE_EXTRA_CA_CERTS` env var is set in the runner pod template (see ARC Runner Configuration above)
+4. Force a pod restart: `kubectl --context fzymgc-house rollout restart deployment -n arc-runners`
 
 ### Vault Authentication Failures
 

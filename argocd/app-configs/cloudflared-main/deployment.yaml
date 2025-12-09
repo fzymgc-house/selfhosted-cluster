@@ -36,24 +36,17 @@ spec:
           image: cloudflare/cloudflared:2025.11.1
           args:
             - tunnel
-            - --no-autoupdate
             - --loglevel
             - debug
-            - --metrics
-            - 0.0.0.0:2000
+            - --config
+            - /etc/cloudflared/config/config.yaml
             - run
-            - --credentials-file
-            - /etc/cloudflared/creds/credentials.json
-            - $(TUNNEL_ID)
-          env:
-            - name: TUNNEL_ID
-              valueFrom:
-                secretKeyRef:
-                  name: cloudflared-credentials
-                  key: tunnel_id
           volumeMounts:
             - name: creds
               mountPath: /etc/cloudflared/creds
+              readOnly: true
+            - name: config
+              mountPath: /etc/cloudflared/config
               readOnly: true
           resources:
             requests:
@@ -95,3 +88,6 @@ spec:
         - name: creds
           secret:
             secretName: cloudflared-credentials
+        - name: config
+          configMap:
+            name: cloudflared-config

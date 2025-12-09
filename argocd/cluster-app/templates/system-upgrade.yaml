@@ -17,6 +17,7 @@ spec:
   ignoreDifferences:
     - group: apps
       kind: Deployment
+      name: system-upgrade-controller
       jqPathExpressions:
         - .metadata.annotations."kubectl.kubernetes.io/last-applied-configuration"
   syncPolicy:
@@ -26,3 +27,4 @@ spec:
     syncOptions:
       - ServerSideApply=false  # Disabled: SSA doesn't handle strategy field migration from RollingUpdate to Recreate
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true

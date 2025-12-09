@@ -37,6 +37,8 @@ spec:
           args:
             - tunnel
             - --no-autoupdate
+            - --loglevel
+            - debug
             - --metrics
             - 0.0.0.0:2000
             - run

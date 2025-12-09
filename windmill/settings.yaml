@@ -37,8 +37,6 @@ git_sync:
       group_by_folder: false
       script_path: hub/28081/sync-script-to-git-repo-windmill
       settings:
-        exclude_path: []
-        extra_include_path: []
         include_path:
           - '**'
         include_type:
@@ -49,7 +47,6 @@ git_sync:
           - variable
           - resource
           - resourcetype
-          - secret
           - schedule
           - trigger
           - user

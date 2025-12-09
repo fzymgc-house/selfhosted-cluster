@@ -8,8 +8,8 @@ namespace: cloudflared
 
 resources:
   - namespace.yaml
+  - service-account.yaml
   # Additional resources will be added as implementation progresses:
-  # - service-account.yaml
   # - external-secret.yaml
   # - deployment.yaml
   # - service.yaml

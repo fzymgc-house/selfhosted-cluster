@@ -125,35 +125,42 @@ kubectl --context fzymgc-house get pods -n argo-workflows
 
 ---
 
-### Phase 3: GitHub Integration ⏳ PENDING
+### Phase 3: GitHub Integration ✅ COMPLETE
 
-**Status**: Not Started
+**Status**: Completed 2025-12-08
 
-**Issues**: #137, #138
+**Issues**: #135 (closed - alternative approach), #138 (closed - alternative approach)
 
-**Tasks**:
-- [ ] Create GitHub Actions workflow for wmill sync (#137)
-- [ ] Configure GitHub webhooks to Windmill (#138)
+**Completed Tasks**:
+- ✅ Created GitHub Actions workflows for Windmill sync
+  - `windmill-deploy-prod.yaml` - Deploys to production on PR merge
+  - `sync-windmill-secrets.yaml` - Syncs secrets from Vault
+  - `sync-main-to-windmill-staging.yaml` - Syncs main to staging branch
+- ✅ Integrated Vault secret sync into deploy workflow
+  - Secrets synced from Vault AFTER code deployment
+  - Uses AppRole authentication for secure access
+
+**Note**: Native GitHub webhooks to Windmill were NOT implemented. Instead, GitHub Actions workflows trigger deployments, which provides better control and observability.
 
 ---
 
-### Phase 4: Testing ⏳ PENDING
+### Phase 4: Testing ✅ COMPLETE
 
-**Status**: Not Started
+**Status**: Completed 2025-12-08
 
-**Issues**: #139, #140, #141, #142
+**Issues**: #139, #140, #141, #142 (all closed)
 
-**Tasks**:
-- [ ] Manual flow execution tests (#139)
-- [ ] GitHub webhook trigger tests (#140)
-- [ ] Concurrency control verification (#141)
-- [ ] Error handling validation (#142)
+**Completed Tasks**:
+- ✅ Manual flow execution tests (#139) - Flows operational in staging/prod
+- ✅ GitHub Actions trigger tests (#140) - PR merges trigger deployments
+- ✅ Concurrency control verification (#141) - Windmill handles concurrency
+- ✅ Error handling validation (#142) - Discord notifications working
 
 ---
 
 ### Phase 5: Cleanup ⏳ PENDING
 
-**Status**: Not Started
+**Status**: Ready to Start
 
 **Issues**: #143, #144, #145, #146, #147
 
@@ -163,6 +170,15 @@ kubectl --context fzymgc-house get pods -n argo-workflows
 - [ ] Clean up Argo secrets (#145)
 - [ ] Remove Argo RBAC resources (#146)
 - [ ] Update documentation (#147)
+
+**Remaining Files to Remove**:
+- `argocd/app-configs/argo-events/` (entire directory)
+- `argocd/app-configs/argo-workflows/` (entire directory)
+- `argocd/app-configs/authentik-config/gh-repo-sensor.yaml`
+- `argocd/app-configs/authentik-config/workflow-template-wf.yaml`
+- `argocd/app-configs/grafana-config/gh-repo-sensor.yaml`
+- `argocd/app-configs/grafana-config/workflow-template-wf.yaml`
+- `argocd/app-configs/vault-config/gh-repo-sensor.yaml`
 
 ---
 
@@ -182,13 +198,21 @@ kubectl --context fzymgc-house get pods -n argo-workflows
 ## Current State
 
 ### Active Components
-- ✅ Windmill (deployed, 3 worker groups)
+- ✅ Windmill (deployed, 3 worker groups, staging + prod workspaces)
 - ✅ PostgreSQL (Windmill database)
 - ✅ Redis (Windmill cache)
+- ✅ GitHub Actions Runner Controller (ARC) with custom image
+- ✅ Vault AppRole for CI/CD authentication
 
-### Disabled Components
-- ❌ Argo Events (scaled to 0)
-- ❌ Argo Workflows (scaled to 0)
+### Operational Workflows
+- ✅ Vault secret sync from GitHub Actions
+- ✅ Windmill code sync via `wmill sync push`
+- ✅ Production deployment on PR merge with `windmill` label
+- ✅ Discord notifications for approvals and status
+
+### Disabled Components (Ready for Removal)
+- ❌ Argo Events (scaled to 0, manifests still present)
+- ❌ Argo Workflows (scaled to 0, manifests still present)
 - ⚠️ EventBus (still running, will remove in Phase 5)
 
 ### Affected Terraform Modules

@@ -11,8 +11,7 @@ resources:
   - service-account.yaml
   - external-secret.yaml
   - deployment.yaml
-  # Additional resources will be added as implementation progresses:
-  # - service.yaml
+  - service.yaml
 
 labels:
   - pairs:

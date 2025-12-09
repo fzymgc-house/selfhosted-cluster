@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: MIT
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/v1/service.json
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudflared-metrics
+  namespace: cloudflared
+  labels:
+    app.kubernetes.io/name: cloudflared
+    app.kubernetes.io/component: metrics
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "2000"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 2000
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cloudflared
+    app.kubernetes.io/component: tunnel-connector

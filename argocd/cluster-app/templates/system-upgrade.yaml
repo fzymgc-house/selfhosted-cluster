@@ -20,11 +20,15 @@ spec:
       name: system-upgrade-controller
       jqPathExpressions:
         - .metadata.annotations."kubectl.kubernetes.io/last-applied-configuration"
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /spec/preserveUnknownFields
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - ServerSideApply=false  # Disabled: SSA doesn't handle strategy field migration from RollingUpdate to Recreate
+      - ServerSideApply=false # Disabled: SSA doesn't handle strategy field migration from RollingUpdate to Recreate
       - CreateNamespace=true
       - RespectIgnoreDifferences=true

@@ -16,8 +16,6 @@ spec:
     auth.generic_oauth:
       name: authentik
       enabled: "true"
-      client_id: ${OAUTH_CLIENT_ID}
-      client_secret: ${OAUTH_CLIENT_SECRET}
       scopes: "openid email profile"
       tls_client_ca: /certs/grafana.fzymgc.house/ca.crt
       auth_url: "https://auth.fzymgc.house/application/o/authorize/"
@@ -64,12 +62,12 @@ spec:
                     secretKeyRef:
                       name: main-grafana-credentials
                       key: url
-                - name: OAUTH_CLIENT_ID
+                - name: GF_AUTH_GENERIC_OAUTH_CLIENT_ID
                   valueFrom:
                     secretKeyRef:
                       name: oidc-credentials
                       key: client_id
-                - name: OAUTH_CLIENT_SECRET
+                - name: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
                   valueFrom:
                     secretKeyRef:
                       name: oidc-credentials

@@ -65,6 +65,8 @@ resource "vault_kv_secret_v2" "tunnel_credentials" {
     tunnel_id     = cloudflare_zero_trust_tunnel_cloudflared.main.id
     tunnel_name   = cloudflare_zero_trust_tunnel_cloudflared.main.name
     tunnel_secret = random_password.tunnel_secret.result
+    # Full token for cloudflared tunnel run --token or TUNNEL_TOKEN env var
+    tunnel_token = cloudflare_zero_trust_tunnel_cloudflared.main.tunnel_token
   })
 
   # Don't delete from Vault when destroying in Terraform

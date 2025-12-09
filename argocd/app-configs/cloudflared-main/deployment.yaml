@@ -42,6 +42,13 @@ spec:
             - run
             - --credentials-file
             - /etc/cloudflared/creds/credentials.json
+            - $(TUNNEL_ID)
+          env:
+            - name: TUNNEL_ID
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflared-credentials
+                  key: tunnel_id
           volumeMounts:
             - name: creds
               mountPath: /etc/cloudflared/creds

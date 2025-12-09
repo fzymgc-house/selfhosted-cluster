@@ -12,6 +12,12 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "main" {
   account_id = var.cloudflare_account_id
   name       = var.tunnel_name
   secret     = base64encode(random_password.tunnel_secret.result)
+
+  # Prevent tunnel recreation if secret changes
+  # The tunnel_token is computed by Cloudflare and remains valid
+  lifecycle {
+    ignore_changes = [secret]
+  }
 }
 
 # Configure tunnel ingress rules
@@ -61,11 +67,11 @@ resource "vault_kv_secret_v2" "tunnel_credentials" {
   name  = "fzymgc-house/cluster/cloudflared/tunnels/${var.tunnel_name}"
 
   data_json = jsonencode({
-    account_tag   = var.cloudflare_account_id
-    tunnel_id     = cloudflare_zero_trust_tunnel_cloudflared.main.id
-    tunnel_name   = cloudflare_zero_trust_tunnel_cloudflared.main.name
-    tunnel_secret = random_password.tunnel_secret.result
+    account_tag  = var.cloudflare_account_id
+    tunnel_id    = cloudflare_zero_trust_tunnel_cloudflared.main.id
+    tunnel_name  = cloudflare_zero_trust_tunnel_cloudflared.main.name
     # Full token for cloudflared tunnel run --token or TUNNEL_TOKEN env var
+    # This is computed by Cloudflare and works with token-based auth
     tunnel_token = cloudflare_zero_trust_tunnel_cloudflared.main.tunnel_token
   })
 

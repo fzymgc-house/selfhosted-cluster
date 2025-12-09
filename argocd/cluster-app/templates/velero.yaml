@@ -77,6 +77,10 @@ spec:
                       extraEnvVars:
                           - name: DATA_UPLOAD_CONCURRENCY
                             value: "8"
+                  kubectl:
+                      image:
+                          repository: bitnamilegacy/kubectl
+                          tag: "1.33.4"
         - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
           targetRevision: HEAD
           path: argocd/app-configs/velero

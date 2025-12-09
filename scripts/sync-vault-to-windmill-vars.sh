@@ -14,6 +14,12 @@ WINDMILL_URL="https://windmill.fzymgc.house"
 DRY_RUN=false
 WORKSPACE=""
 
+# Counters for summary
+CREATED=0
+UPDATED=0
+UNCHANGED=0
+FAILED=0
+
 # Create temp file for API responses (cleaned up on exit)
 TEMP_RESPONSE=$(mktemp)
 trap 'rm -f "$TEMP_RESPONSE"' EXIT
@@ -114,7 +120,7 @@ get_variable_state() {
     if [ "$http_code" = "404" ]; then
         echo "missing"
     elif [ "$http_code" != "200" ]; then
-        echo "error"
+        echo "unknown"
     elif [ "$is_secret" = "true" ]; then
         # Can't compare secret values - report exists
         echo "exists"
@@ -145,27 +151,21 @@ update_variable() {
     state=$(get_variable_state "$var_path" "$var_value" "$is_secret")
 
     if $DRY_RUN; then
-        local display_value
-        if [ "$is_secret" = "true" ]; then
-            display_value="[REDACTED]"
-        else
-            display_value="$var_value"
-        fi
         case "$state" in
             missing)
-                echo "🔍 $var_path: MISSING - would create"
+                echo "🔍 $var_path: would create (new)"
                 ;;
             same)
-                echo "🔍 $var_path: SAME - would skip"
+                echo "🔍 $var_path: would skip (unchanged)"
                 ;;
             different)
-                echo "🔍 $var_path: DIFFERENT - would update"
+                echo "🔍 $var_path: would update (changed)"
                 ;;
             exists)
-                echo "🔍 $var_path: EXISTS (secret) - would update"
+                echo "🔍 $var_path: would update (secret)"
                 ;;
-            error)
-                echo "🔍 $var_path: ERROR checking state - would attempt create"
+            unknown)
+                echo "🔍 $var_path: would sync (state unknown)"
                 ;;
         esac
         return
@@ -173,15 +173,19 @@ update_variable() {
 
     # Skip if value is the same (non-secrets only)
     if [ "$state" = "same" ]; then
-        echo "⏭️  Skipping $var_path (unchanged)"
+        echo "⏭️  $var_path (unchanged)"
+        ((UNCHANGED++))
         return
     fi
 
-    echo "🔄 Updating variable: $var_path ($state)"
+    # Show what we're doing
+    printf "🔍 Checking %s... " "$var_path"
 
     local http_code
-    if [ "$state" = "missing" ] || [ "$state" = "error" ]; then
-        # Create new variable
+    local action_taken=""
+
+    if [ "$state" = "missing" ] || [ "$state" = "unknown" ]; then
+        # Try to create new variable
         http_code=$(curl -s -w "%{http_code}" -o "$TEMP_RESPONSE" -X POST \
             "${WINDMILL_URL}/api/w/${WINDMILL_WORKSPACE}/variables/create" \
             -H "Authorization: Bearer ${WINDMILL_TOKEN}" \
@@ -192,9 +196,11 @@ update_variable() {
                 \"is_secret\": ${is_secret},
                 \"description\": \"${description}\"
             }")
-        if [ "$http_code" != "200" ] && [ "$http_code" != "201" ]; then
-            echo "   ⚠️  Create failed (HTTP $http_code), trying update..."
-            # Fall through to update
+        if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+            action_taken="created"
+        else
+            # Variable exists, update instead
+            printf "exists, updating... "
             http_code=$(curl -s -w "%{http_code}" -o "$TEMP_RESPONSE" -X POST \
                 "${WINDMILL_URL}/api/w/${WINDMILL_WORKSPACE}/variables/update/${var_path}" \
                 -H "Authorization: Bearer ${WINDMILL_TOKEN}" \
@@ -204,6 +210,9 @@ update_variable() {
                     \"is_secret\": ${is_secret},
                     \"description\": \"${description}\"
                 }")
+            if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+                action_taken="updated"
+            fi
         fi
     else
         # Update existing variable
@@ -216,11 +225,26 @@ update_variable() {
                 \"is_secret\": ${is_secret},
                 \"description\": \"${description}\"
             }")
+        if [ "$http_code" = "200" ] || [ "$http_code" = "201" ]; then
+            action_taken="updated"
+        fi
     fi
 
-    if [ "$http_code" != "200" ] && [ "$http_code" != "201" ]; then
-        echo "   ❌ Failed to update $var_path (HTTP $http_code)"
-    fi
+    # Report result
+    case "$action_taken" in
+        created)
+            echo "✨ created"
+            ((CREATED++))
+            ;;
+        updated)
+            echo "✅ updated"
+            ((UPDATED++))
+            ;;
+        *)
+            echo "❌ failed (HTTP $http_code)"
+            ((FAILED++))
+            ;;
+    esac
 }
 
 # Update all variables
@@ -239,12 +263,24 @@ update_variable "s3_bucket_prefix" "$S3_BUCKET_PREFIX" false "S3 bucket prefix f
 [ -n "$VAULT_TERRAFORM_TOKEN" ] && update_variable "vault_terraform_token" "$VAULT_TERRAFORM_TOKEN" true "Vault token for Terraform operations" || echo "⚠️  Skipping vault_terraform_token (not in Vault)"
 
 echo ""
-echo "✅ Variables synced to $WINDMILL_WORKSPACE!"
+echo "=== Summary ==="
+echo "✨ Created:   $CREATED"
+echo "✅ Updated:   $UPDATED"
+echo "⏭️  Unchanged: $UNCHANGED"
+echo "❌ Failed:    $FAILED"
 echo ""
+
+if [ "$FAILED" -gt 0 ]; then
+    echo "⚠️  Some variables failed to sync. Check the output above for details."
+    echo ""
+fi
+
 if [ -z "$S3_ACCESS_KEY" ] || [ -z "$S3_SECRET_KEY" ]; then
     echo "⚠️  WARNING: S3 credentials not configured in Vault"
     echo "   S3 storage tests will fail until credentials are added"
     echo ""
 fi
+
+echo "✅ Sync complete for $WINDMILL_WORKSPACE"
 echo "Next: Run test_configuration script in Windmill to verify integrations"
 echo ""

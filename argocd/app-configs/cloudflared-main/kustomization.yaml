@@ -8,11 +8,13 @@ namespace: cloudflared
 
 resources:
   - namespace.yaml
-  - service-account.yaml
-  - external-secret.yaml
-  - deployment.yaml
-  - service.yaml
+  # Additional resources will be added as implementation progresses:
+  # - service-account.yaml
+  # - external-secret.yaml
+  # - deployment.yaml
+  # - service.yaml
 
-commonLabels:
-  app.kubernetes.io/name: cloudflared
-  app.kubernetes.io/part-of: infrastructure
+labels:
+  - pairs:
+      app.kubernetes.io/name: cloudflared
+      app.kubernetes.io/part-of: infrastructure

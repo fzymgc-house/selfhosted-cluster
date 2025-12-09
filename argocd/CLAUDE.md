@@ -7,9 +7,9 @@ This file provides guidance to Claude Code when working with ArgoCD application 
 ```
 argocd/
 ├── app-configs/         # Application-specific configurations
-│   ├── grafana-config/  # Grafana dashboard and config management
-│   ├── authentik-config/ # Authentik identity provider configs
 │   ├── monitoring-*     # Monitoring stack components
+│   ├── windmill/        # Windmill workflow automation
+│   ├── arc-runners/     # GitHub Actions Runner Controller
 │   └── ...
 └── cluster-app/         # Cluster-wide application definitions
 ```
@@ -20,7 +20,6 @@ Each application directory should contain:
 - `kustomization.yaml` - Kustomize configuration
 - Application-specific YAML manifests
 - External secrets configurations
-- Workflow templates for GitOps automation
 
 ### Standard Kustomization
 ```yaml
@@ -62,26 +61,6 @@ spec:
       remoteRef:
         key: secret/fzymgc-house/app
         property: password
-```
-
-## ArgoCD Workflow Templates
-
-### Standard Workflow Structure
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: WorkflowTemplate
-metadata:
-  name: app-config-workflow
-spec:
-  entrypoint: main
-  templates:
-    - name: main
-      steps:
-        - - name: terraform-plan
-            template: terraform-plan
-        - - name: terraform-apply
-            template: terraform-apply
-            when: "{{workflow.parameters.apply}} == true"
 ```
 
 ## Security Best Practices
@@ -157,29 +136,12 @@ kubectl --context fzymgc-house logs -n external-secrets deployment/external-secr
 
 ## GitOps Workflow Integration
 
-### Argo Events Configuration
-Many applications use Argo Events for GitOps automation:
-- GitHub webhook triggers
-- Workflow template execution
-- Terraform plan/apply automation
+Terraform GitOps automation has been migrated to Windmill:
+- Windmill flows in `windmill/` directory handle Terraform plan/apply
+- GitHub Actions trigger Windmill deployments on PR merge
+- Discord notifications for approvals and status updates
 
-### GitHub Integration
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: EventSource
-metadata:
-  name: github-event-source
-spec:
-  github:
-    webhook:
-      repositories:
-        - owner: fzymgc-house
-          names:
-            - selfhosted-cluster
-      events:
-        - push
-        - pull_request
-```
+See `docs/windmill-migration.md` for details.
 
 ## Best Practices
 

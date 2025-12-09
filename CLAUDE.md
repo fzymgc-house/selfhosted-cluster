@@ -275,8 +275,12 @@ The repository is organized in three layers:
 3. **Kubernetes Layer** (`argocd/`): Application deployment
    - Application manifests and kustomizations
    - ExternalSecrets for Vault integration
-   - Argo Workflows for GitOps automation
    - Service-specific configurations
+
+4. **Automation Layer** (`windmill/`): GitOps workflows
+   - Terraform plan/apply automation
+   - Discord notifications for approvals
+   - GitHub Actions integration
 
 ### Secrets Management Flow
 
@@ -290,12 +294,13 @@ Secrets flow from Vault → Kubernetes via ExternalSecrets Operator:
 
 ### GitOps Automation
 
-Many infrastructure components use Argo Events + Argo Workflows for GitOps:
+Terraform GitOps automation is handled by Windmill:
 
-- GitHub webhook triggers workflows on push/PR
-- Workflows run Terraform plan/apply for infrastructure changes
-- Service accounts have limited RBAC scopes for safety
-- Workflows defined in `argocd/app-configs/*/workflow-template-wf.yaml`
+- GitHub Actions trigger Windmill flows on PR merge to main
+- Windmill flows run Terraform plan/apply for infrastructure changes
+- Discord notifications request approval before apply
+- Flows defined in `windmill/f/terraform/`
+- See `docs/windmill-migration.md` for details
 
 ## File Organization Principles
 

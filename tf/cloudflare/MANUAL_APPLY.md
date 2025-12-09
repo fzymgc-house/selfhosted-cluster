@@ -186,7 +186,7 @@ kubectl --context fzymgc-house get pods -n cloudflared
 # Should show 2 replicas in Running state
 
 # Check logs for successful connection
-kubectl --context fzymgc-house logs -n cloudflared -l app=cloudflared --tail=50
+kubectl --context fzymgc-house logs -n cloudflared -l app.kubernetes.io/name=cloudflared --tail=50
 
 # Look for:
 # - "Connection established"

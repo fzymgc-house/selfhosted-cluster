@@ -18,8 +18,20 @@ variable "tunnel_name" {
   default     = "fzymgc-house-main"
 }
 
-variable "webhook_hostname" {
-  description = "Hostname for webhook endpoints"
+variable "webhook_base_domain" {
+  description = "Base domain for webhook subdomains"
   type        = string
   default     = "wh.fzymgc.house"
+}
+
+variable "webhook_services" {
+  description = "Map of webhook services with their subdomain and upstream configuration"
+  type = map(object({
+    service_url = string
+  }))
+  default = {
+    windmill = {
+      service_url = "http://windmill.windmill.svc.cluster.local:8000"
+    }
+  }
 }

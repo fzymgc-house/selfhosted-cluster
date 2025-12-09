@@ -186,3 +186,13 @@ ansible/.ansible_facts_cache
 
 # Git config (local overrides)
 .gitconfig
+
+# Windmill secret variables (managed via Vault sync, not git)
+# Non-secret variables are still synced via git
+windmill/variables.json
+windmill/g/all/discord_bot_token.variable.yaml
+windmill/g/all/discord_public_key.variable.yaml
+windmill/g/all/github_token.variable.yaml
+windmill/g/all/s3_access_key.variable.yaml
+windmill/g/all/s3_secret_key.variable.yaml
+windmill/g/all/vault_terraform_token.variable.yaml

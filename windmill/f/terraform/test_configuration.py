@@ -1,10 +1,9 @@
 """Test Windmill configuration and integrations."""
 
+import requests
 import subprocess
 from pathlib import Path
 from typing import TypedDict
-
-import requests
 
 
 class discord_bot_configuration(TypedDict):
@@ -56,7 +55,9 @@ def main(
 
     # Test 1: Discord Bot
     try:
-        payload = {"content": "✅ **Windmill Configuration Test**\n\nDiscord bot integration is working correctly!"}
+        payload = {
+            "content": "✅ **Windmill Configuration Test**\n\nDiscord bot integration is working correctly!"
+        }
 
         response = requests.post(
             f"https://discord.com/api/v10/channels/{discord_bot_token['channel_id']}/messages",
@@ -71,7 +72,9 @@ def main(
         results["discord"]["tested"] = True
         results["discord"]["success"] = response.ok
         if not response.ok:
-            results["discord"]["error"] = f"HTTP {response.status_code}: {response.text}"
+            results["discord"]["error"] = (
+                f"HTTP {response.status_code}: {response.text}"
+            )
     except Exception as e:
         results["discord"]["tested"] = True
         results["discord"]["error"] = str(e)
@@ -138,9 +141,10 @@ def main(
     # Summary
     all_success = all(r["success"] for r in results.values() if r["tested"])
 
-    # End of the line
     return {
         "overall_success": all_success,
         "results": results,
-        "summary": f"Discord: {'✅' if results['discord']['success'] else '❌'}, GitHub: {'✅' if results['github']['success'] else '❌'}, S3: {'✅' if results['s3']['success'] else '❌'}",
+        "summary": f"Discord: {'✅' if results['discord']['success'] else '❌'}, "
+        f"GitHub: {'✅' if results['github']['success'] else '❌'}, "
+        f"S3: {'✅' if results['s3']['success'] else '❌'}",
     }

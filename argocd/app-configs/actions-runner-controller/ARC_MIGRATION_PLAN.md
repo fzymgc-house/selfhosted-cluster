@@ -325,15 +325,15 @@ containerMode:
 **File**: `argocd/app-configs/arc-runners/github-token-secret.yaml`
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: github-token
   namespace: arc-runners
 spec:
-  refreshInterval: 15s
+  refreshInterval: 15m
   secretStoreRef:
-    name: vault-backend
+    name: vault
     kind: ClusterSecretStore
   target:
     name: github-token

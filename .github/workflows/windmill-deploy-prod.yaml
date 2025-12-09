@@ -20,21 +20,8 @@ env:
   WINDMILL_URL: https://windmill.fzymgc.house
 
 jobs:
-  sync-secrets:
-    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'windmill')
-    uses: ./.github/workflows/sync-windmill-secrets.yaml
-    with:
-      workspace: prod
-      dry_run: false
-    secrets:
-      VAULT_APPROLE_ROLE_ID: ${{ secrets.VAULT_APPROLE_ROLE_ID }}
-      VAULT_APPROLE_SECRET_ID: ${{ secrets.VAULT_APPROLE_SECRET_ID }}
-
   deploy:
-    needs: sync-secrets
-    # Run if sync-secrets succeeded, or evaluate our condition independently if sync-secrets was skipped
-    # yamllint disable-line rule:line-length
-    if: always() && (needs.sync-secrets.result == 'success' || (needs.sync-secrets.result == 'skipped' && github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'windmill')))
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'windmill')
     runs-on: fzymgc-house-cluster-runners
     steps:
       - name: Checkout repository
@@ -97,3 +84,14 @@ jobs:
               repo: context.repo.repo,
               body: '❌ Production deployment failed. Check [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.'
             })
+
+  # Sync secrets from Vault AFTER deploying variable definitions
+  sync-secrets:
+    needs: deploy
+    uses: ./.github/workflows/sync-windmill-secrets.yaml
+    with:
+      workspace: prod
+      dry_run: false
+    secrets:
+      VAULT_APPROLE_ROLE_ID: ${{ secrets.VAULT_APPROLE_ROLE_ID }}
+      VAULT_APPROLE_SECRET_ID: ${{ secrets.VAULT_APPROLE_SECRET_ID }}

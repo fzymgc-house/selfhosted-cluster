@@ -10,14 +10,14 @@ spec:
     sources:
         - chart: velero
           repoURL: https://vmware-tanzu.github.io/helm-charts
-          targetRevision: 10.1.2
+          targetRevision: 11.2.0
           helm:
               releaseName: velero
               skipCrds: false
               valuesObject:
                   image:
                       repository: velero/velero
-                      tag: v1.16.2
+                      tag: v1.17.1
                   snapshotsEnabled: false
                   deployNodeAgent: true
                   configuration:
@@ -39,7 +39,7 @@ spec:
                                 checksumAlgorithm: ""
                   initContainers:
                       - name: velero-plugin-for-aws
-                        image: velero/velero-plugin-for-aws:v1.12.2
+                        image: velero/velero-plugin-for-aws:v1.13.0
                         volumeMounts:
                             - name: plugins
                               mountPath: /target

@@ -10,7 +10,6 @@ resources:
   - namespace.yaml
   - service-account.yaml
   - external-secret.yaml
-  - configmap.yaml
   - deployment.yaml
   - service.yaml
 

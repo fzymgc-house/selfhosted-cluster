@@ -2,7 +2,7 @@
 # terraform: language=hcl
 
 provider "cloudflare" {
-  api_token = data.vault_kv_secret_v2.cloudflare_token.data["api_token"]
+  api_token = data.vault_kv_secret_v2.cloudflare_token.data["token"]
 }
 
 provider "vault" {

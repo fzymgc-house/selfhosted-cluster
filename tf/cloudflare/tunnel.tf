@@ -20,7 +20,9 @@ resource "cloudflare_tunnel_config" "main" {
   tunnel_id  = cloudflare_tunnel.main.id
 
   config {
-    # Windmill webhook endpoints with path rewriting
+    # Windmill webhook endpoints
+    # Path rewriting (/windmill/* → /*) is handled by cloudflare_ruleset in path-rewrite.tf
+    # This ensures Windmill receives root paths as expected
     ingress_rule {
       hostname = var.webhook_hostname
       path     = "/windmill/*"

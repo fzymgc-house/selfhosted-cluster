@@ -5,6 +5,11 @@ variable "cloudflare_account_id" {
   description = "Cloudflare account ID for tunnel creation"
   type        = string
   default     = "your-account-id-here" # TODO: Replace with actual account ID from Cloudflare dashboard
+
+  validation {
+    condition     = var.cloudflare_account_id != "your-account-id-here"
+    error_message = "Cloudflare account ID must be set to your actual account ID. Find it in Cloudflare dashboard > Overview."
+  }
 }
 
 variable "tunnel_name" {

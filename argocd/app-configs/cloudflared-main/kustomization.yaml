@@ -17,3 +17,4 @@ labels:
   - pairs:
       app.kubernetes.io/name: cloudflared
       app.kubernetes.io/part-of: infrastructure
+      app.kubernetes.io/managed-by: kustomize

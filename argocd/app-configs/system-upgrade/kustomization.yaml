@@ -115,12 +115,6 @@ patches:
           limits:
             cpu: 200m
             memory: 128Mi
-      # Explicitly null rollingUpdate when using Recreate strategy
-      # Required for ServerSideApply to remove this field from existing deployments
-      # that previously used RollingUpdate strategy
-      - op: add
-        path: /spec/strategy/rollingUpdate
-        value: null
 images:
   - name: rancher/system-upgrade-controller
     newTag: v0.18.0

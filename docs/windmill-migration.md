@@ -158,27 +158,37 @@ kubectl --context fzymgc-house get pods -n argo-workflows
 
 ---
 
-### Phase 5: Cleanup ⏳ PENDING
+### Phase 5: Cleanup ✅ COMPLETE
 
-**Status**: Ready to Start
+**Status**: Completed 2025-12-09
 
-**Issues**: #143, #144, #145, #146, #147
+**Issues**: #143, #144, #145, #146, #147 (all closed)
 
-**Tasks**:
-- [ ] Remove Argo Events manifests (#143)
-- [ ] Remove Argo Workflows manifests (#144)
-- [ ] Clean up Argo secrets (#145)
-- [ ] Remove Argo RBAC resources (#146)
-- [ ] Update documentation (#147)
+**Completed Tasks**:
+- ✅ Remove Argo Events manifests (#143) - PR #234
+- ✅ Remove Argo Workflows manifests (#144) - PR #234
+- ✅ Clean up Argo secrets (#145) - Deleted with namespaces
+- ✅ Remove Argo RBAC resources (#146) - Deleted with namespaces
+- ✅ Update documentation (#147) - PR #234
 
-**Remaining Files to Remove**:
+**Removed in PR #234**:
+- `argocd/cluster-app/templates/argo-events.yaml`
+- `argocd/cluster-app/templates/argo-workflows.yaml`
+- `argocd/cluster-app/templates/authentik-config.yaml`
+- `argocd/cluster-app/templates/grafana-config.yaml`
+- `argocd/cluster-app/templates/vault-config.yaml`
 - `argocd/app-configs/argo-events/` (entire directory)
 - `argocd/app-configs/argo-workflows/` (entire directory)
-- `argocd/app-configs/authentik-config/gh-repo-sensor.yaml`
-- `argocd/app-configs/authentik-config/workflow-template-wf.yaml`
-- `argocd/app-configs/grafana-config/gh-repo-sensor.yaml`
-- `argocd/app-configs/grafana-config/workflow-template-wf.yaml`
-- `argocd/app-configs/vault-config/gh-repo-sensor.yaml`
+- `argocd/app-configs/authentik-config/` (entire directory - Argo-only)
+- `argocd/app-configs/grafana-config/` (entire directory - Argo-only)
+- `argocd/app-configs/vault-config/` (entire directory - Argo-only)
+
+**Cluster Cleanup**:
+```bash
+# Verified namespaces deleted
+kubectl --context fzymgc-house get namespace | grep -E "argo-events|argo-workflows"
+# (returns empty - namespaces fully removed)
+```
 
 ---
 
@@ -210,10 +220,10 @@ kubectl --context fzymgc-house get pods -n argo-workflows
 - ✅ Production deployment on PR merge with `windmill` label
 - ✅ Discord notifications for approvals and status
 
-### Disabled Components (Ready for Removal)
-- ❌ Argo Events (scaled to 0, manifests still present)
-- ❌ Argo Workflows (scaled to 0, manifests still present)
-- ⚠️ EventBus (still running, will remove in Phase 5)
+### Removed Components
+- ✅ Argo Events (fully removed - PR #234)
+- ✅ Argo Workflows (fully removed - PR #234)
+- ✅ EventBus (removed with argo-events namespace)
 
 ### Affected Terraform Modules
 1. `tf/vault` - Vault policies and configuration
@@ -232,10 +242,11 @@ Not applicable - per user decision, Argo Events and Workflows are being removed 
 
 - **Migration Plan**: [GitHub Issues #127-#150](https://github.com/fzymgc-house/selfhosted-cluster/issues?q=is%3Aissue+label%3Awindmill-migration)
 - **Windmill Deployment**: `argocd/cluster-app/templates/windmill.yaml`
-- **Current Workflows**:
-  - `argocd/app-configs/vault-config/vault-config-tf-wf-template-wf.yaml`
-  - `argocd/app-configs/grafana-config/workflow-template-wf.yaml`
-  - `argocd/app-configs/authentik-config/workflow-template-wf.yaml`
+- **Windmill Flows**: `windmill/f/terraform/`
+- **GitHub Actions Workflows**:
+  - `.github/workflows/windmill-deploy-prod.yaml`
+  - `.github/workflows/sync-windmill-secrets.yaml`
+  - `.github/workflows/sync-main-to-windmill-staging.yaml`
 
 ---
 
@@ -248,7 +259,7 @@ Not applicable - per user decision, Argo Events and Workflows are being removed 
 - ✅ **Phase 2**: Windmill flows and scripts developed
 - ✅ **Phase 3**: GitHub Integration via Actions workflows
 - ✅ **Phase 4**: Testing completed
-- ⏳ **Phase 5**: Cleanup (ready to start)
+- ✅ **Phase 5**: Cleanup completed (PR #234)
 - ⏳ **Phase 6**: Monitoring
 
-**Next Steps**: Begin Phase 5 cleanup - remove Argo Events/Workflows manifests and RBAC
+**Next Steps**: Begin Phase 6 - create Grafana dashboards, configure caching, set up alerting

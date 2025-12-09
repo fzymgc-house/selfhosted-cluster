@@ -10,8 +10,8 @@ resources:
   - namespace.yaml
   - service-account.yaml
   - external-secret.yaml
+  - deployment.yaml
   # Additional resources will be added as implementation progresses:
-  # - deployment.yaml
   # - service.yaml
 
 labels:

@@ -38,16 +38,18 @@ spec:
             - tunnel
             - --loglevel
             - debug
-            - --config
-            - /etc/cloudflared/config/config.yaml
+            - --metrics
+            - 0.0.0.0:2000
+            - --no-autoupdate
             - run
-          volumeMounts:
-            - name: creds
-              mountPath: /etc/cloudflared/creds
-              readOnly: true
-            - name: config
-              mountPath: /etc/cloudflared/config
-              readOnly: true
+          env:
+            # Token-based auth for remotely-managed tunnels
+            # Ingress rules are managed in Cloudflare via Terraform
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflared-credentials
+                  key: tunnel_token
           resources:
             requests:
               cpu: 100m
@@ -84,10 +86,3 @@ spec:
             capabilities:
               drop:
                 - ALL
-      volumes:
-        - name: creds
-          secret:
-            secretName: cloudflared-credentials
-        - name: config
-          configMap:
-            name: cloudflared-config

@@ -26,5 +26,7 @@ data "vault_kv_secret_v2" "cloudflare_token" {
 
 # Data source for fzymgc.house zone
 data "cloudflare_zone" "fzymgc_house" {
-  name = "fzymgc.house"
+  filter = {
+    name = "fzymgc.house"
+  }
 }

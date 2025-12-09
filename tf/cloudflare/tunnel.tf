@@ -8,16 +8,16 @@ resource "random_password" "tunnel_secret" {
 }
 
 # Create Cloudflare Tunnel
-resource "cloudflare_tunnel" "main" {
+resource "cloudflare_zero_trust_tunnel_cloudflared" "main" {
   account_id = var.cloudflare_account_id
   name       = var.tunnel_name
   secret     = base64encode(random_password.tunnel_secret.result)
 }
 
 # Configure tunnel ingress rules
-resource "cloudflare_tunnel_config" "main" {
+resource "cloudflare_zero_trust_tunnel_cloudflared_config" "main" {
   account_id = var.cloudflare_account_id
-  tunnel_id  = cloudflare_tunnel.main.id
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.main.id
 
   config {
     # Dynamic ingress rules for webhook services
@@ -49,7 +49,7 @@ resource "cloudflare_record" "webhook_services" {
 
   zone_id = data.cloudflare_zone.fzymgc_house.id
   name    = "${each.key}.wh"
-  value   = "${cloudflare_tunnel.main.id}.cfargotunnel.com"
+  value   = "${cloudflare_zero_trust_tunnel_cloudflared.main.id}.cfargotunnel.com"
   type    = "CNAME"
   proxied = true
   comment = "${each.key} webhook endpoint via ${var.tunnel_name} tunnel"
@@ -62,8 +62,8 @@ resource "vault_kv_secret_v2" "tunnel_credentials" {
 
   data_json = jsonencode({
     account_tag   = var.cloudflare_account_id
-    tunnel_id     = cloudflare_tunnel.main.id
-    tunnel_name   = cloudflare_tunnel.main.name
+    tunnel_id     = cloudflare_zero_trust_tunnel_cloudflared.main.id
+    tunnel_name   = cloudflare_zero_trust_tunnel_cloudflared.main.name
     tunnel_secret = random_password.tunnel_secret.result
   })
 

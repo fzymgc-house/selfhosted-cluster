@@ -34,4 +34,9 @@ variable "webhook_services" {
       service_url = "http://windmill.windmill.svc.cluster.local:8000"
     }
   }
+
+  validation {
+    condition     = alltrue([for k, v in var.webhook_services : can(regex("^https?://", v.service_url))])
+    error_message = "All service URLs must start with http:// or https://. Invalid URLs will cause origin_server_name parsing failures."
+  }
 }

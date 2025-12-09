@@ -10,10 +10,11 @@ excludes: []
 
 # Sync configuration - sync everything except workspace encryption key
 # This is the staging workspace configuration
+# Secret variables are managed via Vault sync workflow, not git
 skipVariables: false
 skipResources: false
 skipResourceTypes: false
-skipSecrets: false
+skipSecrets: true
 skipScripts: false
 skipFlows: false
 skipApps: false

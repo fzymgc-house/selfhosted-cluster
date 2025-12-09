@@ -135,13 +135,13 @@ cloudflared-main/
 
 **ExternalSecret:**
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: cloudflared-credentials
   namespace: cloudflared
 spec:
-  refreshInterval: 15s
+  refreshInterval: 15m
   secretStoreRef:
     name: vault
     kind: ClusterSecretStore

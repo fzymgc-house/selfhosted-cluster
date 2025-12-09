@@ -160,7 +160,7 @@ kubectl --context fzymgc-house describe externalsecret github-token -n actions-r
 # Common issues:
 # - Vault path wrong: Should be secret/fzymgc-house/cluster/github
 # - Vault key wrong: Should be windmill_actions_runner_token
-# - ClusterSecretStore not configured: Check vault-backend
+# - ClusterSecretStore not configured: Check 'vault' ClusterSecretStore exists
 ```
 
 ## Security Considerations

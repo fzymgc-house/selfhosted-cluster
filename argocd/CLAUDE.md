@@ -43,15 +43,15 @@ resources:
 
 ### Standard ExternalSecret Pattern
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: app-secrets
   namespace: app-namespace
 spec:
-  refreshInterval: 15s
+  refreshInterval: 15m
   secretStoreRef:
-    name: vault-backend
+    name: vault
     kind: ClusterSecretStore
   target:
     name: app-secrets

@@ -18,8 +18,25 @@ variable "tunnel_name" {
   default     = "fzymgc-house-main"
 }
 
-variable "webhook_hostname" {
-  description = "Hostname for webhook endpoints"
+variable "webhook_base_domain" {
+  description = "Base domain for webhook subdomains"
   type        = string
   default     = "wh.fzymgc.house"
+}
+
+variable "webhook_services" {
+  description = "Map of webhook services with their subdomain and upstream configuration"
+  type = map(object({
+    service_url = string
+  }))
+  default = {
+    windmill = {
+      service_url = "http://windmill.windmill.svc.cluster.local:8000"
+    }
+  }
+
+  validation {
+    condition     = alltrue([for k, v in var.webhook_services : can(regex("^https?://", v.service_url))])
+    error_message = "All service URLs must start with http:// or https://. Invalid URLs will cause origin_server_name parsing failures."
+  }
 }

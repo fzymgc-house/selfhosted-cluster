@@ -94,15 +94,15 @@ terraform plan -out=tfplan
 
 **Review Plan Carefully:**
 - Check that tunnel name is "fzymgc-house-main"
-- Verify DNS record is "wh.fzymgc.house"
+- Verify DNS records for each webhook service subdomain (e.g., `windmill.wh.fzymgc.house`)
 - Confirm Vault path is `secret/fzymgc-house/cluster/cloudflared/tunnels/fzymgc-house-main`
-- Ensure ingress rules route `/windmill/*` to Windmill service
+- Ensure ingress rules route subdomains to correct services
 
 **Expected Resources to Create:**
 - `random_password.tunnel_secret`
 - `cloudflare_tunnel.main`
 - `cloudflare_tunnel_config.main`
-- `cloudflare_record.webhook`
+- `cloudflare_record.webhook_services["windmill"]` (and additional services if configured)
 - `vault_kv_secret_v2.tunnel_credentials`
 
 ### Step 6: Apply Changes
@@ -120,7 +120,9 @@ Outputs:
 tunnel_cname = "<tunnel-id>.cfargotunnel.com"
 tunnel_id = "<tunnel-id>"
 vault_path = "secret/data/fzymgc-house/cluster/cloudflared/tunnels/fzymgc-house-main"
-webhook_url = "https://wh.fzymgc.house"
+webhook_urls = {
+  "windmill" = "https://windmill.wh.fzymgc.house"
+}
 ```
 
 ### Step 7: Verify in Cloudflare Dashboard
@@ -131,14 +133,14 @@ webhook_url = "https://wh.fzymgc.house"
 4. Check status: Should show "Inactive" (no connectors yet)
 5. Click tunnel name → View configuration
 6. Verify ingress rules:
-   - Hostname: `wh.fzymgc.house`
-   - Path: `/windmill/*`
+   - Hostname: `windmill.wh.fzymgc.house`
    - Service: `http://windmill.windmill.svc.cluster.local:8000`
+   - Additional services if configured (e.g., `argo.wh.fzymgc.house`)
 
 **DNS Verification:**
 1. Navigate to **Websites → fzymgc.house → DNS → Records**
-2. Verify CNAME record:
-   - Name: `wh`
+2. Verify CNAME records for each webhook service:
+   - Name: `windmill.wh`
    - Target: `<tunnel-id>.cfargotunnel.com`
    - Proxy status: Proxied (orange cloud)
 
@@ -259,8 +261,8 @@ vault token lookup
 ### Option 1: Delete Specific Resources
 
 ```bash
-# Delete DNS record only (makes webhook unreachable)
-terraform destroy -target=cloudflare_record.webhook
+# Delete DNS records only (makes webhooks unreachable)
+terraform destroy -target=cloudflare_record.webhook_services
 
 # Delete tunnel config only (keeps tunnel but removes routing)
 terraform destroy -target=cloudflare_tunnel_config.main

@@ -3,17 +3,20 @@
 
 output "tunnel_id" {
   description = "ID of the created Cloudflare Tunnel"
-  value       = cloudflare_tunnel.main.id
+  value       = cloudflare_zero_trust_tunnel_cloudflared.main.id
 }
 
 output "tunnel_cname" {
   description = "CNAME target for the tunnel"
-  value       = "${cloudflare_tunnel.main.id}.cfargotunnel.com"
+  value       = "${cloudflare_zero_trust_tunnel_cloudflared.main.id}.cfargotunnel.com"
 }
 
-output "webhook_url" {
-  description = "Public webhook URL"
-  value       = "https://${var.webhook_hostname}"
+output "webhook_urls" {
+  description = "Public webhook URLs for each service"
+  value = {
+    for service in keys(var.webhook_services) :
+    service => "https://${service}.${var.webhook_base_domain}"
+  }
 }
 
 output "vault_path" {

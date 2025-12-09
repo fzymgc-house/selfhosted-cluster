@@ -8,30 +8,31 @@ resource "random_password" "tunnel_secret" {
 }
 
 # Create Cloudflare Tunnel
-resource "cloudflare_tunnel" "main" {
+resource "cloudflare_zero_trust_tunnel_cloudflared" "main" {
   account_id = var.cloudflare_account_id
   name       = var.tunnel_name
   secret     = base64encode(random_password.tunnel_secret.result)
 }
 
 # Configure tunnel ingress rules
-resource "cloudflare_tunnel_config" "main" {
+resource "cloudflare_zero_trust_tunnel_cloudflared_config" "main" {
   account_id = var.cloudflare_account_id
-  tunnel_id  = cloudflare_tunnel.main.id
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.main.id
 
   config {
-    # Windmill webhook endpoints
-    # Path rewriting (/windmill/* → /*) is handled by cloudflare_ruleset in path-rewrite.tf
-    # This ensures Windmill receives root paths as expected
-    ingress_rule {
-      hostname = var.webhook_hostname
-      path     = "/windmill/*"
-      service  = "http://windmill.windmill.svc.cluster.local:8000"
+    # Dynamic ingress rules for webhook services
+    # Each service gets its own subdomain: service.wh.fzymgc.house
+    dynamic "ingress_rule" {
+      for_each = var.webhook_services
+      content {
+        hostname = "${ingress_rule.key}.${var.webhook_base_domain}"
+        service  = ingress_rule.value.service_url
 
-      origin_request {
-        http_host_header   = "windmill.windmill.svc.cluster.local"
-        origin_server_name = "windmill.windmill.svc.cluster.local"
-        no_tls_verify      = false
+        origin_request {
+          http_host_header   = "${ingress_rule.key}.${var.webhook_base_domain}"
+          origin_server_name = split("//", ingress_rule.value.service_url)[1]
+          no_tls_verify      = false
+        }
       }
     }
 
@@ -42,14 +43,16 @@ resource "cloudflare_tunnel_config" "main" {
   }
 }
 
-# Create DNS record pointing to tunnel
-resource "cloudflare_record" "webhook" {
+# Create DNS records for webhook service subdomains
+resource "cloudflare_record" "webhook_services" {
+  for_each = var.webhook_services
+
   zone_id = data.cloudflare_zone.fzymgc_house.id
-  name    = "wh"
-  value   = "${cloudflare_tunnel.main.id}.cfargotunnel.com"
+  name    = "${each.key}.wh"
+  value   = "${cloudflare_zero_trust_tunnel_cloudflared.main.id}.cfargotunnel.com"
   type    = "CNAME"
   proxied = true
-  comment = "Webhook endpoint via ${var.tunnel_name} tunnel"
+  comment = "${each.key} webhook endpoint via ${var.tunnel_name} tunnel"
 }
 
 # Store tunnel credentials in Vault
@@ -59,8 +62,8 @@ resource "vault_kv_secret_v2" "tunnel_credentials" {
 
   data_json = jsonencode({
     account_tag   = var.cloudflare_account_id
-    tunnel_id     = cloudflare_tunnel.main.id
-    tunnel_name   = cloudflare_tunnel.main.name
+    tunnel_id     = cloudflare_zero_trust_tunnel_cloudflared.main.id
+    tunnel_name   = cloudflare_zero_trust_tunnel_cloudflared.main.name
     tunnel_secret = random_password.tunnel_secret.result
   })
 

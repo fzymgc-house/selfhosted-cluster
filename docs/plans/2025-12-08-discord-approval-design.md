@@ -18,13 +18,15 @@ Replace `custom_id` buttons with Link buttons that use Windmill's built-in resum
 **Must complete first:**
 1. Issue #215 - Deploy Cloudflare Tunnel for Windmill
 2. Configure tunnel to expose `/api/w/*/jobs/resume/*` endpoints
-3. **Required:** Configure Cloudflare Access for authentication
 
-**Security Rationale:**
-Resume/cancel URLs must be protected by Cloudflare Access to prevent unauthorized approvals. While Windmill's URLs contain cryptographic signatures, adding Cloudflare Access provides defense-in-depth:
-- Prevents URL leakage from Discord channel history
-- Provides audit trail of who approved changes
-- Adds additional layer against replay attacks
+**Security Model:**
+Resume/cancel URLs are protected by Windmill's cryptographic signatures:
+- URLs contain signed tokens that Windmill validates before resuming/canceling flows
+- Tokens are single-use - once a URL is visited, it cannot be reused
+- Tokens are tied to specific flow runs and cannot be repurposed
+
+**Why not Cloudflare Access?**
+Discord Link buttons open URLs directly in the browser. If Cloudflare Access presents a login page, the approval flow breaks because the user must authenticate before reaching Windmill. Windmill's signed URLs provide sufficient protection for this use case.
 
 ## API Verification
 

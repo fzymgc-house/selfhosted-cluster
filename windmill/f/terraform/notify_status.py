@@ -7,6 +7,7 @@ import requests
 
 # Discord API limits
 DISCORD_EMBED_FIELD_LIMIT = 1000
+DISCORD_API_TIMEOUT = 30  # seconds
 
 
 class discord_bot_configuration(TypedDict):
@@ -83,6 +84,7 @@ def main(
         f"https://discord.com/api/v10/channels/{discord_bot_token['channel_id']}/messages",
         headers={"Authorization": f"Bot {discord_bot_token['token']}", "Content-Type": "application/json"},
         json=payload,
+        timeout=DISCORD_API_TIMEOUT,
     )
 
     if not response.ok:
@@ -148,8 +150,13 @@ def _update_approval_message(
         f"https://discord.com/api/v10/channels/{discord_bot_token['channel_id']}/messages/{message_id}",
         headers={"Authorization": f"Bot {discord_bot_token['token']}", "Content-Type": "application/json"},
         json=edit_payload,
+        timeout=DISCORD_API_TIMEOUT,
     )
 
-    # Ignore 404 (message deleted), raise other errors
-    if not response.ok and response.status_code != 404:
-        raise Exception(f"Discord API failed to update message: {response.status_code} - {response.text}")
+    # Handle response
+    if response.ok:
+        return
+    if response.status_code == 404:
+        print(f"Warning: Approval message {message_id} not found (may have been deleted)")
+        return
+    raise Exception(f"Discord API failed to update message: {response.status_code} - {response.text}")

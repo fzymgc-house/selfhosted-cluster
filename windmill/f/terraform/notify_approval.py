@@ -9,6 +9,7 @@ import wmill
 
 # Discord API limits
 DISCORD_EMBED_FIELD_LIMIT = 1000
+DISCORD_API_TIMEOUT = 30  # seconds
 
 # Public domain for Cloudflare Tunnel webhook endpoint
 PUBLIC_WEBHOOK_DOMAIN = "windmill-wh.fzymgc.net"
@@ -64,7 +65,12 @@ def main(discord: discord_bot_configuration, discord_bot_token: c_discord_bot_to
         dict with message_id and notification status
     """
     # Get internal resume/cancel URLs from Windmill SDK
-    urls = wmill.get_resume_urls()
+    try:
+        urls = wmill.get_resume_urls()
+        if not urls or 'resume' not in urls or 'cancel' not in urls:
+            raise ValueError(f"Invalid resume URLs returned: {urls}")
+    except Exception as e:
+        raise Exception(f"Failed to get resume URLs from Windmill SDK: {e}")
 
     # Transform to public URLs via Cloudflare Tunnel
     public_resume = make_public_url(urls['resume'])
@@ -123,6 +129,7 @@ def main(discord: discord_bot_configuration, discord_bot_token: c_discord_bot_to
         f"https://discord.com/api/v10/channels/{discord_bot_token['channel_id']}/messages",
         headers={"Authorization": f"Bot {discord_bot_token['token']}", "Content-Type": "application/json"},
         json=payload,
+        timeout=DISCORD_API_TIMEOUT,
     )
 
     if not response.ok:

@@ -17,8 +17,8 @@ value:
             type: static
             value: main
           github:
-            type: javascript
-            expr: wmill.getResource('f/resources/github')
+            type: static
+            value: '$res:f/resources/github'
           repository:
             type: static
             value: fzymgc-house/selfhosted-cluster
@@ -34,11 +34,11 @@ value:
             type: static
             value: tf/vault
           s3:
-            type: javascript
-            expr: wmill.getResource('f/resources/s3')
+            type: static
+            value: '$res:f/resources/s3'
           s3_bucket_prefix:
-            type: javascript
-            expr: wmill.getVariable('s3_bucket_prefix')
+            type: static
+            value: '$var:g/all/s3_bucket_prefix'
           workspace_path:
             type: javascript
             expr: 'results[''git-clone''].workspace_path'
@@ -54,19 +54,19 @@ value:
             type: static
             value: 'https://vault.fzymgc.house'
           vault_token:
-            type: javascript
-            expr: wmill.getVariable('vault_terraform_token')
+            type: static
+            value: '$var:g/all/vault_terraform_token'
         path: f/terraform/terraform_plan
     - id: notify-approval
       value:
         type: script
         input_transforms:
           discord:
-            type: javascript
-            expr: wmill.getResource('f/bots/terraform_discord_bot_configuration')
+            type: static
+            value: '$res:f/bots/terraform_discord_bot_configuration'
           discord_bot_token:
-            type: javascript
-            expr: wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
+            type: static
+            value: '$res:f/bots/terraform_discord_bot_token_configuration'
           module:
             type: static
             value: tf/vault
@@ -103,8 +103,8 @@ value:
             type: static
             value: 'https://vault.fzymgc.house'
           vault_token:
-            type: javascript
-            expr: wmill.getVariable('vault_terraform_token')
+            type: static
+            value: '$var:g/all/vault_terraform_token'
         path: f/terraform/terraform_apply
         skip_if:
           expr: 'results[''terraform-plan''].has_changes == false'
@@ -120,11 +120,11 @@ value:
             type: static
             value: Terraform apply completed successfully
           discord:
-            type: javascript
-            expr: wmill.getResource('f/bots/terraform_discord_bot_configuration')
+            type: static
+            value: '$res:f/bots/terraform_discord_bot_configuration'
           discord_bot_token:
-            type: javascript
-            expr: wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
+            type: static
+            value: '$res:f/bots/terraform_discord_bot_token_configuration'
           module:
             type: static
             value: tf/vault
@@ -147,11 +147,11 @@ value:
           type: javascript
           expr: error.message
         discord:
-          type: javascript
-          expr: wmill.getResource('f/bots/terraform_discord_bot_configuration')
+          type: static
+          value: '$res:f/bots/terraform_discord_bot_configuration'
         discord_bot_token:
-          type: javascript
-          expr: wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
+          type: static
+          value: '$res:f/bots/terraform_discord_bot_token_configuration'
         module:
           type: static
           value: tf/vault

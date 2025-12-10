@@ -167,13 +167,35 @@ spec:
                     value: "8"
                   - name: "SLEEP_QUEUE"
                     value: "200"
+                  - name: INIT_SCRIPT
+                    # yamllint disable rule:line-length
+                    value: |
+                      update-ca-certificates \
+                      && curl -fsSL https://apt.releases.hashicorp.com/gpg \
+                        | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+                      && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" \
+                        | tee /etc/apt/sources.list.d/hashicorp.list \
+                      && apt update  -q \
+                      && apt install -qy vault terraform \
+                      && setcap -r /usr/bin/vault
+                    # yamllint enable rule:line-length
                 # -- Extra sidecar containers
                 extraContainers: []
 
                 mode: "worker"
 
-                volumes: []
-                volumeMounts: []
+                volumes:
+                  - name: internal-ca
+                    secret:
+                      secretName: fzymgc-ica1-ca
+                      items:
+                        - key: fullchain.crt
+                          path: fzymgc-internal-ca.crt
+                volumeMounts:
+                  - name: internal-ca
+                    mountPath: /usr/local/share/ca-certificates/fzymgc-internal-ca.crt
+                    subPath: fzymgc-internal-ca.crt
+                    readOnly: true
 
                 # -- mount the docker socket inside the container to be able to run docker command as docker client to the host docker daemon
                 exposeHostDocker: true
@@ -219,14 +241,36 @@ spec:
                     memory: "2Gi"
 
                 # -- Extra environment variables to apply to the pods
-                extraEnv: []
+                extraEnv:
+                  - name: INIT_SCRIPT
+                    # yamllint disable rule:line-length
+                    value: |
+                      update-ca-certificates \
+                      && curl -fsSL https://apt.releases.hashicorp.com/gpg \
+                        | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+                      && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" \
+                        | tee /etc/apt/sources.list.d/hashicorp.list \
+                      && apt update  -q \
+                      && apt install -qy vault terraform \
+                      && setcap -r /usr/bin/vault
+                    # yamllint enable rule:line-length
                 # -- Extra sidecar containers
                 extraContainers: []
 
                 mode: "worker"
 
-                volumes: []
-                volumeMounts: []
+                volumes:
+                  - name: internal-ca
+                    secret:
+                      secretName: fzymgc-ica1-ca
+                      items:
+                        - key: fullchain.crt
+                          path: fzymgc-internal-ca.crt
+                volumeMounts:
+                  - name: internal-ca
+                    mountPath: /usr/local/share/ca-certificates/fzymgc-internal-ca.crt
+                    subPath: fzymgc-internal-ca.crt
+                    readOnly: true
 
                 # -- command override
                 command: []

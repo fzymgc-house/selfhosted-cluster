@@ -7,7 +7,7 @@ terraform {
   required_providers {
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      version = "~> 4.45"
+      version = "~> 5.14"
     }
     vault = {
       source  = "hashicorp/vault"

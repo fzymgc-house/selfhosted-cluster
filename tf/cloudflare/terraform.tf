@@ -11,13 +11,6 @@ provider "vault" {
   # - VAULT_TOKEN (from vault login)
 }
 
-# Backend configuration for state storage
-terraform {
-  backend "local" {
-    path = "terraform.tfstate"
-  }
-}
-
 # Data source for Cloudflare API token
 data "vault_kv_secret_v2" "cloudflare_token" {
   mount = "secret"
@@ -26,5 +19,16 @@ data "vault_kv_secret_v2" "cloudflare_token" {
 
 # Data source for fzymgc.house zone
 data "cloudflare_zone" "fzymgc_house" {
-  name = "fzymgc.house"
+  filter = {
+    name = "fzymgc.house"
+  }
+}
+
+terraform {
+  cloud {
+    organization = "fzymgc-house"
+    workspaces {
+      tags = ["main-cluster", "cloudflared"]
+    }
+  }
 }

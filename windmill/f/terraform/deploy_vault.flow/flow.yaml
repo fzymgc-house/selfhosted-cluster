@@ -40,6 +40,9 @@ value:
           s3_bucket_prefix:
             type: javascript
             expr: variable('g/all/s3_bucket_prefix')
+          tfc_token:
+            type: javascript
+            expr: variable('g/all/tfc_token')
           workspace_path:
             type: javascript
             expr: results.git_clone.workspace_path
@@ -51,6 +54,9 @@ value:
           module_dir:
             type: javascript
             expr: results.terraform_init.module_dir
+          tfc_token:
+            type: javascript
+            expr: variable('g/all/tfc_token')
           vault_addr:
             type: static
             value: 'https://vault.fzymgc.house'
@@ -100,6 +106,9 @@ value:
           module_dir:
             type: javascript
             expr: results.terraform_init.module_dir
+          tfc_token:
+            type: javascript
+            expr: variable('g/all/tfc_token')
           vault_addr:
             type: static
             value: 'https://vault.fzymgc.house'

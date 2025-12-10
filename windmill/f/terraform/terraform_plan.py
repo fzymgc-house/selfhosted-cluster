@@ -1,11 +1,18 @@
 """Run Terraform plan."""
 
 import json
+import os
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 
-def main(module_dir: str, vault_addr: str = "https://vault.fzymgc.house", vault_token: str = ""):
+def main(
+    module_dir: str,
+    vault_addr: str = "https://vault.fzymgc.house",
+    vault_token: str = "",
+    tfc_token: Optional[str] = None,
+):
     """
     Run Terraform plan.
 
@@ -13,6 +20,7 @@ def main(module_dir: str, vault_addr: str = "https://vault.fzymgc.house", vault_
         module_dir: Path to Terraform module directory
         vault_addr: Vault server address
         vault_token: Vault authentication token
+        tfc_token: Terraform Cloud API token (optional)
 
     Returns:
         dict with plan summary and details
@@ -22,11 +30,24 @@ def main(module_dir: str, vault_addr: str = "https://vault.fzymgc.house", vault_
     if not module_path.exists():
         raise ValueError(f"Module directory does not exist: {module_dir}")
 
-    # Set environment variables for Vault
-    env = {"VAULT_ADDR": vault_addr, "VAULT_TOKEN": vault_token, "PATH": "/usr/local/bin:/usr/bin:/bin"}
+    # Build environment with Vault config
+    env = os.environ.copy()
+    env["VAULT_ADDR"] = vault_addr
+    env["VAULT_TOKEN"] = vault_token
+
+    # Add TFC token if provided
+    if tfc_token:
+        env["TF_TOKEN_app_terraform_io"] = tfc_token
 
     # Run terraform plan with JSON output
-    result = subprocess.run(["terraform", "plan", "-out=tfplan", "-json"], cwd=str(module_path), capture_output=True, text=True, env=env, check=True)
+    result = subprocess.run(
+        ["terraform", "plan", "-out=tfplan", "-json"],
+        cwd=str(module_path),
+        capture_output=True,
+        text=True,
+        env=env,
+        check=True,
+    )
 
     # Parse plan output
     plan_lines = result.stdout.strip().split("\n")
@@ -41,8 +62,21 @@ def main(module_dir: str, vault_addr: str = "https://vault.fzymgc.house", vault_
             continue
 
     # Get human-readable plan
-    show_result = subprocess.run(["terraform", "show", "-no-color", "tfplan"], cwd=str(module_path), capture_output=True, text=True, env=env, check=True)
+    show_result = subprocess.run(
+        ["terraform", "show", "-no-color", "tfplan"],
+        cwd=str(module_path),
+        capture_output=True,
+        text=True,
+        env=env,
+        check=True,
+    )
 
     plan_summary = f"Plan: {changes.get('add', 0)} to add, {changes.get('change', 0)} to change, {changes.get('destroy', 0)} to destroy"
 
-    return {"module_dir": str(module_dir), "plan_summary": plan_summary, "plan_details": show_result.stdout, "changes": changes, "has_changes": sum(changes.values()) > 0}
+    return {
+        "module_dir": str(module_dir),
+        "plan_summary": plan_summary,
+        "plan_details": show_result.stdout,
+        "changes": changes,
+        "has_changes": sum(changes.values()) > 0,
+    }

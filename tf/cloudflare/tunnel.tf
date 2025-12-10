@@ -21,11 +21,13 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "main" {
   config = {
     ingress = concat(
       [for svc, definition in var.webhook_services : {
-        hostname = "${svc}.${var.webhook_base_domain}"
+        # Single-level subdomain pattern: windmill-wh.fzymgc.net
+        # (multi-level like windmill.wh.fzymgc.net requires Advanced Certificate Manager)
+        hostname = "${svc}${var.webhook_suffix}.${var.webhook_domain}"
         service  = definition.service_url
 
         origin_request = {
-          http_host_header   = "${svc}.${var.webhook_base_domain}"
+          http_host_header   = "${svc}${var.webhook_suffix}.${var.webhook_domain}"
           origin_server_name = split("//", definition.service_url)[1]
           no_tls_verify      = false
         }
@@ -37,13 +39,14 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "main" {
   }
 }
 
-# Create DNS records for webhook service subdomains
-# Using fzymgc.net zone to avoid split-horizon DNS issues with internal fzymgc.house
+# Create DNS records for webhook service endpoints
+# Using single-level subdomains (service-wh.fzymgc.net) for Universal SSL compatibility
+# Multi-level subdomains (service.wh.fzymgc.net) require Advanced Certificate Manager
 resource "cloudflare_dns_record" "webhook_services" {
   for_each = var.webhook_services
 
   zone_id = data.cloudflare_zone.fzymgc_net.id
-  name    = "${each.key}.wh"
+  name    = "${each.key}${var.webhook_suffix}"
   content = "${cloudflare_zero_trust_tunnel_cloudflared.main.id}.cfargotunnel.com"
   type    = "CNAME"
   proxied = true

@@ -79,7 +79,7 @@ variable "webhook_services" {
   }))
   default = {
     windmill = {
-      service_url = "http://windmill.windmill.svc.cluster.local:8000"
+      service_url = "http://windmill-app.windmill.svc.cluster.local:8000"
     }
   }
 }
@@ -503,7 +503,7 @@ To expose more services, add them to the `webhook_services` variable in `tf/clou
 variable "webhook_services" {
   default = {
     windmill = {
-      service_url = "http://windmill.windmill.svc.cluster.local:8000"
+      service_url = "http://windmill-app.windmill.svc.cluster.local:8000"
     }
     argo = {
       service_url = "http://argo-server.argo.svc.cluster.local:2746"

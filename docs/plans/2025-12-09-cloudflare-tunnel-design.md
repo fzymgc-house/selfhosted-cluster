@@ -3,7 +3,7 @@
 **Date:** 2025-12-09
 **Issue:** #215 - Add Cloudflare Tunnel for public service exposure
 **Author:** Claude Code
-**Status:** Design Phase
+**Status:** Implemented (PRs #259, #260)
 
 ## Overview
 
@@ -113,10 +113,12 @@ secret/fzymgc-house/cluster/cloudflared/tunnels/fzymgc-house-main/
   ├── account_tag
   ├── tunnel_id
   ├── tunnel_name
-  └── tunnel_secret
+  └── tunnel_token   # Full token for TUNNEL_TOKEN env var (base64-encoded JSON with {a,t,s})
 ```
 
 **Rationale:** Multi-tunnel path structure allows future tunnels at `.../tunnels/<tunnel-name>/`
+
+> **Important:** The `tunnel_token` is the full authentication token computed by Cloudflare for token-based authentication. This is the recommended approach for remotely-managed tunnels where ingress rules are configured via Terraform/API rather than a local config file.
 
 #### 2. ArgoCD Application (`argocd/app-configs/cloudflared-main/`)
 
@@ -148,34 +150,16 @@ spec:
   target:
     name: cloudflared-credentials
     creationPolicy: Owner
-    template:
-      type: Opaque
-      data:
-        credentials.json: |
-          {
-            "AccountTag": "{{ .account_tag }}",
-            "TunnelID": "{{ .tunnel_id }}",
-            "TunnelName": "{{ .tunnel_name }}",
-            "TunnelSecret": "{{ .tunnel_secret }}"
-          }
   data:
-    - secretKey: account_tag
+    # Full tunnel token for TUNNEL_TOKEN env var (token-based auth)
+    # This is the recommended approach for remotely-managed tunnels
+    - secretKey: tunnel_token
       remoteRef:
         key: fzymgc-house/cluster/cloudflared/tunnels/fzymgc-house-main
-        property: account_tag
-    - secretKey: tunnel_id
-      remoteRef:
-        key: fzymgc-house/cluster/cloudflared/tunnels/fzymgc-house-main
-        property: tunnel_id
-    - secretKey: tunnel_name
-      remoteRef:
-        key: fzymgc-house/cluster/cloudflared/tunnels/fzymgc-house-main
-        property: tunnel_name
-    - secretKey: tunnel_secret
-      remoteRef:
-        key: fzymgc-house/cluster/cloudflared/tunnels/fzymgc-house-main
-        property: tunnel_secret
+        property: tunnel_token
 ```
+
+> **Note:** Token-based authentication is simpler than `credentials.json`. The `tunnel_token` contains all necessary authentication data (account tag, tunnel ID, and secret) encoded into a single value that cloudflared understands via the `TUNNEL_TOKEN` environment variable.
 
 **Deployment:**
 ```yaml
@@ -188,28 +172,32 @@ spec:
   replicas: 2  # High availability
   selector:
     matchLabels:
-      app: cloudflared
+      app.kubernetes.io/name: cloudflared
   template:
     metadata:
       labels:
-        app: cloudflared
+        app.kubernetes.io/name: cloudflared
     spec:
       serviceAccountName: cloudflared
       containers:
       - name: cloudflared
-        image: cloudflare/cloudflared:latest
+        image: cloudflare/cloudflared:2025.11.1
         args:
           - tunnel
+          - --loglevel
+          - debug
+          - --metrics
+          - 0.0.0.0:2000
           - --no-autoupdate
           - run
-          - --token
-          - "$(TUNNEL_TOKEN)"
         env:
-        - name: TUNNEL_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: cloudflared-credentials
-              key: credentials.json
+          # Token-based auth for remotely-managed tunnels
+          # Ingress rules are managed in Cloudflare via Terraform
+          - name: TUNNEL_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflared-credentials
+                key: tunnel_token
         resources:
           requests:
             cpu: 100m
@@ -229,7 +217,18 @@ spec:
             port: 2000
           initialDelaySeconds: 5
           periodSeconds: 5
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65532
+          runAsGroup: 65532
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
 ```
+
+> **Important:** The deployment uses `TUNNEL_TOKEN` environment variable directly, not `--token` flag with `credentials.json`. When cloudflared detects `TUNNEL_TOKEN` in the environment, it authenticates and fetches configuration from Cloudflare automatically.
 
 ### Security Model
 
@@ -427,6 +426,48 @@ curl -v https://wh.fzymgc.house/
 - Windmill reverts to internal-only access
 - Discord approval buttons won't work, but Windmill UI still accessible via Tailscale
 
+### Troubleshooting
+
+#### Authentication Method: Token vs credentials.json
+
+There are two authentication methods for cloudflared:
+
+1. **credentials.json** (locally-managed tunnels):
+   - File contains `AccountTag`, `TunnelID`, `TunnelName`, and `TunnelSecret`
+   - `TunnelSecret` must be the **raw base64-encoded secret value only**
+   - Ingress rules configured via local config file
+
+2. **TUNNEL_TOKEN** (remotely-managed tunnels - **recommended**):
+   - Environment variable contains full authentication token
+   - Token format: base64-encoded JSON with `{a: accountTag, t: tunnelSecret, s: tunnelId}`
+   - Ingress rules configured in Cloudflare dashboard or via API/Terraform
+
+**Common Error:** "control stream encountered a failure while serving"
+
+This error occurs when using `credentials.json` but the `TunnelSecret` field contains the full tunnel token (with `{a,t,s}`) instead of just the raw secret value. The solution is to use token-based auth with `TUNNEL_TOKEN` environment variable.
+
+**Lesson Learned (PRs #253-#260):** Initially tried `credentials.json` approach, but the Terraform provider's `tunnel_token` attribute returns the full token (for `TUNNEL_TOKEN` env var), not the raw `TunnelSecret` value. Switching to token-based auth resolved the issue.
+
+#### Terraform State Issues
+
+If Terraform wants to recreate the tunnel (destroy + create), add lifecycle rules:
+
+```hcl
+resource "cloudflare_zero_trust_tunnel_cloudflared" "main" {
+  # ...
+
+  lifecycle {
+    ignore_changes = [secret]
+  }
+}
+```
+
+If `random_password.tunnel_secret` is not in state but Terraform expects it:
+
+```bash
+terraform import random_password.tunnel_secret "$(openssl rand -base64 48 | tr -d '\n')"
+```
+
 ### Monitoring
 
 **cloudflared pod logs:**
@@ -535,22 +576,34 @@ resource "cloudflare_access_policy" "protected_service" {
 
 ## Implementation Checklist
 
-- [ ] Create `tf/cloudflare/tunnel.tf` with tunnel resources
+- [x] Create `tf/cloudflare/tunnel.tf` with tunnel resources
 - [ ] Create `tf/cloudflare/MANUAL_APPLY.md` with break-glass procedure
-- [ ] Update Cloudflare API token permissions if needed
-- [ ] Run manual Terraform apply (Phase 1)
-- [ ] Verify tunnel in Cloudflare dashboard
-- [ ] Verify credentials in Vault
-- [ ] Create `argocd/app-configs/cloudflared-main/` directory
-- [ ] Create Kubernetes manifests (namespace, ExternalSecret, deployment)
-- [ ] Deploy via ArgoCD (Phase 2)
-- [ ] Verify pods running and connected
+- [x] Update Cloudflare API token permissions if needed
+- [x] Run manual Terraform apply (Phase 1)
+- [x] Verify tunnel in Cloudflare dashboard
+- [x] Verify credentials in Vault
+- [x] Create `argocd/app-configs/cloudflared-main/` directory
+- [x] Create Kubernetes manifests (namespace, ExternalSecret, deployment)
+- [x] Deploy via ArgoCD (Phase 2)
+- [x] Verify pods running and connected (4 connections to Cloudflare edge)
 - [ ] Test webhook endpoint externally (Phase 3)
 - [ ] Update Discord approval code (Phase 4)
 - [ ] Test full Discord approval flow
-- [ ] Document any issues encountered
+- [x] Document any issues encountered (see Troubleshooting section)
 - [ ] Add monitoring/alerting for tunnel health
 
 ## Open Questions
 
-None - design validated and ready for implementation.
+None - implementation complete and working.
+
+## Implementation Notes
+
+**PRs:**
+- #259: Initial token-based auth implementation
+- #260: Terraform lifecycle fix to prevent tunnel recreation
+
+**Verified Working (2025-12-09):**
+- 2 cloudflared pods running in HA configuration
+- 4 tunnel connections registered to Cloudflare edge (iad05, iad07, iad16)
+- ExternalSecret syncing `tunnel_token` from Vault
+- Ingress rules configured via Terraform for `windmill.wh.fzymgc.house`

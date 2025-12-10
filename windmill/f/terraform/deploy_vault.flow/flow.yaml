@@ -113,6 +113,9 @@ value:
       value:
         type: script
         input_transforms:
+          approval_message_id:
+            type: javascript
+            expr: 'results[''notify-approval'']?.message_id'
           details:
             type: static
             value: Terraform apply completed successfully
@@ -137,6 +140,9 @@ value:
     value:
       type: script
       input_transforms:
+        approval_message_id:
+          type: javascript
+          expr: 'results[''notify-approval'']?.message_id'
         details:
           type: javascript
           expr: error.message

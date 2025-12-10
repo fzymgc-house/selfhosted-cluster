@@ -1,10 +1,17 @@
 """Apply Terraform changes."""
 
+import os
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 
-def main(module_dir: str, vault_addr: str = "https://vault.fzymgc.house", vault_token: str = ""):
+def main(
+    module_dir: str,
+    vault_addr: str = "https://vault.fzymgc.house",
+    vault_token: str = "",
+    tfc_token: Optional[str] = None,
+):
     """
     Apply Terraform plan.
 
@@ -12,6 +19,7 @@ def main(module_dir: str, vault_addr: str = "https://vault.fzymgc.house", vault_
         module_dir: Path to Terraform module directory
         vault_addr: Vault server address
         vault_token: Vault authentication token
+        tfc_token: Terraform Cloud API token (optional)
 
     Returns:
         dict with apply status and output
@@ -25,10 +33,23 @@ def main(module_dir: str, vault_addr: str = "https://vault.fzymgc.house", vault_
     if not plan_file.exists():
         raise ValueError(f"Plan file not found: {plan_file}")
 
-    # Set environment variables for Vault
-    env = {"VAULT_ADDR": vault_addr, "VAULT_TOKEN": vault_token, "PATH": "/usr/local/bin:/usr/bin:/bin"}
+    # Build environment with Vault config
+    env = os.environ.copy()
+    env["VAULT_ADDR"] = vault_addr
+    env["VAULT_TOKEN"] = vault_token
+
+    # Add TFC token if provided
+    if tfc_token:
+        env["TF_TOKEN_app_terraform_io"] = tfc_token
 
     # Apply the plan
-    result = subprocess.run(["terraform", "apply", "-no-color", "tfplan"], cwd=str(module_path), capture_output=True, text=True, env=env, check=True)
+    result = subprocess.run(
+        ["terraform", "apply", "-no-color", "tfplan"],
+        cwd=str(module_path),
+        capture_output=True,
+        text=True,
+        env=env,
+        check=True,
+    )
 
     return {"module_dir": str(module_dir), "applied": True, "output": result.stdout}

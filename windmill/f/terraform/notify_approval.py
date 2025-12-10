@@ -1,5 +1,6 @@
 """Send approval notification to Discord with Link buttons for Windmill resume/cancel."""
 
+import os
 from datetime import datetime
 from typing import TypedDict
 from urllib.parse import urlparse, urlunparse
@@ -46,7 +47,7 @@ def make_public_url(internal_url: str) -> str:
     ))
 
 
-def main(discord: discord_bot_configuration, discord_bot_token: c_discord_bot_token_configuration, module: str, plan_summary: str, plan_details: str, run_id: str):
+def main(discord: discord_bot_configuration, discord_bot_token: c_discord_bot_token_configuration, module: str, plan_summary: str, plan_details: str):
     """
     Send approval notification with Link buttons to Discord.
 
@@ -59,11 +60,12 @@ def main(discord: discord_bot_configuration, discord_bot_token: c_discord_bot_to
         module: Terraform module name
         plan_summary: Short summary of plan changes
         plan_details: Full plan output
-        run_id: Windmill run ID
 
     Returns:
         dict with message_id and notification status
     """
+    # Get flow job ID from Windmill environment variable
+    run_id = os.environ.get('WM_FLOW_JOB_ID') or os.environ.get('WM_JOB_ID', 'unknown')
     # Get internal resume/cancel URLs from Windmill SDK
     try:
         urls = wmill.get_resume_urls()

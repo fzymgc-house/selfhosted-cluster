@@ -2,7 +2,7 @@ version: v2
 locks:
   f/terraform/git_clone: c9f87462659ab096dc570ac9f7f7afee89aa79abb24b3d4b8cd76da93d80b462
   f/terraform/notify_approval: fce60ec4354ef0cae2f94c0bceea4f83ed70ae7bfe982b3ad387292602eb7285
-  f/terraform/notify_status: ee7767de883de127596c6c6a11cd09615a71c9c9bacc314817900793dac548bd
+  f/terraform/notify_status: 1b7df8c343292625bc59ae16c93ee369d0f7e185004fb6afa021bc4b73f29ef1
   f/terraform/terraform_apply: 013076d26a929afc26da4d45fb98375ab0ad27ce887a97e0277ac4edae086ff0
   f/terraform/terraform_init: 4bb0c307e8e3623804338589f3201d427b01e9e36c4e85c53d470618cafc4ad8
   f/terraform/terraform_plan: 8eb458215cf0717e97a1a6963f86db50c84dcaf91ffd36ef9709a87f1183f2ce

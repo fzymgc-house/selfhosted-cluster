@@ -4,6 +4,7 @@
 name: Windmill - Deploy to Production
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [closed]
     branches:
@@ -21,7 +22,7 @@ env:
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'windmill')
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'windmill'))
     runs-on: fzymgc-house-cluster-runners
     steps:
       - name: Checkout repository
@@ -62,7 +63,7 @@ jobs:
           echo "✅ Workspace is accessible and authenticated"
 
       - name: Comment on PR
-        if: success()
+        if: success() && github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
@@ -74,7 +75,7 @@ jobs:
             })
 
       - name: Comment on failure
-        if: failure()
+        if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |

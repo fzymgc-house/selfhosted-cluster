@@ -1,7 +1,7 @@
 # Discord Approval Flow Design
 
 **Date:** 2025-12-08
-**Status:** Proposed
+**Status:** Implemented
 **Blocks:** Issue #237 (Discord approval testing), Issue #238 (End-to-end Terraform testing)
 **Dependencies:** Issue #215 (Cloudflare Tunnel for Windmill)
 
@@ -18,13 +18,15 @@ Replace `custom_id` buttons with Link buttons that use Windmill's built-in resum
 **Must complete first:**
 1. Issue #215 - Deploy Cloudflare Tunnel for Windmill
 2. Configure tunnel to expose `/api/w/*/jobs/resume/*` endpoints
-3. **Required:** Configure Cloudflare Access for authentication
 
-**Security Rationale:**
-Resume/cancel URLs must be protected by Cloudflare Access to prevent unauthorized approvals. While Windmill's URLs contain cryptographic signatures, adding Cloudflare Access provides defense-in-depth:
-- Prevents URL leakage from Discord channel history
-- Provides audit trail of who approved changes
-- Adds additional layer against replay attacks
+**Security Model:**
+Resume/cancel URLs are protected by Windmill's cryptographic signatures:
+- URLs contain signed tokens that Windmill validates before resuming/canceling flows
+- Tokens are single-use - once a URL is visited, it cannot be reused
+- Tokens are tied to specific flow runs and cannot be repurposed
+
+**Why not Cloudflare Access?**
+Discord Link buttons open URLs directly in the browser. If Cloudflare Access presents a login page, the approval flow breaks because the user must authenticate before reaching Windmill. Windmill's signed URLs provide sufficient protection for this use case.
 
 ## API Verification
 
@@ -48,7 +50,7 @@ urls = wmill.get_resume_urls()
 - Call `wmill.get_resume_urls()` to get internal resume/cancel URLs
 - Transform internal URLs to public tunnel URLs using `urllib.parse`:
   - From: `http://windmill.windmill.svc.cluster.local/api/...`
-  - To: `https://windmill.fzymgc.house/api/...`
+  - To: `https://windmill-wh.fzymgc.net/api/...`
 - Change button style from `custom_id` (styles 3, 4) to Link buttons (style 5)
 - Return `message_id` for downstream message editing
 - Extract Discord limits to named constants
@@ -219,7 +221,7 @@ def make_public_url(internal_url: str) -> str:
     parsed = urlparse(internal_url)
     return urlunparse((
         'https',  # scheme
-        'windmill.fzymgc.house',  # netloc
+        'windmill-wh.fzymgc.net',  # netloc - via Cloudflare Tunnel
         parsed.path,
         parsed.params,
         parsed.query,
@@ -542,7 +544,7 @@ class DiscordBotToken(TypedDict):
     channel_id: str
 
 
-def make_public_url(internal_url: str, public_domain: str = "windmill.fzymgc.house") -> str:
+def make_public_url(internal_url: str, public_domain: str = "windmill-wh.fzymgc.net") -> str:
     """
     Transform internal Windmill URL to public tunnel URL.
 

@@ -1,9 +1,18 @@
-"""Send approval notification to Discord."""
+"""Send approval notification to Discord with Link buttons for Windmill resume/cancel."""
 
 from datetime import datetime
 from typing import TypedDict
+from urllib.parse import urlparse, urlunparse
 
 import requests
+import wmill
+
+# Discord API limits
+DISCORD_EMBED_FIELD_LIMIT = 1000
+DISCORD_API_TIMEOUT = 30  # seconds
+
+# Public domain for Cloudflare Tunnel webhook endpoint
+PUBLIC_WEBHOOK_DOMAIN = "windmill-wh.fzymgc.net"
 
 
 class discord_bot_configuration(TypedDict):
@@ -16,9 +25,33 @@ class c_discord_bot_token_configuration(TypedDict):
     channel_id: str
 
 
+def make_public_url(internal_url: str) -> str:
+    """
+    Transform internal Windmill URL to public tunnel URL.
+
+    Args:
+        internal_url: Internal URL from Windmill (e.g., http://windmill.windmill.svc.cluster.local/api/...)
+
+    Returns:
+        Public HTTPS URL accessible via Cloudflare Tunnel
+    """
+    parsed = urlparse(internal_url)
+    return urlunparse((
+        'https',
+        PUBLIC_WEBHOOK_DOMAIN,
+        parsed.path,
+        parsed.params,
+        parsed.query,
+        parsed.fragment
+    ))
+
+
 def main(discord: discord_bot_configuration, discord_bot_token: c_discord_bot_token_configuration, module: str, plan_summary: str, plan_details: str, run_id: str):
     """
-    Send approval notification with interactive buttons to Discord.
+    Send approval notification with Link buttons to Discord.
+
+    Uses Windmill's built-in resume/cancel URLs exposed via Cloudflare Tunnel.
+    Link buttons (style 5) open URLs directly - no Discord interactions endpoint needed.
 
     Args:
         discord: Discord bot configuration resource
@@ -31,8 +64,24 @@ def main(discord: discord_bot_configuration, discord_bot_token: c_discord_bot_to
     Returns:
         dict with message_id and notification status
     """
+    # Get internal resume/cancel URLs from Windmill SDK
+    try:
+        urls = wmill.get_resume_urls()
+        if not urls or 'resume' not in urls or 'cancel' not in urls:
+            raise ValueError(f"Invalid resume URLs returned: {urls}")
+    except Exception as e:
+        raise Exception(f"Failed to get resume URLs from Windmill SDK: {e}")
+
+    # Transform to public URLs via Cloudflare Tunnel
+    public_resume = make_public_url(urls['resume'])
+    public_cancel = make_public_url(urls['cancel'])
+
     # Truncate plan details to fit in Discord embed
-    truncated_details = plan_details[:1000] + "..." if len(plan_details) > 1000 else plan_details
+    truncated_details = (
+        plan_details[:DISCORD_EMBED_FIELD_LIMIT] + "..."
+        if len(plan_details) > DISCORD_EMBED_FIELD_LIMIT
+        else plan_details
+    )
 
     payload = {
         "embeds": [
@@ -55,15 +104,15 @@ def main(discord: discord_bot_configuration, discord_bot_token: c_discord_bot_to
                 "components": [
                     {
                         "type": 2,  # Button
-                        "style": 3,  # Success (green)
+                        "style": 5,  # Link
                         "label": "✅ Approve",
-                        "custom_id": f"approve_{run_id}",
+                        "url": public_resume,
                     },
                     {
                         "type": 2,  # Button
-                        "style": 4,  # Danger (red)
+                        "style": 5,  # Link
                         "label": "❌ Reject",
-                        "custom_id": f"reject_{run_id}",
+                        "url": public_cancel,
                     },
                     {
                         "type": 2,  # Button
@@ -80,6 +129,7 @@ def main(discord: discord_bot_configuration, discord_bot_token: c_discord_bot_to
         f"https://discord.com/api/v10/channels/{discord_bot_token['channel_id']}/messages",
         headers={"Authorization": f"Bot {discord_bot_token['token']}", "Content-Type": "application/json"},
         json=payload,
+        timeout=DISCORD_API_TIMEOUT,
     )
 
     if not response.ok:

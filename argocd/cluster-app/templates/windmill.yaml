@@ -92,7 +92,7 @@ spec:
                       && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" \
                         | tee /etc/apt/sources.list.d/hashicorp.list \
                       && apt update  -q \
-                      && apt install -qy vault \
+                      && apt install -qy vault terraform \
                       && setcap -r /usr/bin/vault
                     # yamllint enable rule:line-length
                 # -- Extra sidecar containers

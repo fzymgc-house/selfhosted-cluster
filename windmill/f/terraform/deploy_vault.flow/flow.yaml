@@ -9,7 +9,7 @@ description: |
   6. Send completion notification
 value:
   modules:
-    - id: git-clone
+    - id: git_clone
       value:
         type: script
         input_transforms:
@@ -18,7 +18,7 @@ value:
             value: main
           github:
             type: javascript
-            expr: wmill.getResource('f/resources/github')
+            expr: resource('f/resources/github')
           repository:
             type: static
             value: fzymgc-house/selfhosted-cluster
@@ -26,7 +26,7 @@ value:
             type: static
             value: /tmp/terraform-workspace
         path: f/terraform/git_clone
-    - id: terraform-init
+    - id: terraform_init
       value:
         type: script
         input_transforms:
@@ -35,53 +35,53 @@ value:
             value: tf/vault
           s3:
             type: javascript
-            expr: wmill.getResource('f/resources/s3')
+            expr: resource('f/resources/s3')
           s3_bucket_prefix:
             type: javascript
-            expr: wmill.getVariable('s3_bucket_prefix')
+            expr: variable('g/all/s3_bucket_prefix')
           workspace_path:
             type: javascript
-            expr: 'results[''git-clone''].workspace_path'
+            expr: results.git_clone.workspace_path
         path: f/terraform/terraform_init
-    - id: terraform-plan
+    - id: terraform_plan
       value:
         type: script
         input_transforms:
           module_dir:
             type: javascript
-            expr: 'results[''terraform-init''].module_dir'
+            expr: results.terraform_init.module_dir
           vault_addr:
             type: static
             value: 'https://vault.fzymgc.house'
           vault_token:
             type: javascript
-            expr: wmill.getVariable('vault_terraform_token')
+            expr: variable('g/all/vault_terraform_token')
         path: f/terraform/terraform_plan
-    - id: notify-approval
+    - id: notify_approval
       value:
         type: script
         input_transforms:
           discord:
             type: javascript
-            expr: wmill.getResource('f/bots/terraform_discord_bot_configuration')
+            expr: resource('f/bots/terraform_discord_bot_configuration')
           discord_bot_token:
             type: javascript
-            expr: wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
+            expr: resource('f/bots/terraform_discord_bot_token_configuration')
           module:
             type: static
             value: tf/vault
           plan_details:
             type: javascript
-            expr: 'results[''terraform-plan''].plan_details'
+            expr: results.terraform_plan.plan_details
           plan_summary:
             type: javascript
-            expr: 'results[''terraform-plan''].plan_summary'
+            expr: results.terraform_plan.plan_summary
           run_id:
             type: javascript
             expr: flow.id
         path: f/terraform/notify_approval
         skip_if:
-          expr: 'results[''terraform-plan''].has_changes == false'
+          expr: results.terraform_plan.has_changes == false
           label: Skip if no changes
     - id: approval
       value:
@@ -90,41 +90,41 @@ value:
           required_events: 1
           timeout: 86400
         skip_if:
-          expr: 'results[''terraform-plan''].has_changes == false'
+          expr: results.terraform_plan.has_changes == false
           label: Skip if no changes
-    - id: terraform-apply
+    - id: terraform_apply
       value:
         type: script
         input_transforms:
           module_dir:
             type: javascript
-            expr: 'results[''terraform-init''].module_dir'
+            expr: results.terraform_init.module_dir
           vault_addr:
             type: static
             value: 'https://vault.fzymgc.house'
           vault_token:
             type: javascript
-            expr: wmill.getVariable('vault_terraform_token')
+            expr: variable('g/all/vault_terraform_token')
         path: f/terraform/terraform_apply
         skip_if:
-          expr: 'results[''terraform-plan''].has_changes == false'
+          expr: results.terraform_plan.has_changes == false
           label: Skip if no changes
-    - id: notify-success
+    - id: notify_success
       value:
         type: script
         input_transforms:
           approval_message_id:
             type: javascript
-            expr: 'results[''notify-approval'']?.message_id'
+            expr: results.notify_approval?.message_id
           details:
             type: static
             value: Terraform apply completed successfully
           discord:
             type: javascript
-            expr: wmill.getResource('f/bots/terraform_discord_bot_configuration')
+            expr: resource('f/bots/terraform_discord_bot_configuration')
           discord_bot_token:
             type: javascript
-            expr: wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
+            expr: resource('f/bots/terraform_discord_bot_token_configuration')
           module:
             type: static
             value: tf/vault
@@ -133,25 +133,25 @@ value:
             value: success
         path: f/terraform/notify_status
         skip_if:
-          expr: 'results[''terraform-plan''].has_changes == false'
+          expr: results.terraform_plan.has_changes == false
           label: Skip if no changes
   failure_module:
-    id: notify-failure
+    id: notify_failure
     value:
       type: script
       input_transforms:
         approval_message_id:
           type: javascript
-          expr: 'results[''notify-approval'']?.message_id'
+          expr: results.notify_approval?.message_id
         details:
           type: javascript
           expr: error.message
         discord:
           type: javascript
-          expr: wmill.getResource('f/bots/terraform_discord_bot_configuration')
+          expr: resource('f/bots/terraform_discord_bot_configuration')
         discord_bot_token:
           type: javascript
-          expr: wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
+          expr: resource('f/bots/terraform_discord_bot_token_configuration')
         module:
           type: static
           value: tf/vault

@@ -37,7 +37,7 @@ variable "webhook_services" {
   }))
   default = {
     windmill = {
-      service_url = "http://windmill.windmill.svc.cluster.local:8000"
+      service_url = "http://windmill-app.windmill.svc.cluster.local:8000"
     }
   }
 

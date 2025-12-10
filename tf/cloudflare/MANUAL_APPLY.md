@@ -138,7 +138,7 @@ webhook_urls = {
 5. Click tunnel name → View configuration
 6. Verify ingress rules:
    - Hostname: `windmill-wh.fzymgc.net`
-   - Service: `http://windmill.windmill.svc.cluster.local:8000`
+   - Service: `http://windmill-app.windmill.svc.cluster.local:8000`
    - Additional services if configured (e.g., `argo-wh.fzymgc.net`)
 
 **DNS Verification:**

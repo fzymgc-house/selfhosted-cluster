@@ -83,9 +83,6 @@ value:
           plan_summary:
             type: javascript
             expr: results.terraform_plan.plan_summary
-          run_id:
-            type: javascript
-            expr: flow.id
         path: f/terraform/notify_approval
         skip_if:
           expr: results.terraform_plan.has_changes == false

@@ -1,4 +1,7 @@
 """Send approval notification to Discord with Link buttons for Windmill resume/cancel."""
+#requirements:
+#wmill
+#requests
 
 import os
 from datetime import datetime

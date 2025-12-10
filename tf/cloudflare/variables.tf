@@ -19,9 +19,9 @@ variable "tunnel_name" {
 }
 
 variable "webhook_base_domain" {
-  description = "Base domain for webhook subdomains"
+  description = "Base domain for webhook subdomains (using fzymgc.net to avoid split-horizon DNS)"
   type        = string
-  default     = "wh.fzymgc.house"
+  default     = "wh.fzymgc.net"
 }
 
 variable "webhook_services" {

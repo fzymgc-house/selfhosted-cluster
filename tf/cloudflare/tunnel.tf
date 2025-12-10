@@ -38,10 +38,11 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "main" {
 }
 
 # Create DNS records for webhook service subdomains
+# Using fzymgc.net zone to avoid split-horizon DNS issues with internal fzymgc.house
 resource "cloudflare_dns_record" "webhook_services" {
   for_each = var.webhook_services
 
-  zone_id = data.cloudflare_zone.fzymgc_house.id
+  zone_id = data.cloudflare_zone.fzymgc_net.id
   name    = "${each.key}.wh"
   content = "${cloudflare_zero_trust_tunnel_cloudflared.main.id}.cfargotunnel.com"
   type    = "CNAME"

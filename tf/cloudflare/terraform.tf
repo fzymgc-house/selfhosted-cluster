@@ -17,10 +17,18 @@ data "vault_kv_secret_v2" "cloudflare_token" {
   name  = "fzymgc-house/infrastructure/cloudflare/api-token"
 }
 
-# Data source for fzymgc.house zone
+# Data source for fzymgc.house zone (internal services)
 data "cloudflare_zone" "fzymgc_house" {
   filter = {
     name = "fzymgc.house"
+  }
+}
+
+# Data source for fzymgc.net zone (external/webhook services)
+# Using separate domain avoids split-horizon DNS issues with internal fzymgc.house
+data "cloudflare_zone" "fzymgc_net" {
+  filter = {
+    name = "fzymgc.net"
   }
 }
 

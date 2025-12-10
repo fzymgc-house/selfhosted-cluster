@@ -20,6 +20,10 @@
 - Vault token with `infrastructure-developer` policy
 - Cloudflare account access (to verify in dashboard)
 
+**Required Cloudflare Setup:**
+- Zone `fzymgc.house` must exist and be active (internal services)
+- Zone `fzymgc.net` must exist and be active (external webhook services)
+
 ---
 
 ## Procedure
@@ -94,7 +98,7 @@ terraform plan -out=tfplan
 
 **Review Plan Carefully:**
 - Check that tunnel name is "fzymgc-house-main"
-- Verify DNS records for each webhook service subdomain (e.g., `windmill.wh.fzymgc.house`)
+- Verify DNS records for each webhook service subdomain (e.g., `windmill.wh.fzymgc.net`)
 - Confirm Vault path is `secret/fzymgc-house/cluster/cloudflared/tunnels/fzymgc-house-main`
 - Ensure ingress rules route subdomains to correct services
 
@@ -121,7 +125,7 @@ tunnel_cname = "<tunnel-id>.cfargotunnel.com"
 tunnel_id = "<tunnel-id>"
 vault_path = "secret/data/fzymgc-house/cluster/cloudflared/tunnels/fzymgc-house-main"
 webhook_urls = {
-  "windmill" = "https://windmill.wh.fzymgc.house"
+  "windmill" = "https://windmill.wh.fzymgc.net"
 }
 ```
 
@@ -133,12 +137,12 @@ webhook_urls = {
 4. Check status: Should show "Inactive" (no connectors yet)
 5. Click tunnel name → View configuration
 6. Verify ingress rules:
-   - Hostname: `windmill.wh.fzymgc.house`
+   - Hostname: `windmill.wh.fzymgc.net`
    - Service: `http://windmill.windmill.svc.cluster.local:8000`
-   - Additional services if configured (e.g., `argo.wh.fzymgc.house`)
+   - Additional services if configured (e.g., `argo.wh.fzymgc.net`)
 
 **DNS Verification:**
-1. Navigate to **Websites → fzymgc.house → DNS → Records**
+1. Navigate to **Websites → fzymgc.net → DNS → Records**
 2. Verify CNAME records for each webhook service:
    - Name: `windmill.wh`
    - Target: `<tunnel-id>.cfargotunnel.com`
@@ -158,14 +162,14 @@ Key             Value
 account_tag     <cloudflare-account-id>
 tunnel_id       <tunnel-id>
 tunnel_name     fzymgc-house-main
-tunnel_secret   <64-character-secret>
+tunnel_token    <base64-encoded-token>
 ```
 
 **All Four Keys Must Be Present:**
 - `account_tag`
 - `tunnel_id`
 - `tunnel_name`
-- `tunnel_secret`
+- `tunnel_token` (full token for TUNNEL_TOKEN env var)
 
 ### Step 9: Deploy cloudflared (If Not Already Deployed)
 

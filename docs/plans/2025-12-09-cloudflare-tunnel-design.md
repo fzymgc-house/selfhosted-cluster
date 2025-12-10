@@ -7,7 +7,7 @@
 
 ## Overview
 
-Deploy Cloudflare Tunnel infrastructure to expose internal Kubernetes services to the internet without inbound firewall rules. Initial use case: expose Windmill webhook endpoints at `windmill.wh.fzymgc.house` for Discord approval buttons using subdomain-based routing.
+Deploy Cloudflare Tunnel infrastructure to expose internal Kubernetes services to the internet without inbound firewall rules. Initial use case: expose Windmill webhook endpoints at `windmill.wh.fzymgc.net` for Discord approval buttons using subdomain-based routing.
 
 ## Problem Statement
 
@@ -15,15 +15,17 @@ Issue #237 requires testing the Discord approval flow for Windmill Terraform dep
 
 **Challenge:** Discord servers need to reach Windmill's webhook endpoints from the internet. Current Windmill instance is internal-only (accessible via Tailscale or Traefik IngressRoute within cluster).
 
-**Solution:** Expose Windmill webhook endpoints via Cloudflare Tunnel at `windmill.wh.fzymgc.house` using subdomain-based routing. This approach avoids Cloudflare Free plan limitations with Transform Rules (regex_replace requires Business plan) and provides cleaner service isolation.
+**Solution:** Expose Windmill webhook endpoints via Cloudflare Tunnel at `windmill.wh.fzymgc.net` using subdomain-based routing. This approach avoids Cloudflare Free plan limitations with Transform Rules (regex_replace requires Business plan) and provides cleaner service isolation.
+
+> **Why fzymgc.net instead of fzymgc.house?** The `fzymgc.house` domain is used internally with Tailscale MagicDNS and local DNS resolution. Using the same domain for external Cloudflare-proxied services would create split-horizon DNS issues where internal and external clients resolve the same hostname to different IPs. Using `fzymgc.net` for external webhooks keeps the DNS resolution clean and predictable.
 
 ## Requirements
 
 ### Functional Requirements
 
 1. **Webhook Exposure**: Expose Windmill webhook endpoints (`/api/w/*/jobs_u/*`) publicly
-2. **Subdomain Isolation**: Use `service.wh.fzymgc.house` subdomain pattern for clear service separation
-3. **Future Extensibility**: Support adding other services (e.g., `argo.wh.fzymgc.house`)
+2. **Subdomain Isolation**: Use `service.wh.fzymgc.net` subdomain pattern for clear service separation
+3. **Future Extensibility**: Support adding other services (e.g., `argo.wh.fzymgc.net`)
 4. **No Authentication Layer**: Discord can't handle OAuth/service tokens; security is in Windmill's signed URLs
 5. **High Availability**: Multiple cloudflared replicas for redundancy
 6. **No Path Rewriting**: Works on Cloudflare Free plan (no Transform Rules needed)
@@ -51,7 +53,7 @@ GitHub PR merge → Windmill Flow → Terraform Apply
                                       ↓
                         cloudflared connects to tunnel
                                       ↓
-                Discord → windmill.wh.fzymgc.house → Windmill
+                Discord → windmill.wh.fzymgc.net → Windmill
 ```
 
 ### Components
@@ -85,7 +87,7 @@ variable "webhook_services" {
 ```hcl
 config {
   # Dynamic ingress rules for webhook services
-  # Each service gets its own subdomain: service.wh.fzymgc.house
+  # Each service gets its own subdomain: service.wh.fzymgc.net
   dynamic "ingress_rule" {
     for_each = var.webhook_services
     content {
@@ -243,7 +245,7 @@ spec:
 - **Defense-in-Depth**: Even if someone gets the URL, it's single-use and time-limited
 
 **Subdomain Security:**
-- Only `windmill.wh.fzymgc.house` exposed publicly (webhook endpoints only)
+- Only `windmill.wh.fzymgc.net` exposed publicly (webhook endpoints only)
 - Full Windmill UI remains internal (Traefik IngressRoute at `windmill.fzymgc.house`)
 - Each service requires explicit subdomain configuration in Terraform
 - Subdomain isolation prevents accidental exposure of other services
@@ -294,7 +296,7 @@ terraform apply tfplan
 
 # Step 4: Verify in Cloudflare Dashboard
 # - Check tunnel exists: "fzymgc-house-main"
-# - Check DNS record: wh.fzymgc.house → <tunnel-id>.cfargotunnel.com
+# - Check DNS record: wh.fzymgc.net → <tunnel-id>.cfargotunnel.com
 # - Check ingress rules configured
 
 # Step 5: Verify in Vault
@@ -329,8 +331,8 @@ terraform apply tfplan
 
 **Verification:**
 - Cloudflare Dashboard: Tunnel "fzymgc-house-main" exists
-- Cloudflare Dashboard: DNS record `windmill.wh.fzymgc.house` points to tunnel
-- Cloudflare Dashboard: Ingress rules show `windmill.wh.fzymgc.house` → Windmill service
+- Cloudflare Dashboard: DNS record `windmill.wh.fzymgc.net` points to tunnel
+- Cloudflare Dashboard: Ingress rules show `windmill.wh.fzymgc.net` → Windmill service
 - Vault: `vault kv get secret/fzymgc-house/cluster/cloudflared/tunnels/fzymgc-house-main`
 
 ### Phase 2: Deploy cloudflared
@@ -369,19 +371,19 @@ kubectl --context fzymgc-house logs -n cloudflared -l app=cloudflared
 
 ```bash
 # Test valid Windmill endpoint
-curl -v https://windmill.wh.fzymgc.house/api/version
+curl -v https://windmill.wh.fzymgc.net/api/version
 # Expected: 200 OK with Windmill version JSON
 
 # Test path that doesn't exist in Windmill
-curl -v https://windmill.wh.fzymgc.house/nonexistent
+curl -v https://windmill.wh.fzymgc.net/nonexistent
 # Expected: Windmill's 404 response (confirms routing to Windmill)
 
 # Test non-configured subdomain
-curl -v https://other.wh.fzymgc.house/api/version
+curl -v https://other.wh.fzymgc.net/api/version
 # Expected: Tunnel 404 (no matching ingress rule)
 
 # Test base domain
-curl -v https://wh.fzymgc.house/
+curl -v https://wh.fzymgc.net/
 # Expected: DNS resolution may fail or tunnel 404 (no ingress rule)
 ```
 
@@ -391,7 +393,7 @@ curl -v https://wh.fzymgc.house/
 
 ```bash
 # Update windmill/f/terraform/notify_approval.py
-# Change public_domain from "windmill.fzymgc.house" to "windmill.wh.fzymgc.house"
+# Change public_domain from "windmill.fzymgc.house" to "windmill.wh.fzymgc.net"
 # No path prefix needed - subdomain routing is direct to Windmill
 
 # Test with safe Terraform change
@@ -412,12 +414,12 @@ curl -v https://wh.fzymgc.house/
 - Verify DNS record in Cloudflare dashboard
 - Check `proxied=true` (orange cloud enabled)
 - Wait up to 5 minutes for DNS propagation
-- Test with `dig wh.fzymgc.house` or `nslookup wh.fzymgc.house`
+- Test with `dig wh.fzymgc.net` or `nslookup wh.fzymgc.net`
 
 **If subdomain routing broken:**
 - Review ingress rules in Cloudflare Tunnel dashboard
 - Check Terraform config for typos in hostname or service URL
-- Verify DNS records created correctly (`windmill.wh.fzymgc.house`)
+- Verify DNS records created correctly (`windmill.wh.fzymgc.net`)
 - Fix in Terraform, re-apply
 - cloudflared automatically picks up config changes
 
@@ -508,8 +510,8 @@ variable "webhook_services" {
 ```
 
 This automatically creates:
-- DNS records: `argo.wh.fzymgc.house` → tunnel CNAME
-- Ingress rules: `argo.wh.fzymgc.house` → Argo service
+- DNS records: `argo.wh.fzymgc.net` → tunnel CNAME
+- Ingress rules: `argo.wh.fzymgc.net` → Argo service
 
 Then apply via Terraform workflow.
 
@@ -568,7 +570,7 @@ resource "cloudflare_access_policy" "protected_service" {
 
 **Blocks:**
 - #237 - Test end-to-end Discord approval flow (requires webhook endpoint)
-- Discord approval design implementation (requires `wh.fzymgc.house` to exist)
+- Discord approval design implementation (requires `wh.fzymgc.net` to exist)
 
 **Related:**
 - Discord approval design (docs/plans/2025-12-08-discord-approval-design.md)
@@ -606,4 +608,4 @@ None - implementation complete and working.
 - 2 cloudflared pods running in HA configuration
 - 4 tunnel connections registered to Cloudflare edge (iad05, iad07, iad16)
 - ExternalSecret syncing `tunnel_token` from Vault
-- Ingress rules configured via Terraform for `windmill.wh.fzymgc.house`
+- Ingress rules configured via Terraform for `windmill.wh.fzymgc.net`

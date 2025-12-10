@@ -98,7 +98,7 @@ terraform plan -out=tfplan
 
 **Review Plan Carefully:**
 - Check that tunnel name is "fzymgc-house-main"
-- Verify DNS records for each webhook service subdomain (e.g., `windmill.wh.fzymgc.net`)
+- Verify DNS records for each webhook service subdomain (e.g., `windmill-wh.fzymgc.net`)
 - Confirm Vault path is `secret/fzymgc-house/cluster/cloudflared/tunnels/fzymgc-house-main`
 - Ensure ingress rules route subdomains to correct services
 
@@ -125,7 +125,7 @@ tunnel_cname = "<tunnel-id>.cfargotunnel.com"
 tunnel_id = "<tunnel-id>"
 vault_path = "secret/data/fzymgc-house/cluster/cloudflared/tunnels/fzymgc-house-main"
 webhook_urls = {
-  "windmill" = "https://windmill.wh.fzymgc.net"
+  "windmill" = "https://windmill-wh.fzymgc.net"
 }
 ```
 
@@ -137,14 +137,14 @@ webhook_urls = {
 4. Check status: Should show "Inactive" (no connectors yet)
 5. Click tunnel name → View configuration
 6. Verify ingress rules:
-   - Hostname: `windmill.wh.fzymgc.net`
+   - Hostname: `windmill-wh.fzymgc.net`
    - Service: `http://windmill.windmill.svc.cluster.local:8000`
-   - Additional services if configured (e.g., `argo.wh.fzymgc.net`)
+   - Additional services if configured (e.g., `argo-wh.fzymgc.net`)
 
 **DNS Verification:**
 1. Navigate to **Websites → fzymgc.net → DNS → Records**
 2. Verify CNAME records for each webhook service:
-   - Name: `windmill.wh`
+   - Name: `windmill-wh`
    - Target: `<tunnel-id>.cfargotunnel.com`
    - Proxy status: Proxied (orange cloud)
 

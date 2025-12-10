@@ -18,10 +18,16 @@ variable "tunnel_name" {
   default     = "fzymgc-house-main"
 }
 
-variable "webhook_base_domain" {
-  description = "Base domain for webhook subdomains (using fzymgc.net to avoid split-horizon DNS)"
+variable "webhook_domain" {
+  description = "Domain for webhook endpoints (using fzymgc.net to avoid split-horizon DNS)"
   type        = string
-  default     = "wh.fzymgc.net"
+  default     = "fzymgc.net"
+}
+
+variable "webhook_suffix" {
+  description = "Suffix appended to service name for webhook hostnames (e.g., -wh gives windmill-wh.fzymgc.net)"
+  type        = string
+  default     = "-wh"
 }
 
 variable "webhook_services" {

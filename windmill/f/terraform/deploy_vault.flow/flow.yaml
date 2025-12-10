@@ -66,7 +66,8 @@ value:
             expr: wmill.getResource('f/bots/terraform_discord_bot_configuration')
           discord_bot_token:
             type: javascript
-            expr: wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
+            expr: >-
+              wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
           module:
             type: static
             value: tf/vault
@@ -86,12 +87,12 @@ value:
     - id: approval
       value:
         type: identity
-        suspend:
-          required_events: 1
-          timeout: 86400
         skip_if:
           expr: 'results[''terraform-plan''].has_changes == false'
           label: Skip if no changes
+        suspend:
+          required_events: 1
+          timeout: 86400
     - id: terraform-apply
       value:
         type: script
@@ -113,6 +114,9 @@ value:
       value:
         type: script
         input_transforms:
+          approval_message_id:
+            type: javascript
+            expr: 'results[''notify-approval'']?.message_id'
           details:
             type: static
             value: Terraform apply completed successfully
@@ -121,7 +125,8 @@ value:
             expr: wmill.getResource('f/bots/terraform_discord_bot_configuration')
           discord_bot_token:
             type: javascript
-            expr: wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
+            expr: >-
+              wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
           module:
             type: static
             value: tf/vault
@@ -137,6 +142,9 @@ value:
     value:
       type: script
       input_transforms:
+        approval_message_id:
+          type: javascript
+          expr: 'results[''notify-approval'']?.message_id'
         details:
           type: javascript
           expr: error.message
@@ -145,7 +153,8 @@ value:
           expr: wmill.getResource('f/bots/terraform_discord_bot_configuration')
         discord_bot_token:
           type: javascript
-          expr: wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
+          expr: >-
+            wmill.getResource('f/bots/terraform_discord_bot_token_configuration')
         module:
           type: static
           value: tf/vault

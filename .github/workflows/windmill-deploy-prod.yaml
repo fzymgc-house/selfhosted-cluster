@@ -4,6 +4,7 @@
 name: Windmill - Deploy to Production
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [closed]
     branches:
@@ -21,16 +22,16 @@ env:
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'windmill')
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'windmill'))
     runs-on: fzymgc-house-cluster-runners
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: main
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
@@ -62,7 +63,7 @@ jobs:
           echo "✅ Workspace is accessible and authenticated"
 
       - name: Comment on PR
-        if: success()
+        if: success() && github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
@@ -74,7 +75,7 @@ jobs:
             })
 
       - name: Comment on failure
-        if: failure()
+        if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
@@ -84,6 +85,17 @@ jobs:
               repo: context.repo.repo,
               body: '❌ Production deployment failed. Check [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.'
             })
+
+      - name: Summary for manual trigger
+        if: always() && github.event_name == 'workflow_dispatch'
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "## ✅ Deployment Successful" >> $GITHUB_STEP_SUMMARY
+            echo "Successfully deployed to production workspace **${{ env.WINDMILL_WORKSPACE }}**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Deployment Failed" >> $GITHUB_STEP_SUMMARY
+            echo "Production deployment failed. Check workflow logs for details." >> $GITHUB_STEP_SUMMARY
+          fi
 
   # Sync secrets from Vault AFTER deploying variable definitions
   sync-secrets:

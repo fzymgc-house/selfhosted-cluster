@@ -1,0 +1,3 @@
+description: Terraform Cloud API token for HCP Terraform authentication
+value: ""
+is_secret: true

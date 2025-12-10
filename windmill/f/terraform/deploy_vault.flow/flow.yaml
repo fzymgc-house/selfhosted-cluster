@@ -8,6 +8,7 @@ description: |
   5. Apply changes
   6. Send completion notification
 value:
+  same_worker: true
   modules:
     - id: git_clone
       value:

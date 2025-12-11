@@ -1,6 +1,0 @@
-{
-    "ansible.python.interpreterPath": "/Volumes/Code/github.com/fzymgc-house/selfhosted-cluster/ansible/.venv/bin/python",
-    "yaml.schemas": {
-        "https://raw.githubusercontent.com/argoproj/argo-workflows/main/api/jsonschema/schema.json": "argocd/**/*-wf.yaml"
-    }
-}

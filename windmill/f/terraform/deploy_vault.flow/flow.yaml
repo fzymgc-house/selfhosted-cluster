@@ -88,8 +88,7 @@ value:
           required_events: 1
           timeout: 86400
         skip_if:
-          expr: results.terraform_plan.has_changes == false
-          label: Skip if no changes
+          expr: '!results.terraform_plan.has_changes'
     - id: terraform_apply
       value:
         type: script
@@ -108,8 +107,7 @@ value:
             expr: variable('g/all/vault_terraform_token')
         path: f/terraform/terraform_apply
         skip_if:
-          expr: results.terraform_plan.has_changes == false
-          label: Skip if no changes
+          expr: '!results.terraform_plan.has_changes'
     - id: notify_success
       value:
         type: script
@@ -134,8 +132,7 @@ value:
             value: success
         path: f/terraform/notify_status
         skip_if:
-          expr: results.terraform_plan.has_changes == false
-          label: Skip if no changes
+          expr: '!results.terraform_plan.has_changes'
   failure_module:
     id: notify_failure
     value:

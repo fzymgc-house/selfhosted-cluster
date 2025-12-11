@@ -84,12 +84,6 @@ value:
             type: javascript
             expr: results.terraform_plan.plan_summary
         path: f/terraform/notify_approval
-        skip_if:
-          expr: results.terraform_plan.has_changes == false
-          label: Skip if no changes
-    - id: approval
-      value:
-        type: identity
         suspend:
           required_events: 1
           timeout: 86400

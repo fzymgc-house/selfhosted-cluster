@@ -302,6 +302,36 @@ Terraform GitOps automation is handled by Windmill:
 - Flows defined in `windmill/f/terraform/`
 - See `docs/windmill-migration.md` for details
 
+### Windmill Script Dependencies
+
+Windmill Python scripts use `.script.lock` files to pin dependencies. These lockfiles are **required for GitOps sync** - the `#requirements:` comments in scripts are ignored when syncing from Git.
+
+**Lockfile format:**
+```
+# py: 3.11
+package1==version1
+package2==version2
+```
+
+**IMPORTANT:** Lockfiles must include ALL transitive dependencies, not just direct imports. For example, `wmill` depends on `httpx`, which depends on `anyio`, `httpcore`, etc.
+
+**Generating lockfiles:**
+```bash
+# Use the helper script
+./scripts/generate-windmill-lockfile.sh windmill/f/terraform/notify_approval.py
+
+# Or manually: create venv, install deps, pip freeze
+python3 -m venv /tmp/lockfile-venv
+source /tmp/lockfile-venv/bin/activate
+pip install wmill requests
+pip freeze  # Copy output to .script.lock file
+```
+
+**Current script dependencies:**
+- `notify_approval.py`: wmill + requests (includes httpx, anyio, httpcore, h11)
+- `notify_status.py`, `test_configuration.py`: requests only
+- `git_clone.py`, `terraform_*.py`: stdlib only (no external deps)
+
 ## File Organization Principles
 
 ### Terraform Modules

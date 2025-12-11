@@ -3,10 +3,9 @@ description: |
   Automated deployment flow for tf/vault module:
   1. Clone repository
   2. Initialize Terraform
-  3. Run plan and send to Discord for approval
-  4. Wait for manual approval
-  5. Apply changes
-  6. Send completion notification
+  3. Run plan and check for changes
+  4. If changes: send Discord notification, wait for approval, apply
+  5. If no changes: complete silently
 value:
   same_worker: true
   modules:
@@ -64,84 +63,77 @@ value:
             type: javascript
             expr: variable('g/all/vault_terraform_token')
         path: f/terraform/terraform_plan
-    - id: notify_approval
+    - id: check_changes
       value:
-        type: script
-        input_transforms:
-          discord:
-            type: javascript
-            expr: resource('f/bots/terraform_discord_bot_configuration')
-          discord_bot_token:
-            type: javascript
-            expr: resource('f/bots/terraform_discord_bot_token_configuration')
-          module:
-            type: static
-            value: tf/vault
-          plan_details:
-            type: javascript
-            expr: results.terraform_plan.plan_details
-          plan_summary:
-            type: javascript
-            expr: results.terraform_plan.plan_summary
-        path: f/terraform/notify_approval
-        skip_if:
-          expr: results.terraform_plan.has_changes == false
-          label: Skip if no changes
-    - id: approval
-      value:
-        type: identity
-        suspend:
-          required_events: 1
-          timeout: 86400
-        skip_if:
-          expr: results.terraform_plan.has_changes == false
-          label: Skip if no changes
-    - id: terraform_apply
-      value:
-        type: script
-        input_transforms:
-          module_dir:
-            type: javascript
-            expr: results.terraform_init.module_dir
-          tfc_token:
-            type: javascript
-            expr: variable('g/all/tfc_token')
-          vault_addr:
-            type: static
-            value: 'https://vault.fzymgc.house'
-          vault_token:
-            type: javascript
-            expr: variable('g/all/vault_terraform_token')
-        path: f/terraform/terraform_apply
-        skip_if:
-          expr: results.terraform_plan.has_changes == false
-          label: Skip if no changes
-    - id: notify_success
-      value:
-        type: script
-        input_transforms:
-          approval_message_id:
-            type: javascript
-            expr: results.notify_approval?.message_id
-          details:
-            type: static
-            value: Terraform apply completed successfully
-          discord:
-            type: javascript
-            expr: resource('f/bots/terraform_discord_bot_configuration')
-          discord_bot_token:
-            type: javascript
-            expr: resource('f/bots/terraform_discord_bot_token_configuration')
-          module:
-            type: static
-            value: tf/vault
-          status:
-            type: static
-            value: success
-        path: f/terraform/notify_status
-        skip_if:
-          expr: results.terraform_plan.has_changes == false
-          label: Skip if no changes
+        type: branchone
+        branches:
+          - summary: Has changes - request approval and apply
+            expr: results.terraform_plan.has_changes
+            modules:
+              - id: notify_approval
+                value:
+                  type: script
+                  input_transforms:
+                    discord:
+                      type: javascript
+                      expr: resource('f/bots/terraform_discord_bot_configuration')
+                    discord_bot_token:
+                      type: javascript
+                      expr: resource('f/bots/terraform_discord_bot_token_configuration')
+                    module:
+                      type: static
+                      value: tf/vault
+                    plan_details:
+                      type: javascript
+                      expr: results.terraform_plan.plan_details
+                    plan_summary:
+                      type: javascript
+                      expr: results.terraform_plan.plan_summary
+                  path: f/terraform/notify_approval
+                suspend:
+                  required_events: 1
+                  timeout: 86400
+              - id: terraform_apply
+                value:
+                  type: script
+                  input_transforms:
+                    module_dir:
+                      type: javascript
+                      expr: results.terraform_init.module_dir
+                    tfc_token:
+                      type: javascript
+                      expr: variable('g/all/tfc_token')
+                    vault_addr:
+                      type: static
+                      value: 'https://vault.fzymgc.house'
+                    vault_token:
+                      type: javascript
+                      expr: variable('g/all/vault_terraform_token')
+                  path: f/terraform/terraform_apply
+              - id: notify_success
+                value:
+                  type: script
+                  input_transforms:
+                    approval_message_id:
+                      type: javascript
+                      expr: results.notify_approval?.message_id
+                    details:
+                      type: static
+                      value: Terraform apply completed successfully
+                    discord:
+                      type: javascript
+                      expr: resource('f/bots/terraform_discord_bot_configuration')
+                    discord_bot_token:
+                      type: javascript
+                      expr: resource('f/bots/terraform_discord_bot_token_configuration')
+                    module:
+                      type: static
+                      value: tf/vault
+                    status:
+                      type: static
+                      value: success
+                  path: f/terraform/notify_status
+        default: []
   failure_module:
     id: notify_failure
     value:

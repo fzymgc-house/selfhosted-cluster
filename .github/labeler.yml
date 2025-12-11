@@ -26,6 +26,10 @@ github-actions:
   - changed-files:
       - any-glob-to-any-file: '.github/workflows/**/*'
 
+windmill:
+  - changed-files:
+      - any-glob-to-any-file: 'windmill/**/*'
+
 dependencies:
   - changed-files:
       - any-glob-to-any-file:

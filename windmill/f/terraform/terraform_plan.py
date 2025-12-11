@@ -57,7 +57,13 @@ def main(
         try:
             data = json.loads(line)
             if data.get("type") == "change_summary":
-                changes = data.get("changes", changes)
+                raw_changes = data.get("changes", {})
+                # Ensure values are integers (Terraform JSON may return strings)
+                changes = {
+                    "add": int(raw_changes.get("add", 0)),
+                    "change": int(raw_changes.get("change", 0)),
+                    "destroy": int(raw_changes.get("destroy", 0)),
+                }
         except json.JSONDecodeError:
             continue
 

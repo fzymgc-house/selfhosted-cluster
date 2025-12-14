@@ -39,7 +39,7 @@ Issues server certificates for mTLS server authentication.
 | `ttl` | `720h` (30 days) |
 | `max_ttl` | `720h` (30 days) |
 
-**Allowed IP SANs:** `127.0.0.1`, `192.168.20.1`
+**Expected IP SANs:** `127.0.0.1`, `192.168.20.1` (see Security Considerations)
 
 ### router-hosts-client
 
@@ -141,3 +141,4 @@ Create three files in `tf/vault/`:
 - **Short token TTL:** 1-hour tokens limit exposure if compromised
 - **Non-expiring secret_id:** Acceptable for long-running services; rotate manually if compromised
 - **Response wrapping:** Consider wrapping secret_id when retrieving for production deployment
+- **IP SAN limitation:** Vault PKI roles cannot restrict which IP addresses are allowed in SANs—`allow_ip_sans = true` permits any IP. The security boundary is enforced by vault-agent's certificate request configuration, which should specify only the expected IPs (`127.0.0.1`, `192.168.20.1`)

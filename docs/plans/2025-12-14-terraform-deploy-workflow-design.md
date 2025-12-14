@@ -44,7 +44,7 @@ curl -X POST \
   -H "Authorization: Bearer $WMILL_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"module": "<module>", "ref": "<commit-sha>"}' \
-  "https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/f/terraform/deploy_terraform"
+  "https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/p/f/terraform/deploy_terraform"
 ```
 
 Uses async `run` endpoint (not `run_wait_result`) - flow handles its own Discord notifications, avoiding GitHub Actions timeout issues for long-running approvals.
@@ -181,7 +181,7 @@ jobs:
             -H "Authorization: Bearer $WMILL_TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"module": "${{ matrix.module }}", "ref": "${{ github.sha }}"}' \
-            "https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/f/terraform/deploy_terraform"
+            "https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/p/f/terraform/deploy_terraform"
 ```
 
 ## Testing Plan

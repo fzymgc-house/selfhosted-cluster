@@ -1,0 +1,112 @@
+# Triggers Windmill terraform deployment flows when tf/* modules change
+name: Terraform Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tf/vault/**'
+      - 'tf/grafana/**'
+      - 'tf/authentik/**'
+      - 'tf/cloudflare/**'
+      - 'tf/core-services/**'
+  workflow_dispatch:
+    inputs:
+      module:
+        description: 'Terraform module to deploy'
+        required: true
+        type: choice
+        options:
+          - tf/vault
+          - tf/grafana
+          - tf/authentik
+          - tf/cloudflare
+          - tf/core-services
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    outputs:
+      vault: ${{ steps.filter.outputs.vault }}
+      grafana: ${{ steps.filter.outputs.grafana }}
+      authentik: ${{ steps.filter.outputs.authentik }}
+      cloudflare: ${{ steps.filter.outputs.cloudflare }}
+      core-services: ${{ steps.filter.outputs.core-services }}
+    steps:
+      - uses: actions/checkout@v6.0.1
+      - uses: dorny/paths-filter@v3.0.2
+        id: filter
+        with:
+          filters: |
+            vault:
+              - 'tf/vault/**'
+            grafana:
+              - 'tf/grafana/**'
+            authentik:
+              - 'tf/authentik/**'
+            cloudflare:
+              - 'tf/cloudflare/**'
+            core-services:
+              - 'tf/core-services/**'
+
+  deploy:
+    runs-on: fzymgc-house-cluster-runners
+    needs: [detect-changes]
+    if: always() && (needs.detect-changes.result == 'success' || needs.detect-changes.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [tf/vault, tf/grafana, tf/authentik, tf/cloudflare, tf/core-services]
+    steps:
+      - name: Check if should deploy
+        id: should-deploy
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            if [ "${{ github.event.inputs.module }}" == "${{ matrix.module }}" ]; then
+              echo "deploy=true" >> $GITHUB_OUTPUT
+            else
+              echo "deploy=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            case "${{ matrix.module }}" in
+              tf/vault)
+                echo "deploy=${{ needs.detect-changes.outputs.vault }}" >> $GITHUB_OUTPUT
+                ;;
+              tf/grafana)
+                echo "deploy=${{ needs.detect-changes.outputs.grafana }}" >> $GITHUB_OUTPUT
+                ;;
+              tf/authentik)
+                echo "deploy=${{ needs.detect-changes.outputs.authentik }}" >> $GITHUB_OUTPUT
+                ;;
+              tf/cloudflare)
+                echo "deploy=${{ needs.detect-changes.outputs.cloudflare }}" >> $GITHUB_OUTPUT
+                ;;
+              tf/core-services)
+                echo "deploy=${{ needs.detect-changes.outputs.core-services }}" >> $GITHUB_OUTPUT
+                ;;
+            esac
+          fi
+
+      - name: Trigger Windmill flow
+        if: steps.should-deploy.outputs.deploy == 'true'
+        timeout-minutes: 2
+        env:
+          WMILL_TOKEN: ${{ secrets.WMILL_TOKEN_PROD }}
+        run: |
+          echo "Triggering deploy for ${{ matrix.module }} at ${{ github.sha }}"
+
+          response=$(curl -f -X POST \
+            --max-time 30 \
+            --connect-timeout 10 \
+            -H "Authorization: Bearer $WMILL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"module\": \"${{ matrix.module }}\", \"ref\": \"${{ github.sha }}\"}" \
+            "https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/f/terraform/deploy_terraform")
+
+          if [ $? -ne 0 ]; then
+            echo "Error: Failed to trigger Windmill flow"
+            exit 1
+          fi
+
+          echo "Windmill job started: $response"

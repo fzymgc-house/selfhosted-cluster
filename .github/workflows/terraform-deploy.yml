@@ -76,7 +76,7 @@ jobs:
         if: steps.should-deploy.outputs.deploy == 'true'
         timeout-minutes: 2
         env:
-          WMILL_TOKEN: ${{ secrets.WMILL_TOKEN }}
+          WMILL_TOKEN: ${{ secrets.WMILL_TOKEN_PROD }}
         run: |
           echo "Triggering deploy for ${{ matrix.module }} at ${{ github.sha }}"
 

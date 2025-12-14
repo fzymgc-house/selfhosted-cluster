@@ -96,17 +96,48 @@ jobs:
         run: |
           echo "Triggering deploy for ${{ matrix.module }} at ${{ github.sha }}"
 
-          response=$(curl -f -X POST \
+          # Try URL with /p/ prefix first (per async docs)
+          WINDMILL_URL_1="https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/p/f/terraform/deploy_terraform"
+          # Alternative URL without /p/ prefix (per sync docs format)
+          WINDMILL_URL_2="https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/f/terraform/deploy_terraform"
+
+          PAYLOAD="{\"module\": \"${{ matrix.module }}\", \"ref\": \"${{ github.sha }}\"}"
+
+          echo "=== Trying URL format 1 (with /p/): $WINDMILL_URL_1 ==="
+          http_code=$(curl -s -o /tmp/response1.json -w "%{http_code}" \
             --max-time 30 \
             --connect-timeout 10 \
+            -X POST \
             -H "Authorization: Bearer $WMILL_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"module\": \"${{ matrix.module }}\", \"ref\": \"${{ github.sha }}\"}" \
-            "https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/p/f/terraform/deploy_terraform")
+            -d "$PAYLOAD" \
+            "$WINDMILL_URL_1")
+          echo "HTTP Status: $http_code"
+          echo "Response: $(cat /tmp/response1.json 2>/dev/null || echo '(empty)')"
 
-          if [ $? -ne 0 ]; then
-            echo "Error: Failed to trigger Windmill flow"
-            exit 1
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "Success with URL format 1!"
+            exit 0
           fi
 
-          echo "Windmill job started: $response"
+          echo ""
+          echo "=== Trying URL format 2 (without /p/): $WINDMILL_URL_2 ==="
+          http_code=$(curl -s -o /tmp/response2.json -w "%{http_code}" \
+            --max-time 30 \
+            --connect-timeout 10 \
+            -X POST \
+            -H "Authorization: Bearer $WMILL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" \
+            "$WINDMILL_URL_2")
+          echo "HTTP Status: $http_code"
+          echo "Response: $(cat /tmp/response2.json 2>/dev/null || echo '(empty)')"
+
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "Success with URL format 2!"
+            exit 0
+          fi
+
+          echo ""
+          echo "Both URL formats failed. Check Windmill configuration."
+          exit 1

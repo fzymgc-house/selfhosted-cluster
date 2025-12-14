@@ -96,48 +96,29 @@ jobs:
         run: |
           echo "Triggering deploy for ${{ matrix.module }} at ${{ github.sha }}"
 
-          # Try URL with /p/ prefix first (per async docs)
-          WINDMILL_URL_1="https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/p/f/terraform/deploy_terraform"
-          # Alternative URL without /p/ prefix (per sync docs format)
-          WINDMILL_URL_2="https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/f/terraform/deploy_terraform"
+          # Windmill API endpoint format for flows:
+          # /api/w/{workspace}/jobs/run/f/{flow_path}
+          # Flow path is: f/terraform/deploy_terraform (in folder namespace)
+          WINDMILL_URL="https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/f/f/terraform/deploy_terraform"
+          echo "Windmill URL: $WINDMILL_URL"
 
           PAYLOAD="{\"module\": \"${{ matrix.module }}\", \"ref\": \"${{ github.sha }}\"}"
 
-          echo "=== Trying URL format 1 (with /p/): $WINDMILL_URL_1 ==="
-          http_code=$(curl -s -o /tmp/response1.json -w "%{http_code}" \
+          http_code=$(curl -s -o /tmp/response.json -w "%{http_code}" \
             --max-time 30 \
             --connect-timeout 10 \
             -X POST \
             -H "Authorization: Bearer $WMILL_TOKEN" \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD" \
-            "$WINDMILL_URL_1")
+            "$WINDMILL_URL")
+
           echo "HTTP Status: $http_code"
-          echo "Response: $(cat /tmp/response1.json 2>/dev/null || echo '(empty)')"
+          echo "Response: $(cat /tmp/response.json 2>/dev/null || echo '(empty)')"
 
           if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-            echo "Success with URL format 1!"
-            exit 0
+            echo "Windmill job started successfully"
+          else
+            echo "Error: Windmill API returned HTTP $http_code"
+            exit 1
           fi
-
-          echo ""
-          echo "=== Trying URL format 2 (without /p/): $WINDMILL_URL_2 ==="
-          http_code=$(curl -s -o /tmp/response2.json -w "%{http_code}" \
-            --max-time 30 \
-            --connect-timeout 10 \
-            -X POST \
-            -H "Authorization: Bearer $WMILL_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "$PAYLOAD" \
-            "$WINDMILL_URL_2")
-          echo "HTTP Status: $http_code"
-          echo "Response: $(cat /tmp/response2.json 2>/dev/null || echo '(empty)')"
-
-          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
-            echo "Success with URL format 2!"
-            exit 0
-          fi
-
-          echo ""
-          echo "Both URL formats failed. Check Windmill configuration."
-          exit 1

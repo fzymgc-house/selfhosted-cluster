@@ -74,15 +74,21 @@ jobs:
 
       - name: Trigger Windmill flow
         if: steps.should-deploy.outputs.deploy == 'true'
+        timeout-minutes: 2
         env:
           WMILL_TOKEN: ${{ secrets.WMILL_TOKEN }}
         run: |
           echo "Triggering deploy for ${{ matrix.module }} at ${{ github.sha }}"
 
-          response=$(curl -sf -X POST \
+          response=$(curl -f -X POST \
             -H "Authorization: Bearer $WMILL_TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{"module": "${{ matrix.module }}", "ref": "${{ github.sha }}"}' \
+            -d "{\"module\": \"${{ matrix.module }}\", \"ref\": \"${{ github.sha }}\"}" \
             "https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/f/terraform/deploy_terraform")
+
+          if [ $? -ne 0 ]; then
+            echo "Error: Failed to trigger Windmill flow"
+            exit 1
+          fi
 
           echo "Windmill job started: $response"

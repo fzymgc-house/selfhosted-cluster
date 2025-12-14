@@ -3,3 +3,13 @@
   become: true
   roles:
     - tp2-bootstrap-node
+  tags:
+    - bootstrap-alpha
+
+- name: Bootstrap beta nodes
+  hosts: tpi_beta_hosts
+  become: true
+  roles:
+    - tp2-bootstrap-node
+  tags:
+    - bootstrap-beta

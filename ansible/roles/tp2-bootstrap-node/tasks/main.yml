@@ -73,14 +73,18 @@
       group: root
       mode: "0644"
 
-- name: Ensure required modules are loaded
-  ansible.builtin.shell:
-      cmd: |
-          modprobe br_netfilter
-  changed_when: false
-  failed_when: false
+- name: Check if br_netfilter is built into kernel
+  ansible.builtin.stat:
+      path: /proc/sys/net/bridge/bridge-nf-call-iptables
+  register: br_netfilter_builtin
 
-- name: Ensure required modules load at bootstrap
+- name: Load br_netfilter kernel module (if not built-in)
+  ansible.builtin.command:
+      cmd: modprobe br_netfilter
+  when: not br_netfilter_builtin.stat.exists
+  changed_when: true
+
+- name: Ensure br_netfilter loads at boot (if not built-in)
   ansible.builtin.copy:
       content: |
           br_netfilter
@@ -88,6 +92,13 @@
       mode: "0644"
       owner: root
       group: root
+  when: not br_netfilter_builtin.stat.exists
+
+- name: Verify bridge netfilter is available
+  ansible.builtin.stat:
+      path: /proc/sys/net/bridge/bridge-nf-call-iptables
+  register: br_netfilter_check
+  failed_when: not br_netfilter_check.stat.exists
 
 - name: Configure bridge sysctl settings
   ansible.posix.sysctl:
@@ -99,6 +110,15 @@
       net.bridge.bridge-nf-call-iptables: "1"
       net.bridge.bridge-nf-call-ip6tables: "1"
       net.bridge.bridge-nf-call-arptables: "1"
+  tags: sysctl
+
+- name: Configure inotify sysctl settings
+  ansible.posix.sysctl:
+      name: "{{ item.key }}"
+      value: "{{ item.value }}"
+      sysctl_set: true
+      state: present
+  with_dict:
       fs.inotify.max_user_watches: "2099999999"
       fs.inotify.max_user_instances: "2099999999"
       fs.inotify.max_queued_events: "2099999999"

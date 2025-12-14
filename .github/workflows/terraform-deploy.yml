@@ -28,7 +28,7 @@ jobs:
       grafana: ${{ steps.filter.outputs.grafana }}
       authentik: ${{ steps.filter.outputs.authentik }}
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v6.0.1
       - uses: dorny/paths-filter@v3.0.2
         id: filter
         with:

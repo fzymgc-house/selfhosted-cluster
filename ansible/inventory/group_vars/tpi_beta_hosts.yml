@@ -2,7 +2,7 @@
 tpi_bmc_host: tpi-beta-bmc
 tpi_bmc_password: "{{ lookup('community.hashi_vault.vault_kv2_get', 'infrastructure/bmc/tpi-beta', engine_mount_point='secret/fzymgc-house').secret.password }}"
 
-machine_kind: rpi
+machine_kind: rk1
 machine_arch: arm64
 
 host_group_name: tpi_beta_hosts

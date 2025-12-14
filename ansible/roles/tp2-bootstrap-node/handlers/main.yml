@@ -54,3 +54,9 @@
 - name: Apply netplan
   ansible.builtin.command: netplan apply
   changed_when: false
+
+- name: Restart multipathd
+  ansible.builtin.systemd:
+    name: multipathd
+    state: restarted
+  failed_when: false

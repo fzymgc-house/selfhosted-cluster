@@ -1,5 +1,18 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
 - name: Bootstrap alpha nodes
   hosts: tpi_alpha_hosts
   become: true
   roles:
     - tp2-bootstrap-node
+  tags:
+    - bootstrap-alpha
+
+- name: Bootstrap beta nodes
+  hosts: tpi_beta_hosts
+  become: true
+  roles:
+    - tp2-bootstrap-node
+  tags:
+    - bootstrap-beta

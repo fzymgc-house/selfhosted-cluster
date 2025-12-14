@@ -220,6 +220,15 @@ kubectl --context fzymgc-house get namespace | grep -E "argo-events|argo-workflo
 - ✅ Production deployment on PR merge with `windmill` label
 - ✅ Discord notifications for approvals and status
 
+### Terraform GitOps Trigger
+
+The `terraform-deploy.yml` GitHub Actions workflow triggers Windmill flows when Terraform modules change:
+
+- **Trigger:** Push to `main` with changes in `tf/vault/**`, `tf/grafana/**`, or `tf/authentik/**`
+- **Manual:** workflow_dispatch with module selector
+- **Flow:** `f/terraform/deploy_terraform` (generic parameterized flow)
+- **Runner:** `fzymgc-house-cluster-runners` (self-hosted for Windmill API access)
+
 ### Removed Components
 - ✅ Argo Events (fully removed - PR #234)
 - ✅ Argo Workflows (fully removed - PR #234)

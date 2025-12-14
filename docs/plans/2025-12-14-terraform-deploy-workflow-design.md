@@ -99,6 +99,14 @@ schema:
 - Existing scripts (`git_clone.py`, `terraform_*.py`, `notify_*.py`) - already parameterized
 - `WMILL_TOKEN` secret - already exists
 
+### Excluded Modules
+| Module | Reason |
+|--------|--------|
+| `tf/teleport` | Empty directory - no Terraform files present |
+| `tf/cluster-bootstrap` | Chicken-egg problem: this module deploys ArgoCD and Windmill itself. Auto-triggering could break the deployment infrastructure mid-apply. Manual deployment required. |
+
+**Note:** To add a new module, add its path to the workflow's `paths`, `filters`, `matrix`, and `case` statement.
+
 ## Implementation
 
 ### Workflow File

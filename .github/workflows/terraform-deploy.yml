@@ -8,6 +8,8 @@ on:
       - 'tf/vault/**'
       - 'tf/grafana/**'
       - 'tf/authentik/**'
+      - 'tf/cloudflare/**'
+      - 'tf/core-services/**'
   workflow_dispatch:
     inputs:
       module:
@@ -18,6 +20,8 @@ on:
           - tf/vault
           - tf/grafana
           - tf/authentik
+          - tf/cloudflare
+          - tf/core-services
 
 jobs:
   detect-changes:
@@ -27,6 +31,8 @@ jobs:
       vault: ${{ steps.filter.outputs.vault }}
       grafana: ${{ steps.filter.outputs.grafana }}
       authentik: ${{ steps.filter.outputs.authentik }}
+      cloudflare: ${{ steps.filter.outputs.cloudflare }}
+      core-services: ${{ steps.filter.outputs.core-services }}
     steps:
       - uses: actions/checkout@v6.0.1
       - uses: dorny/paths-filter@v3.0.2
@@ -39,6 +45,10 @@ jobs:
               - 'tf/grafana/**'
             authentik:
               - 'tf/authentik/**'
+            cloudflare:
+              - 'tf/cloudflare/**'
+            core-services:
+              - 'tf/core-services/**'
 
   deploy:
     runs-on: fzymgc-house-cluster-runners
@@ -47,7 +57,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [tf/vault, tf/grafana, tf/authentik]
+        module: [tf/vault, tf/grafana, tf/authentik, tf/cloudflare, tf/core-services]
     steps:
       - name: Check if should deploy
         id: should-deploy
@@ -69,6 +79,12 @@ jobs:
               tf/authentik)
                 echo "deploy=${{ needs.detect-changes.outputs.authentik }}" >> $GITHUB_OUTPUT
                 ;;
+              tf/cloudflare)
+                echo "deploy=${{ needs.detect-changes.outputs.cloudflare }}" >> $GITHUB_OUTPUT
+                ;;
+              tf/core-services)
+                echo "deploy=${{ needs.detect-changes.outputs.core-services }}" >> $GITHUB_OUTPUT
+                ;;
             esac
           fi
 
@@ -81,6 +97,8 @@ jobs:
           echo "Triggering deploy for ${{ matrix.module }} at ${{ github.sha }}"
 
           response=$(curl -f -X POST \
+            --max-time 30 \
+            --connect-timeout 10 \
             -H "Authorization: Bearer $WMILL_TOKEN" \
             -H "Content-Type: application/json" \
             -d "{\"module\": \"${{ matrix.module }}\", \"ref\": \"${{ github.sha }}\"}" \

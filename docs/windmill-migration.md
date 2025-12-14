@@ -224,7 +224,7 @@ kubectl --context fzymgc-house get namespace | grep -E "argo-events|argo-workflo
 
 The `terraform-deploy.yml` GitHub Actions workflow triggers Windmill flows when Terraform modules change:
 
-- **Trigger:** Push to `main` with changes in `tf/vault/**`, `tf/grafana/**`, or `tf/authentik/**`
+- **Trigger:** Push to `main` with changes in any supported `tf/*` module
 - **Manual:** workflow_dispatch with module selector
 - **Flow:** `f/terraform/deploy_terraform` (generic parameterized flow)
 - **Runner:** `fzymgc-house-cluster-runners` (self-hosted for Windmill API access)
@@ -234,10 +234,16 @@ The `terraform-deploy.yml` GitHub Actions workflow triggers Windmill flows when 
 - ✅ Argo Workflows (fully removed - PR #234)
 - ✅ EventBus (removed with argo-events namespace)
 
-### Affected Terraform Modules
+### Supported Terraform Modules
 1. `tf/vault` - Vault policies and configuration
 2. `tf/grafana` - Grafana dashboards and data sources
 3. `tf/authentik` - Authentik applications and groups
+4. `tf/cloudflare` - Cloudflare DNS and tunnel configuration
+5. `tf/core-services` - Core services configuration
+
+**Excluded:**
+- `tf/teleport` - Empty directory, no Terraform files
+- `tf/cluster-bootstrap` - Chicken-egg: deploys ArgoCD and Windmill itself, auto-triggering could break deployment infrastructure mid-apply
 
 ---
 

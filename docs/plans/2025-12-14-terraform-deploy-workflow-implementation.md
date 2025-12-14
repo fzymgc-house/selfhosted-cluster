@@ -324,7 +324,7 @@ jobs:
             -H "Authorization: Bearer $WMILL_TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"module": "${{ matrix.module }}", "ref": "${{ github.sha }}"}' \
-            "https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/f/terraform/deploy_terraform")
+            "https://windmill.fzymgc.house/api/w/terraform-gitops-prod/jobs/run/p/f/terraform/deploy_terraform")
 
           echo "Windmill job started: $response"
 ```

@@ -72,6 +72,7 @@
       owner: root
       group: root
       mode: "0644"
+  notify: Restart multipathd
 
 - name: Check if br_netfilter is built into kernel
   ansible.builtin.stat:
@@ -82,7 +83,7 @@
   ansible.builtin.command:
       cmd: modprobe br_netfilter
   when: not br_netfilter_builtin.stat.exists
-  changed_when: true
+  changed_when: false
 
 - name: Ensure br_netfilter loads at boot (if not built-in)
   ansible.builtin.copy:
@@ -98,7 +99,13 @@
   ansible.builtin.stat:
       path: /proc/sys/net/bridge/bridge-nf-call-iptables
   register: br_netfilter_check
-  failed_when: not br_netfilter_check.stat.exists
+
+- name: Assert bridge netfilter is available
+  ansible.builtin.assert:
+      that:
+          - br_netfilter_check.stat.exists
+      fail_msg: "Bridge netfilter not available - check kernel configuration (CONFIG_BRIDGE_NETFILTER)"
+      success_msg: "Bridge netfilter is available"
 
 - name: Configure bridge sysctl settings
   ansible.posix.sysctl:

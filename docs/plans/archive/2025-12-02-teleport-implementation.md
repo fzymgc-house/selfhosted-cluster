@@ -1,5 +1,7 @@
 # Teleport Implementation Plan
 
+**Status:** Not implemented - tracked in [#300](https://github.com/fzymgc-house/selfhosted-cluster/issues/300)
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Deploy self-hosted Teleport providing SSH and Kubernetes access with Authentik OIDC authentication.

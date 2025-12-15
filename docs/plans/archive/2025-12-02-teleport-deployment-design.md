@@ -1,5 +1,7 @@
 # Teleport Deployment Design
 
+**Status:** Not implemented - tracked in [#300](https://github.com/fzymgc-house/selfhosted-cluster/issues/300)
+
 ## Overview
 
 Deploy Goteleport as a self-hosted zero-trust access platform providing:

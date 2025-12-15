@@ -276,8 +276,8 @@ schema:
 ### Immediate
 
 - [x] Update GitHub issues to reflect completion
-- [ ] Create documentation for developers on using Windmill resources
-- [ ] Document Terraform workflow patterns
+- [ ] Create documentation for developers on using Windmill resources - tracked in [#158](https://github.com/fzymgc-house/selfhosted-cluster/issues/158)
+- [ ] Document Terraform workflow patterns - tracked in [#158](https://github.com/fzymgc-house/selfhosted-cluster/issues/158)
 
 ### Future Enhancements
 

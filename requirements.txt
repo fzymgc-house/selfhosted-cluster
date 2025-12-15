@@ -5,7 +5,7 @@
 ansible-core>=2.18.0,<3.0.0
 
 # Ansible full package (includes community collections)
-ansible>=12.2.0,<12.2.1
+ansible>=12.3.0,<12.3.1
 
 # Required for various Ansible modules
 jmespath>=1.0.1        # JSON query language for filters

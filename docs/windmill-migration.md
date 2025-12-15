@@ -103,7 +103,7 @@ kubectl --context fzymgc-house get pods -n argo-workflows
   - `notify_approval.py` - Discord approval notifications
   - `notify_status.py` - Discord status notifications
 - ✅ Created Terraform deployment flow (#134)
-  - `deploy_vault.flow` - Complete flow for tf/vault module
+  - `deploy_terraform.flow` - Generic parameterized flow for all modules
   - Includes: Clone → Init → Plan → Approval → Apply → Notify
   - Skip logic for no-change plans
   - Error handling with failure notifications
@@ -118,7 +118,7 @@ kubectl --context fzymgc-house get pods -n argo-workflows
 
 **Files Created**:
 - Scripts: `windmill/f/terraform/*.py` (6 scripts)
-- Flow: `windmill/f/terraform/deploy_vault.flow/flow.yaml`
+- Flow: `windmill/f/terraform/deploy_terraform.flow/flow.yaml`
 - Resources: `windmill/u/admin/*.resource.yaml` (3 resources)
 - Variables: `windmill/variables.json`
 - Configuration: `windmill/wmill.yaml`
@@ -265,7 +265,7 @@ Not applicable - per user decision, Argo Events and Workflows are being removed 
 
 ---
 
-**Last Updated**: 2025-12-09
+**Last Updated**: 2025-12-14
 
 ## Phase Completion Summary
 

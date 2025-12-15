@@ -645,15 +645,17 @@ After deployment, access Mealie at `https://mealie.fzymgc.house` to:
 
 ## Verification Checklist
 
-- [ ] PostgreSQL database `mealie` exists in CNPG cluster
-- [ ] Database credentials stored in Vault
-- [ ] ExternalSecrets syncing successfully
-- [ ] Deployment running with 1/1 pods ready
-- [ ] PVC bound and mounted
-- [ ] Certificate issued by vault-issuer
-- [ ] HTTPS accessible via Traefik at mealie.fzymgc.house
-- [ ] Application logs show no errors
-- [ ] Initial user can be created via web UI
+- [x] PostgreSQL database `mealie` exists in CNPG cluster
+- [x] Database credentials stored in Vault
+- [x] ExternalSecrets syncing successfully
+- [x] Deployment running with 1/1 pods ready
+- [x] PVC bound and mounted
+- [x] Certificate issued by vault-issuer
+- [x] HTTPS accessible via Traefik at mealie.fzymgc.house
+- [x] Application logs show no errors
+- [x] Initial user can be created via web UI
+
+**Status:** ✅ Implemented and verified (2025-12-14)
 
 ## Rollback Plan
 

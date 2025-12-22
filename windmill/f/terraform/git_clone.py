@@ -1,6 +1,7 @@
 """Clone Git repository for Terraform operations."""
 
 import re
+import shutil
 import subprocess
 from pathlib import Path
 from typing import TypedDict
@@ -19,8 +20,10 @@ def _run_git(args: list[str], cwd: str | None = None, operation: str = "git oper
     """
     Run a git command with safe error handling.
 
-    Raises RuntimeError with stderr on failure - never exposes the command line
-    which may contain tokens in URLs.
+    Raises RuntimeError with stderr on failure. Error messages intentionally
+    exclude command arguments, as they may contain tokens embedded in URLs.
+    Stderr from git is safe to include - it contains user-facing error messages
+    without sensitive data.
     """
     result = subprocess.run(args, cwd=cwd, capture_output=True, text=True)
     if result.returncode != 0:
@@ -45,7 +48,7 @@ def main(github: github, repository: str = "fzymgc-house/selfhosted-cluster", br
     # Clean up existing workspace
     workspace_path = Path(workspace_dir)
     if workspace_path.exists():
-        _run_git(["rm", "-rf", str(workspace_path)], operation="cleanup")
+        shutil.rmtree(workspace_path)
 
     repo_url = f"https://x-access-token:{github['token']}@github.com/{repository}.git"
 

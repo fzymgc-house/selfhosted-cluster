@@ -48,12 +48,8 @@ def main(
     )
 
     if result.returncode != 0:
-        return {
-            "module_dir": str(module_dir),
-            "error": "Terraform plan failed",
-            "stderr": result.stderr,
-            "returncode": result.returncode,
-        }
+        # Raise exception to trigger failure_module - stderr is safe (no tokens)
+        raise RuntimeError(f"Terraform plan failed (exit {result.returncode}):\n{result.stderr}")
 
     # Parse plan output
     plan_lines = result.stdout.strip().split("\n")
@@ -83,12 +79,8 @@ def main(
     )
 
     if show_result.returncode != 0:
-        return {
-            "module_dir": str(module_dir),
-            "error": "Terraform show failed",
-            "stderr": show_result.stderr,
-            "returncode": show_result.returncode,
-        }
+        # Raise exception to trigger failure_module - stderr is safe (no tokens)
+        raise RuntimeError(f"Terraform show failed (exit {show_result.returncode}):\n{show_result.stderr}")
 
     plan_summary = f"Plan: {changes.get('add', 0)} to add, {changes.get('change', 0)} to change, {changes.get('destroy', 0)} to destroy"
 

@@ -95,15 +95,8 @@ def main(
     result = subprocess.run(cmd, cwd=str(module_dir), capture_output=True, text=True, env=env)
 
     if result.returncode != 0:
-        return {
-            "module_path": module_path,
-            "module_dir": str(module_dir),
-            "initialized": False,
-            "backend_type": backend_type,
-            "error": "Terraform init failed",
-            "stderr": result.stderr,
-            "returncode": result.returncode,
-        }
+        # Raise exception to trigger failure_module - stderr is safe (no tokens)
+        raise RuntimeError(f"Terraform init failed (exit {result.returncode}):\n{result.stderr}")
 
     return {
         "module_path": module_path,

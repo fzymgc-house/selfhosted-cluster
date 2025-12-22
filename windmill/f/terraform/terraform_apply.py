@@ -51,12 +51,7 @@ def main(
     )
 
     if result.returncode != 0:
-        return {
-            "module_dir": str(module_dir),
-            "applied": False,
-            "error": "Terraform apply failed",
-            "stderr": result.stderr,
-            "returncode": result.returncode,
-        }
+        # Raise exception to trigger failure_module - stderr is safe (no tokens)
+        raise RuntimeError(f"Terraform apply failed (exit {result.returncode}):\n{result.stderr}")
 
     return {"module_dir": str(module_dir), "applied": True, "output": result.stdout}

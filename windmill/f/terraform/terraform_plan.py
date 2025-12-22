@@ -4,14 +4,13 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 
 def main(
     module_dir: str,
     vault_addr: str = "https://vault.fzymgc.house",
     vault_token: str = "",
-    tfc_token: Optional[str] = None,
+    tfc_token: str | None = None,
 ):
     """
     Run Terraform plan.
@@ -46,8 +45,15 @@ def main(
         capture_output=True,
         text=True,
         env=env,
-        check=True,
     )
+
+    if result.returncode != 0:
+        return {
+            "module_dir": str(module_dir),
+            "error": "Terraform plan failed",
+            "stderr": result.stderr,
+            "returncode": result.returncode,
+        }
 
     # Parse plan output
     plan_lines = result.stdout.strip().split("\n")
@@ -74,8 +80,15 @@ def main(
         capture_output=True,
         text=True,
         env=env,
-        check=True,
     )
+
+    if show_result.returncode != 0:
+        return {
+            "module_dir": str(module_dir),
+            "error": "Terraform show failed",
+            "stderr": show_result.stderr,
+            "returncode": show_result.returncode,
+        }
 
     plan_summary = f"Plan: {changes.get('add', 0)} to add, {changes.get('change', 0)} to change, {changes.get('destroy', 0)} to destroy"
 

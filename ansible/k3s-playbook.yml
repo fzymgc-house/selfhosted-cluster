@@ -9,6 +9,9 @@
 #   2. Additional control plane nodes join
 #   3. Worker nodes join
 #   4. Calico CNI is installed
+#   5. CSI snapshot controller is installed
+#   6. Additional Longhorn disks are configured (if defined in host_vars)
+#   7. Longhorn disk configuration is registered with cluster
 
 # Phase 1: First control plane node
 - name: Initialize k3s cluster on first control plane node
@@ -159,3 +162,67 @@
       changed_when: "'created' in csi_snapshot_result.stdout or 'configured' in csi_snapshot_result.stdout"
       tags:
         - k3s-csi-snapshot-controller
+
+# Phase 6: Configure additional Longhorn disks
+- name: Configure additional Longhorn storage disks
+  hosts: tp_cluster_nodes
+  become: true
+  roles:
+    - role: longhorn-disks
+      tags:
+        - longhorn-disks
+
+# Phase 7: Register Longhorn disk configuration
+- name: Register Longhorn disk configuration
+  hosts: tp_cluster_nodes
+  gather_facts: false
+  vars:
+    longhorn_kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml"
+  tasks:
+    - name: Validate k8s_context is defined
+      ansible.builtin.assert:
+        that:
+          - k8s_context is defined
+          - k8s_context | length > 0
+        fail_msg: |
+          k8s_context variable is not defined or is empty.
+          This variable is required to locate the kubeconfig file.
+          Set it in inventory or pass via -e k8s_context=your-context
+        quiet: true
+      run_once: true
+      tags:
+        - longhorn-disks
+        - longhorn-register
+
+    - name: Verify kubeconfig exists
+      ansible.builtin.stat:
+        path: "{{ longhorn_kubeconfig }}"
+      register: kubeconfig_stat
+      delegate_to: localhost
+      become: false
+      run_once: true
+      tags:
+        - longhorn-disks
+        - longhorn-register
+
+    - name: Fail if kubeconfig not found
+      ansible.builtin.fail:
+        msg: |
+          Kubeconfig not found at {{ longhorn_kubeconfig }}
+          Ensure k8s_context is set correctly and kubeconfig file exists.
+          Current k8s_context: {{ k8s_context | default('undefined') }}
+      when: not kubeconfig_stat.stat.exists
+      run_once: true
+      tags:
+        - longhorn-disks
+        - longhorn-register
+
+    # Note: longhorn_kubeconfig is inherited from play-level vars above
+    - name: Register disks with Longhorn
+      ansible.builtin.include_role:
+        name: longhorn-disks
+        tasks_from: register-with-longhorn.yml
+      when: longhorn_additional_disks is defined and longhorn_additional_disks | length > 0
+      tags:
+        - longhorn-disks
+        - longhorn-register

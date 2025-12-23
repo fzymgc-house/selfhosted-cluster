@@ -1,0 +1,99 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# defaults file for longhorn-disks
+#
+# This role configures additional block devices for Longhorn distributed storage.
+#
+# VARIABLE NAMING CONVENTION:
+# - longhorn_additional_disks: List of disk definitions (input from host_vars)
+# - longhorn_disk_*: Settings related to disk configuration (mount, subvol, etc.)
+# - longhorn_default_*: Settings for the pre-existing default Longhorn disk
+# - longhorn_kubeconfig: Kubernetes access configuration
+#
+# CHECK MODE LIMITATIONS:
+# The --check flag provides limited validation for this role:
+#
+# ✓ CAN validate in check mode:
+#   - Disk name format (regex validation)
+#   - Disk name/device uniqueness
+#   - Device existence and type (block device check)
+#   - Mount unit template rendering (--diff shows changes)
+#   - Longhorn registration logic flow
+#
+# ✗ CANNOT validate in check mode:
+#   - Actual partitioning (parted commands)
+#   - Filesystem creation (mkfs.btrfs)
+#   - BTRFS subvolume creation
+#   - Mount operations
+#
+# Recommendation: Use --check --diff to preview mount unit changes, but
+# always test on a non-production node first for actual disk operations.
+#
+# DISK REMOVAL (manual process by design):
+# This role does NOT automatically remove disks from Longhorn when entries are
+# removed from longhorn_additional_disks. This is intentional because automatic
+# removal could cause data loss if replicas exist on the disk.
+#
+# ORPHANED MOUNT UNITS WARNING:
+# When you remove a disk from host_vars, the systemd mount unit remains on the
+# system. The playbook will warn about orphaned disks but NOT remove the units
+# automatically. You must clean them up manually (see step 4 below).
+#
+# To safely remove a disk from Longhorn:
+# 1. In Longhorn UI: Set "Scheduling" to "Disable" for the disk
+# 2. In Longhorn UI: Wait for all replicas to evacuate (disk shows 0 replicas)
+# 3. Remove the disk entry from longhorn_additional_disks in host_vars
+# 4. SSH to the node and clean up the mount unit:
+#    # Stop and disable the mount
+#    systemctl disable --now data-longhorn-<disk-name>.mount
+#    # Remove the unit file
+#    rm /etc/systemd/system/data-longhorn-<disk-name>.mount
+#    # Reload systemd
+#    systemctl daemon-reload
+# 5. (Optional) In Longhorn UI: Delete the disk entry from the node
+# 6. (Optional) Wipe the disk: wipefs -a /dev/sdX
+
+# Additional disks for Longhorn - set per host in host_vars
+# Disk names must match: ^[a-zA-Z0-9][a-zA-Z0-9_-]*$
+# longhorn_additional_disks:
+#   - device: /dev/sda       # Block device (must exist)
+#     name: sata-storage-1   # Unique identifier (alphanumeric, _, -)
+#     tags:                  # Optional Longhorn scheduling tags
+#       - sata
+#       - bulk
+
+# Base mount path for additional Longhorn disks
+longhorn_disk_mount_base: /data
+
+# BTRFS subvolume name inside each disk
+longhorn_disk_subvol_name: longhorn
+
+# Default Longhorn disk path (the pre-existing disk from Longhorn installation)
+# This is included in fresh cluster annotations alongside additional disks
+longhorn_default_disk_path: "{{ longhorn_disk_mount_base }}/longhorn"
+
+# BTRFS mount options (compression can be disabled for performance-critical storage)
+# Set to "defaults,noatime,compress=no" to disable compression
+longhorn_disk_mount_options: "defaults,noatime,compress=zstd"
+
+# Minimum disk size in bytes (default 10GB = 10737418240 bytes)
+# Disks smaller than this will be rejected to prevent issues with Longhorn storage
+longhorn_disk_min_size_bytes: 10737418240
+
+# Systemd mount timeout in seconds (for slow disk initialization)
+longhorn_disk_mount_timeout: 300
+
+# Timeout for partition to appear after creation (seconds)
+longhorn_disk_partition_timeout: 60
+
+# Longhorn namespace (where Longhorn is installed)
+# Override if using a custom namespace for Longhorn deployment
+longhorn_namespace: longhorn-system
+
+# Kubeconfig path for Longhorn registration
+# Default uses KUBECONFIG env var or ~/.kube/config
+# Override in playbook for project-specific configs, e.g.:
+#   longhorn_kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml"
+# Note: The playbook should validate the kubeconfig file exists before including this role
+longhorn_kubeconfig: "{{ lookup('env', 'KUBECONFIG') | default('~/.kube/config') }}"

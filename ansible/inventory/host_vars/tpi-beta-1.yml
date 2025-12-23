@@ -6,7 +6,7 @@ host_btrfs_subvolume_prefix: "@"
 
 # Additional Longhorn storage disks
 longhorn_additional_disks:
-  - name: sata-hdd
+  - name: sata_hdd
     device: /dev/sda
     tags:
       - sata

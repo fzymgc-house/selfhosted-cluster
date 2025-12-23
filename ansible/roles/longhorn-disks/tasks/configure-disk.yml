@@ -4,6 +4,11 @@
 # Configure a single disk for Longhorn storage
 # Called with loop_var: disk
 
+# Compute partition path: NVMe and MMC devices use 'p1', others use '1'
+- name: Determine partition path - {{ disk.name }}
+  ansible.builtin.set_fact:
+    disk_partition_path: "{{ disk.device }}{{ 'p1' if disk.device is regex('nvme|mmcblk|loop') else '1' }}"
+
 - name: Check if disk has partition table - {{ disk.name }}
   ansible.builtin.command:
     cmd: blkid -p "{{ disk.device }}"
@@ -14,7 +19,7 @@
 
 - name: Check if partition has our BTRFS label - {{ disk.name }}
   ansible.builtin.command:
-    cmd: blkid -s LABEL -o value "{{ disk.device }}1"
+    cmd: blkid -s LABEL -o value "{{ disk_partition_path }}"
   register: disk_label_check
   failed_when: false
   changed_when: false
@@ -55,13 +60,13 @@
 
     - name: Wait for partition to appear - {{ disk.name }}
       ansible.builtin.wait_for:
-        path: "{{ disk.device }}1"
+        path: "{{ disk_partition_path }}"
         state: present
         timeout: "{{ longhorn_disk_partition_timeout | default(60) }}"
 
     - name: Format partition as BTRFS - {{ disk.name }}
       ansible.builtin.command:
-        cmd: mkfs.btrfs -f -L longhorn-{{ disk.name }} "{{ disk.device }}1"
+        cmd: mkfs.btrfs -f -L longhorn-{{ disk.name }} "{{ disk_partition_path }}"
       changed_when: true
 
     - name: Create secure temporary mount point - {{ disk.name }}
@@ -73,7 +78,7 @@
     - name: Mount partition temporarily - {{ disk.name }}
       ansible.posix.mount:
         path: "{{ temp_mount_dir.path }}"
-        src: "{{ disk.device }}1"
+        src: "{{ disk_partition_path }}"
         fstype: btrfs
         state: mounted
 
@@ -95,10 +100,10 @@
   rescue:
     - name: Cleanup - attempt to unmount on failure - {{ disk.name }}
       ansible.posix.mount:
-        path: "{{ temp_mount_dir.path | default('/tmp/longhorn-disk-cleanup') }}"
+        path: "{{ temp_mount_dir.path }}"
         state: unmounted
       failed_when: false
-      when: temp_mount_dir is defined
+      when: temp_mount_dir is defined and temp_mount_dir.path is defined
 
     - name: Cleanup - remove temp directory on failure - {{ disk.name }}
       ansible.builtin.file:
@@ -113,7 +118,7 @@
           Failed to configure disk {{ disk.device }} ({{ disk.name }}).
           The disk may be in a partially configured state.
           Manual intervention may be required:
-            - Check if disk is mounted: findmnt {{ disk.device }}1
+            - Check if disk is mounted: findmnt {{ disk_partition_path }}
             - Check disk state: blkid {{ disk.device }}
             - To retry from scratch: wipefs -a {{ disk.device }}
 

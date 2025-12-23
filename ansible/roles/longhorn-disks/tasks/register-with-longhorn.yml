@@ -13,7 +13,7 @@
     - name: Build disk config for Longhorn
       ansible.builtin.set_fact:
         longhorn_disk_config_list: |
-          {% set disks = [{"path": longhorn_disk_mount_base + "/longhorn", "allowScheduling": true}] %}
+          {% set disks = [{"path": longhorn_default_disk_path, "allowScheduling": true}] %}
           {% for disk in longhorn_additional_disks %}
           {% set disk_entry = {"path": longhorn_disk_mount_base + "/longhorn-" + disk.name, "allowScheduling": true} %}
           {% if disk.tags is defined %}

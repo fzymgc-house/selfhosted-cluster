@@ -1,14 +1,16 @@
 [Unit]
 Description=Mount {{ mount_path }} for Longhorn storage ({{ disk_name }})
-After=systemd-modules-load.service
+After=systemd-modules-load.service local-fs-pre.target
 Before=local-fs.target k3s.service
 Requires=systemd-modules-load.service
+ConditionPathIsDirectory={{ mount_path }}
 
 [Mount]
 What=UUID={{ disk_uuid }}
 Where={{ mount_path }}
 Type=btrfs
-Options=subvol=/{{ longhorn_disk_subvol_name }},defaults,noatime,compress=zstd
+Options=subvol=/{{ longhorn_disk_subvol_name }},{{ longhorn_disk_mount_options | default('defaults,noatime,compress=zstd') }}
+TimeoutSec={{ longhorn_disk_mount_timeout | default(300) }}
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=local-fs.target

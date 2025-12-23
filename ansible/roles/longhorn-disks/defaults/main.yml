@@ -39,5 +39,19 @@ longhorn_disk_mount_base: /data
 # BTRFS subvolume name inside each disk
 longhorn_disk_subvol_name: longhorn
 
+# Default Longhorn disk path (the pre-existing disk from Longhorn installation)
+# This is included in fresh cluster annotations alongside additional disks
+longhorn_default_disk_path: "{{ longhorn_disk_mount_base }}/longhorn"
+
+# BTRFS mount options (compression can be disabled for performance-critical storage)
+# Set to "defaults,noatime,compress=no" to disable compression
+longhorn_disk_mount_options: "defaults,noatime,compress=zstd"
+
+# Systemd mount timeout in seconds (for slow disk initialization)
+longhorn_disk_mount_timeout: 300
+
+# Timeout for partition to appear after creation (seconds)
+longhorn_disk_partition_timeout: 60
+
 # Kubeconfig path for Longhorn registration
 longhorn_kubeconfig: "{{ lookup('env', 'KUBECONFIG') | default('~/.kube/config') }}"

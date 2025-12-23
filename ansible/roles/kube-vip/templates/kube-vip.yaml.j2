@@ -34,6 +34,8 @@ spec:
           value: "{{ kube_vip_cp_namespace }}"
         - name: svc_enable
           value: "false"
+        - name: kubeconfigPath
+          value: "{{ kube_vip_kubeconfig }}"
       securityContext:
         capabilities:
           add:

@@ -78,10 +78,22 @@
         label: "{{ item.item.name }}"
       when: item.stat.exists and not (item.stat.isblk | default(false))
 
+    # Compute partition paths early (NVMe/MMC use 'p1', others use '1')
+    # This is the single source of truth for partition path logic
+    - name: Compute partition paths for all disks
+      ansible.builtin.set_fact:
+        longhorn_disks_with_partitions: |
+          {% set result = [] %}
+          {% for disk in longhorn_additional_disks %}
+          {% set partition = disk.device ~ ('p1' if 'nvme' in disk.device or 'mmcblk' in disk.device or 'loop' in disk.device else '1') %}
+          {% set _ = result.append(disk | combine({'partition': partition})) %}
+          {% endfor %}
+          {{ result }}
+
     - name: Check existing mounts for each disk
       ansible.builtin.command:
         cmd: findmnt -n {{ longhorn_disk_mount_base }}/longhorn-{{ item.name }}
-      loop: "{{ longhorn_additional_disks }}"
+      loop: "{{ longhorn_disks_with_partitions }}"
       loop_control:
         label: "{{ item.name }}"
       register: longhorn_disk_mount_check
@@ -93,7 +105,7 @@
       ansible.builtin.set_fact:
         longhorn_disks_to_configure: >-
           {{
-            longhorn_additional_disks | zip(longhorn_disk_mount_check.results)
+            longhorn_disks_with_partitions | zip(longhorn_disk_mount_check.results)
             | selectattr('1.rc', 'ne', 0)
             | map(attribute='0')
             | list
@@ -113,17 +125,6 @@
       loop_control:
         loop_var: disk
         label: "{{ disk.name }}"
-
-    # Compute partition paths for each disk (NVMe/MMC use 'p1', others use '1')
-    - name: Compute partition paths for disks
-      ansible.builtin.set_fact:
-        longhorn_disks_with_partitions: |
-          {% set result = [] %}
-          {% for disk in longhorn_additional_disks %}
-          {% set partition = disk.device ~ ('p1' if 'nvme' in disk.device or 'mmcblk' in disk.device or 'loop' in disk.device else '1') %}
-          {% set _ = result.append(disk | combine({'partition': partition})) %}
-          {% endfor %}
-          {{ result }}
 
     - name: Get disk info for mount units
       ansible.builtin.command:

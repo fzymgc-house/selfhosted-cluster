@@ -2,12 +2,7 @@
 # code: language=ansible
 ---
 # Configure a single disk for Longhorn storage
-# Called with loop_var: disk
-
-# Compute partition path: NVMe and MMC devices use 'p1', others use '1'
-- name: Determine partition path - {{ disk.name }}
-  ansible.builtin.set_fact:
-    disk_partition_path: "{{ disk.device }}{{ 'p1' if disk.device is regex('nvme|mmcblk|loop') else '1' }}"
+# Called with loop_var: disk (includes disk.partition from main.yml)
 
 - name: Check if disk has partition table - {{ disk.name }}
   ansible.builtin.command:
@@ -19,7 +14,7 @@
 
 - name: Check if partition has our BTRFS label - {{ disk.name }}
   ansible.builtin.command:
-    cmd: blkid -s LABEL -o value "{{ disk_partition_path }}"
+    cmd: blkid -s LABEL -o value "{{ disk.partition }}"
   register: disk_label_check
   failed_when: false
   changed_when: false
@@ -45,12 +40,12 @@
   block:
     - name: Create GPT partition table - {{ disk.name }}
       ansible.builtin.command:
-        cmd: parted -s "{{ disk.device }}" mklabel gpt
+        cmd: parted -s -a optimal "{{ disk.device }}" mklabel gpt
       changed_when: true
 
     - name: Create partition spanning entire disk - {{ disk.name }}
       ansible.builtin.command:
-        cmd: parted -s "{{ disk.device }}" mkpart primary 0% 100%
+        cmd: parted -s -a optimal "{{ disk.device }}" mkpart primary 0% 100%
       changed_when: true
 
     - name: Wait for udev to settle - {{ disk.name }}
@@ -60,13 +55,13 @@
 
     - name: Wait for partition to appear - {{ disk.name }}
       ansible.builtin.wait_for:
-        path: "{{ disk_partition_path }}"
+        path: "{{ disk.partition }}"
         state: present
         timeout: "{{ longhorn_disk_partition_timeout | default(60) }}"
 
     - name: Format partition as BTRFS - {{ disk.name }}
       ansible.builtin.command:
-        cmd: mkfs.btrfs -f -L longhorn-{{ disk.name }} "{{ disk_partition_path }}"
+        cmd: mkfs.btrfs -f -L longhorn-{{ disk.name }} "{{ disk.partition }}"
       changed_when: true
 
     - name: Create secure temporary mount point - {{ disk.name }}
@@ -118,7 +113,7 @@
           Failed to configure disk {{ disk.device }} ({{ disk.name }}).
           The disk may be in a partially configured state.
           Manual intervention may be required:
-            - Check if disk is mounted: findmnt {{ disk_partition_path }}
+            - Check if disk is mounted: findmnt {{ disk.partition }}
             - Check disk state: blkid {{ disk.device }}
             - To retry from scratch: wipefs -a {{ disk.device }}
 

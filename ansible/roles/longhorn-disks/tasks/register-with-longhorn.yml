@@ -10,28 +10,10 @@
     - longhorn-disks
     - longhorn-register
   block:
-    - name: Build disk config JSON for node
-      ansible.builtin.set_fact:
-        longhorn_node_disk_config: >-
-          {{
-            [{"path": "/data/longhorn", "allowScheduling": true}] +
-            (longhorn_additional_disks | map('dict2items')
-              | map('selectattr', 'key', 'in', ['name', 'tags'])
-              | map('items2dict')
-              | list
-              | map('combine', {"allowScheduling": true})
-              | list
-              | map('dict_update', 'path', '/data/longhorn-')
-              | list)
-          }}
-      vars:
-        dict_update: "{{ item | combine({'path': longhorn_disk_mount_base + '/longhorn-' + item.name}) }}"
-
-    # Simpler approach - build the config explicitly
     - name: Build disk config for Longhorn
       ansible.builtin.set_fact:
         longhorn_disk_config_list: |
-          {% set disks = [{"path": "/data/longhorn", "allowScheduling": true}] %}
+          {% set disks = [{"path": longhorn_disk_mount_base + "/longhorn", "allowScheduling": true}] %}
           {% for disk in longhorn_additional_disks %}
           {% set disk_entry = {"path": longhorn_disk_mount_base + "/longhorn-" + disk.name, "allowScheduling": true} %}
           {% if disk.tags is defined %}

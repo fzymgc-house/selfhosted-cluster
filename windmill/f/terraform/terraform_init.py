@@ -4,7 +4,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 
 class s3(TypedDict):
@@ -26,7 +26,7 @@ def _uses_terraform_cloud(module_dir: Path) -> bool:
     for tf_file in module_dir.glob("*.tf"):
         content = tf_file.read_text()
         # Match 'cloud {' or 'cloud{' in terraform block
-        if re.search(r'\bcloud\s*\{', content):
+        if re.search(r"\bcloud\s*\{", content):
             return True
     return False
 
@@ -34,9 +34,9 @@ def _uses_terraform_cloud(module_dir: Path) -> bool:
 def main(
     workspace_path: str,
     module_path: str,
-    s3: Optional[s3] = None,
+    s3: s3 | None = None,
     s3_bucket_prefix: str = "",
-    tfc_token: Optional[str] = None,
+    tfc_token: str | None = None,
 ):
     """
     Initialize Terraform module.
@@ -65,10 +65,7 @@ def main(
     if uses_tfc:
         # Terraform Cloud configuration
         if not tfc_token:
-            raise ValueError(
-                f"Terraform Cloud token required for module {module_path}. "
-                "Set the tfc_token parameter or g/all/tfc_token variable."
-            )
+            raise ValueError(f"Terraform Cloud token required for module {module_path}. Set the tfc_token parameter or g/all/tfc_token variable.")
         env["TF_TOKEN_app_terraform_io"] = tfc_token
         cmd = ["terraform", "init"]
         backend_type = "terraform_cloud"
@@ -78,11 +75,7 @@ def main(
             raise ValueError("S3 configuration required for non-Terraform Cloud modules")
 
         prefix = s3_bucket_prefix.strip("/") if s3_bucket_prefix else ""
-        state_key = (
-            f"{prefix}/terraform/{module_path}/terraform.tfstate"
-            if prefix
-            else f"terraform/{module_path}/terraform.tfstate"
-        )
+        state_key = f"{prefix}/terraform/{module_path}/terraform.tfstate" if prefix else f"terraform/{module_path}/terraform.tfstate"
 
         backend_config = [
             f"-backend-config=bucket={s3['bucket']}",
@@ -99,7 +92,11 @@ def main(
         cmd = ["terraform", "init"] + backend_config
         backend_type = "s3"
 
-    result = subprocess.run(cmd, cwd=str(module_dir), capture_output=True, text=True, env=env, check=True)
+    result = subprocess.run(cmd, cwd=str(module_dir), capture_output=True, text=True, env=env)
+
+    if result.returncode != 0:
+        # Raise exception to trigger failure_module - stderr is safe (no tokens)
+        raise RuntimeError(f"Terraform init failed (exit {result.returncode}):\n{result.stderr}")
 
     return {
         "module_path": module_path,

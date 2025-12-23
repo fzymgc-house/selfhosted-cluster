@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# tasks file for kube-vip
+# Deploys kube-vip as a static pod for Kubernetes API HA
+
+- name: Validate kube-vip configuration
+  ansible.builtin.assert:
+    that:
+      - kube_vip_address is defined
+      - kube_vip_address | ansible.utils.ipaddr
+      - kube_vip_interface is defined
+      - kube_vip_interface | length > 0
+    fail_msg: |
+      Invalid kube-vip configuration:
+        kube_vip_address: {{ kube_vip_address | default('undefined') }}
+        kube_vip_interface: {{ kube_vip_interface | default('undefined') }}
+    quiet: true
+  tags:
+    - kube-vip
+
+- name: Verify network interface exists
+  ansible.builtin.command:
+    cmd: ip link show {{ kube_vip_interface }}
+  register: kube_vip_interface_check
+  changed_when: false
+  failed_when: kube_vip_interface_check.rc != 0
+  tags:
+    - kube-vip
+
+- name: Create static pod manifest directory
+  ansible.builtin.file:
+    path: "{{ kube_vip_manifest_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  tags:
+    - kube-vip
+
+- name: Deploy kube-vip static pod manifest
+  ansible.builtin.template:
+    src: kube-vip.yaml.j2
+    dest: "{{ kube_vip_manifest_dir }}/kube-vip.yaml"
+    owner: root
+    group: root
+    mode: "0644"
+  tags:
+    - kube-vip
+
+- name: Wait for kube-vip pod to be created
+  ansible.builtin.command:
+    cmd: crictl pods --name kube-vip -q
+  register: kube_vip_pod_check
+  until: kube_vip_pod_check.stdout | length > 0
+  retries: 12
+  delay: 5
+  changed_when: false
+  # Don't fail if pod doesn't appear yet - kubelet may need time
+  failed_when: false
+  tags:
+    - kube-vip
+
+- name: Report kube-vip deployment status
+  ansible.builtin.debug:
+    msg: |
+      kube-vip static pod deployed on {{ inventory_hostname }}
+      VIP: {{ kube_vip_address }}:{{ kube_vip_port }}
+      Interface: {{ kube_vip_interface }}
+      Pod status: {{ 'Running' if kube_vip_pod_check.stdout | length > 0 else 'Pending (kubelet will start it)' }}
+  tags:
+    - kube-vip

@@ -7,7 +7,7 @@ host_btrfs_subvolume_prefix: ""
 # Additional Longhorn storage disks (optional)
 # Uncomment and configure to add extra disks to Longhorn storage pool
 # longhorn_additional_disks:
-#   - name: sata-ssd-1        # Unique identifier for this disk
+#   - name: sata_ssd_1        # Unique identifier (alphanumeric, underscore preferred)
 #     device: /dev/sda        # Block device path (must be empty/unpartitioned)
 #     tags:                   # Optional tags for Longhorn scheduling
 #       - sata

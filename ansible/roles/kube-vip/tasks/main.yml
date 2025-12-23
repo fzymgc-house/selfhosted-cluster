@@ -126,16 +126,12 @@
   tags:
     - kube-vip
 
-- name: Wait for VIP to be bound to interface
+- name: Check if VIP is bound locally
   ansible.builtin.command:
     cmd: ip addr show {{ kube_vip_interface }}
   register: kube_vip_ip_bound
-  until: kube_vip_address in kube_vip_ip_bound.stdout
-  retries: 12
-  delay: 5
   changed_when: false
-  # Only the leader node will have the VIP bound
-  failed_when: false
+  # VIP only bound on leader - just record status, don't wait
   tags:
     - kube-vip
 

@@ -8,7 +8,7 @@
     cmd: >
       K3S_URL={{ k3s_server_url }}
       K3S_TOKEN={{ k3s_join_token }}
-      {% if k3s_version %}INSTALL_K3S_VERSION={{ k3s_version }}{% endif %}
+      {% if k3s_target_version %}INSTALL_K3S_VERSION={{ k3s_target_version }}{% endif %}
       /tmp/k3s-install.sh
   environment:
     K3S_URL: "{{ k3s_server_url }}"

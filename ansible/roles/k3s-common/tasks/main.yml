@@ -21,18 +21,22 @@
     k3s_installed_version: "{{ k3s_installed_version_raw.stdout | regex_search('v[0-9]+\\.[0-9]+\\.[0-9]+[^\\s]*') }}"
   when: k3s_binary.stat.exists
 
+- name: Determine target k3s version
+  ansible.builtin.set_fact:
+    k3s_target_version: "{{ k3s_version if k3s_version else (k3s_cluster_version | default('')) }}"
+
 - name: Set installation state facts
   ansible.builtin.set_fact:
     k3s_existing_install: "{{ k3s_binary.stat.exists }}"
     k3s_needs_install: "{{ not k3s_binary.stat.exists }}"
-    k3s_needs_upgrade: "{{ k3s_binary.stat.exists and k3s_version | default('') != '' and k3s_installed_version != k3s_version }}"
+    k3s_needs_upgrade: "{{ k3s_binary.stat.exists and k3s_target_version != '' and k3s_installed_version != k3s_target_version }}"
 
 - name: Display k3s installation state
   ansible.builtin.debug:
     msg: >-
       k3s state: installed={{ k3s_existing_install }},
       version={{ k3s_installed_version | default('none') }},
-      desired={{ k3s_version | default('latest') }},
+      target={{ k3s_target_version | default('latest') }},
       needs_install={{ k3s_needs_install }},
       needs_upgrade={{ k3s_needs_upgrade }}
   tags:

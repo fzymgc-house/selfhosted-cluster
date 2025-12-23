@@ -10,11 +10,12 @@
       K3S_TOKEN={{ k3s_join_token }}
       {% if k3s_version %}INSTALL_K3S_VERSION={{ k3s_version }}{% endif %}
       /tmp/k3s-install.sh
-    creates: /usr/local/bin/k3s
   environment:
     K3S_URL: "{{ k3s_server_url }}"
     K3S_TOKEN: "{{ k3s_join_token }}"
-  when: not k3s_existing_install
+  when: k3s_needs_install or k3s_needs_upgrade
+  changed_when: true
+  notify: Restart k3s
   tags:
     - k3s-install
 

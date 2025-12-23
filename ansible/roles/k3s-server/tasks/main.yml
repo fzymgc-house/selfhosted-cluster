@@ -9,10 +9,11 @@
       INSTALL_K3S_SKIP_START=true
       {% if k3s_version %}INSTALL_K3S_VERSION={{ k3s_version }}{% endif %}
       /tmp/k3s-install.sh
-    creates: /usr/local/bin/k3s
   environment:
     INSTALL_K3S_SKIP_START: "true"
-  when: not k3s_existing_install
+  when: k3s_needs_install or k3s_needs_upgrade
+  changed_when: true
+  notify: Restart k3s
   tags:
     - k3s-install
 

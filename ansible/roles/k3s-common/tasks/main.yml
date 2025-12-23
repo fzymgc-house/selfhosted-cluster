@@ -8,9 +8,34 @@
     path: /usr/local/bin/k3s
   register: k3s_binary
 
-- name: Set existing install fact
+- name: Get installed k3s version
+  ansible.builtin.command:
+    cmd: k3s --version
+  register: k3s_installed_version_raw
+  changed_when: false
+  when: k3s_binary.stat.exists
+
+- name: Parse installed k3s version
+  ansible.builtin.set_fact:
+    k3s_installed_version: "{{ k3s_installed_version_raw.stdout | regex_search('v[0-9]+\\.[0-9]+\\.[0-9]+[^\\s]*') }}"
+  when: k3s_binary.stat.exists
+
+- name: Set installation state facts
   ansible.builtin.set_fact:
     k3s_existing_install: "{{ k3s_binary.stat.exists }}"
+    k3s_needs_install: "{{ not k3s_binary.stat.exists }}"
+    k3s_needs_upgrade: "{{ k3s_binary.stat.exists and k3s_version | default('') != '' and k3s_installed_version != k3s_version }}"
+
+- name: Display k3s installation state
+  ansible.builtin.debug:
+    msg: >-
+      k3s state: installed={{ k3s_existing_install }},
+      version={{ k3s_installed_version | default('none') }},
+      desired={{ k3s_version | default('latest') }},
+      needs_install={{ k3s_needs_install }},
+      needs_upgrade={{ k3s_needs_upgrade }}
+  tags:
+    - k3s-status
 
 - name: Create k3s config directory
   ansible.builtin.file:
@@ -20,6 +45,11 @@
     owner: root
     group: root
 
+- name: Check existing k3s config
+  ansible.builtin.stat:
+    path: /etc/rancher/k3s/config.yaml
+  register: k3s_config_file
+
 - name: Template k3s configuration
   ansible.builtin.template:
     src: k3s-config.yaml.j2
@@ -28,7 +58,8 @@
     owner: root
     group: root
   notify: Restart k3s
-  # Skip config for existing agents - they run fine without config file
+  # For servers: always manage config
+  # For agents: only create config on fresh install (existing agents have no config)
   when: k3s_role | default('agent') == 'server' or not k3s_existing_install
   tags:
     - k3s-config
@@ -41,7 +72,7 @@
     owner: root
     group: root
   notify: Restart k3s
-  # Skip registries for existing agents - they run fine without it
+  # Same logic as config
   when: k3s_role | default('agent') == 'server' or not k3s_existing_install
   tags:
     - k3s-registries
@@ -51,6 +82,7 @@
     url: https://get.k3s.io
     dest: /tmp/k3s-install.sh
     mode: "0755"
-  when: not k3s_existing_install
+    force: true
+  when: k3s_needs_install or k3s_needs_upgrade
   tags:
     - k3s-install-script

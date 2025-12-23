@@ -1,3 +1,4 @@
+---
 - name: Install packages for restic
   ansible.builtin.apt:
     name: "{{ item }}"
@@ -26,7 +27,7 @@
   ansible.builtin.get_url:
     url: "https://github.com/restic/restic/releases/download/v{{ restic_version }}/restic_{{ restic_version }}_linux_arm64.bz2"
     dest: "/tmp/restic_{{ restic_version }}_linux_arm64.bz2"
-    mode: '0644'
+    mode: "0644"
   register: download_restic
   when: (installed_restic_version | default('0.0.0')) is version(restic_version, '<')
 
@@ -42,7 +43,7 @@
     remote_src: true
     owner: root
     group: root
-    mode: '0755'
+    mode: "0755"
   when: download_restic.changed
 
 - name: Cleanup downloaded files
@@ -65,7 +66,7 @@
     state: directory
     owner: root
     group: root
-    mode: '0700'
+    mode: "0700"
   with_items:
     - /etc/restic
     - /etc/restic/backup-scripts
@@ -80,7 +81,7 @@
     dest: /etc/restic/env
     owner: root
     group: root
-    mode: '0600'
+    mode: "0600"
 
 - name: Create restic password file
   ansible.builtin.copy:
@@ -88,7 +89,7 @@
     dest: /etc/restic/repository-password
     owner: root
     group: root
-    mode: '0600'
+    mode: "0600"
 
 - name: Check if restic repository exists
   ansible.builtin.shell:

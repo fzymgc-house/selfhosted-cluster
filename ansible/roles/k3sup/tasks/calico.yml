@@ -1,3 +1,4 @@
+---
 # code: language=ansible
 
 - name: Install Calico operator using kubectl create

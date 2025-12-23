@@ -16,7 +16,8 @@
 
 - name: Add Teleport APT repository
   ansible.builtin.apt_repository:
-    repo: "deb [signed-by=/etc/apt/keyrings/teleport.asc] https://apt.releases.teleport.dev/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable/v17"
+    repo: "deb [signed-by=/etc/apt/keyrings/teleport.asc] https://apt.releases.teleport.dev/{{ ansible_distribution | lower }} {{ ansible_distribution_release }}
+      stable/v17"
     state: present
     filename: teleport
 

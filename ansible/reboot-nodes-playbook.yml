@@ -1,3 +1,4 @@
+---
 - name: Reboot alpha nodes
   hosts: tpi_alpha_hosts
   become: true

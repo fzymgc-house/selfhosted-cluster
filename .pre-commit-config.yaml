@@ -24,12 +24,12 @@ repos:
         args: [-c, .yamllint.yaml]
         exclude: '\.j2$'
 
-  # Ansible (runs from ansible/ directory to use local ansible.cfg)
+  # # Ansible (runs from ansible/ directory to use local ansible.cfg)
   - repo: local
     hooks:
       - id: ansible-lint
         name: ansible-lint
-        entry: bash -c 'cd ansible && ANSIBLE_VAULT_PASSWORD="" ansible-lint'
+        entry: bash -c 'cd ansible && ansible-lint -vv --fix=all  --config-file=.ansible-lint'
         language: system
         files: ^ansible/
         pass_filenames: false
@@ -58,5 +58,5 @@ repos:
       - id: ruff-format
 
 ci:
-  autofix_commit_msg: 'style: auto-fix by pre-commit hooks'
-  autoupdate_commit_msg: 'chore: pre-commit autoupdate'
+  autofix_commit_msg: "style: auto-fix by pre-commit hooks"
+  autoupdate_commit_msg: "chore: pre-commit autoupdate"

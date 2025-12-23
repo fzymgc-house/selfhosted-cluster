@@ -26,6 +26,9 @@ hvac>=2.3.0            # HashiCorp Vault client
 paramiko>=3.5.0        # SSH protocol library
 cryptography>=44.0.0   # Cryptographic recipes
 
+# Ansible dev tools
+ansible-dev-tools>=25.12.0
+
 # Linting and validation (optional but recommended)
 ansible-lint>=24.10.0  # Ansible best practices linter
 yamllint>=1.35.0       # YAML linter

@@ -1,22 +1,23 @@
+---
 - name: Configure postfix
   ansible.builtin.debconf:
     name: postfix
     question: postfix/main_mailer_type
-    value: 'Satellite system'
+    value: "Satellite system"
     vtype: select
 
 - name: Configure postfix mailname
   ansible.builtin.debconf:
     name: postfix
     question: postfix/mailname
-    value: '{{ ansible_fqdn }}'
+    value: "{{ ansible_fqdn }}"
     vtype: string
 
 - name: Configure postfix relayhost
   ansible.builtin.debconf:
     name: postfix
     question: postfix/relayhost
-    value: '[smtp.mailgun.org]:587'
+    value: "[smtp.mailgun.org]:587"
     vtype: string
 
 - name: Install packages for mail

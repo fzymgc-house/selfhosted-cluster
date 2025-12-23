@@ -4,197 +4,205 @@
 
 - name: Update apt cache and upgrade packages
   ansible.builtin.apt:
-      update_cache: true
-      upgrade: full
+    update_cache: true
+    upgrade: full
 
 - name: Set hostname
   ansible.builtin.hostname:
-      name: "{{ inventory_hostname }}"
+    name: "{{ inventory_hostname }}"
 
 - name: Set timezone
   community.general.timezone:
-      hwclock: UTC
-      name: "{{ timezone }}"
+    hwclock: UTC
+    name: "{{ timezone }}"
 
 - name: Install packages
   ansible.builtin.apt:
-      name: "{{ packages }}"
+    name: "{{ packages }}"
 
 - name: Configure systemd resolved
   ansible.builtin.template:
-      src: systemd-resolved.conf.j2
-      dest: /etc/systemd/resolved.conf
-      owner: root
-      group: root
-      mode: "0644"
+    src: systemd-resolved.conf.j2
+    dest: /etc/systemd/resolved.conf
+    owner: root
+    group: root
+    mode: "0644"
   notify: Restart systemd-resolved
 
 - name: Configure chrony
   ansible.builtin.template:
-      src: chrony.conf.j2
-      dest: /etc/chrony/chrony.conf
-      owner: root
-      group: root
-      mode: "0644"
+    src: chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: "0644"
   notify: Restart chrony
   tags: chrony
 
 - name: Configure apt unattended upgrades
   ansible.builtin.template:
-      src: apt-unattended-upgrades.j2
-      dest: /etc/apt/apt.conf.d/50unattended-upgrades
-      owner: root
-      group: root
-      mode: "0644"
+    src: apt-unattended-upgrades.j2
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: "0644"
 
 - name: Update /etc/hosts from template
   ansible.builtin.template:
-      src: hosts.j2
-      dest: /etc/hosts
-      owner: root
-      group: root
-      mode: "0644"
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: "0644"
   tags: hosts
 
 - name: Install sshd_config
   ansible.builtin.template:
-      src: sshd_config.j2
-      dest: /etc/ssh/sshd_config
-      owner: root
-      group: root
-      mode: "0644"
+    src: sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: "0644"
   notify: Restart sshd
 
 - name: Configure multipath for longhorn support
   ansible.builtin.copy:
-      src: multipath.conf
-      dest: /etc/multipath.conf
-      owner: root
-      group: root
-      mode: "0644"
+    src: multipath.conf
+    dest: /etc/multipath.conf
+    owner: root
+    group: root
+    mode: "0644"
   notify: Restart multipathd
 
 - name: Check if br_netfilter is built into kernel
   ansible.builtin.stat:
-      path: /proc/sys/net/bridge/bridge-nf-call-iptables
+    path: /proc/sys/net/bridge/bridge-nf-call-iptables
   register: br_netfilter_builtin
 
 - name: Load br_netfilter kernel module (if not built-in)
   ansible.builtin.command:
-      cmd: modprobe br_netfilter
+    cmd: modprobe br_netfilter
   when: not br_netfilter_builtin.stat.exists
   changed_when: false
 
 - name: Ensure br_netfilter loads at boot (if not built-in)
   ansible.builtin.copy:
-      content: |
-          br_netfilter
-      dest: /etc/modules-load.d/br_netfilter.conf
-      mode: "0644"
-      owner: root
-      group: root
+    content: |
+      br_netfilter
+    dest: /etc/modules-load.d/br_netfilter.conf
+    mode: "0644"
+    owner: root
+    group: root
   when: not br_netfilter_builtin.stat.exists
 
 - name: Verify bridge netfilter is available
   ansible.builtin.stat:
-      path: /proc/sys/net/bridge/bridge-nf-call-iptables
+    path: /proc/sys/net/bridge/bridge-nf-call-iptables
   register: br_netfilter_check
 
 - name: Assert bridge netfilter is available
   ansible.builtin.assert:
-      that:
-          - br_netfilter_check.stat.exists
-      fail_msg: "Bridge netfilter not available - check kernel configuration (CONFIG_BRIDGE_NETFILTER)"
-      success_msg: "Bridge netfilter is available"
+    that:
+      - br_netfilter_check.stat.exists
+    fail_msg: "Bridge netfilter not available - check kernel configuration (CONFIG_BRIDGE_NETFILTER)"
+    success_msg: "Bridge netfilter is available"
 
 - name: Configure bridge sysctl settings
   ansible.posix.sysctl:
-      name: "{{ item.key }}"
-      value: "{{ item.value }}"
-      sysctl_set: true
-      state: present
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: true
+    state: present
   with_dict:
-      net.bridge.bridge-nf-call-iptables: "1"
-      net.bridge.bridge-nf-call-ip6tables: "1"
-      net.bridge.bridge-nf-call-arptables: "1"
+    net.bridge.bridge-nf-call-iptables: "1"
+    net.bridge.bridge-nf-call-ip6tables: "1"
+    net.bridge.bridge-nf-call-arptables: "1"
   tags: sysctl
 
 - name: Configure inotify sysctl settings
   ansible.posix.sysctl:
-      name: "{{ item.key }}"
-      value: "{{ item.value }}"
-      sysctl_set: true
-      state: present
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: true
+    state: present
   with_dict:
-      fs.inotify.max_user_watches: "2099999999"
-      fs.inotify.max_user_instances: "2099999999"
-      fs.inotify.max_queued_events: "2099999999"
+    fs.inotify.max_user_watches: "2099999999"
+    fs.inotify.max_user_instances: "2099999999"
+    fs.inotify.max_queued_events: "2099999999"
   tags: sysctl
 
 - name: Install root certificates
   ansible.builtin.copy:
-      src: "{{ item }}"
-      dest: /usr/local/share/ca-certificates/
-      owner: root
-      group: root
-      mode: "0644"
+    src: "{{ item }}"
+    dest: /usr/local/share/ca-certificates/
+    owner: root
+    group: root
+    mode: "0644"
   with_fileglob:
-      - "{{ role_path }}/files/*.crt"
+    - "{{ role_path }}/files/*.crt"
   notify: Update ca certificates
   tags: root-certs
 
 - name: Configure journald
   ansible.builtin.copy:
-      src: journald.conf
-      dest: /etc/systemd/journald.conf
-      owner: root
-      group: root
-      mode: "0644"
+    src: journald.conf
+    dest: /etc/systemd/journald.conf
+    owner: root
+    group: root
+    mode: "0644"
   notify:
-      - Restart systemd-journald
-      - Vacuum systemd-journald
+    - Restart systemd-journald
+    - Vacuum systemd-journald
   tags: journald
 
 - name: Disable armbian zlog
   ansible.builtin.lineinfile:
-      path: /etc/default/armbian-zram-config
-      search_string: "ENABLED="
-      line: "ENABLED=false"
-      state: present
+    path: /etc/default/armbian-zram-config
+    search_string: "ENABLED="
+    line: "ENABLED=false"
+    state: present
   tags: zlog
 
 - name: Disable armbian ramlog
   ansible.builtin.lineinfile:
-      path: /etc/default/armbian-ramlog
-      search_string: "ENABLED="
-      line: "ENABLED=false"
-      state: present
+    path: /etc/default/armbian-ramlog
+    search_string: "ENABLED="
+    line: "ENABLED=false"
+    state: present
   tags: ramlog
 
 - name: Install mail handling
   ansible.builtin.import_tasks:
-      file: mail.yml
+    file: mail.yml
   tags:
-      - mail
+    - mail
 
 - name: Install restic
   ansible.builtin.import_tasks:
-      file: restic.yml
+    file: restic.yml
   tags:
-      - restic
+    - restic
 
 - name: Remove first boot netplan config
   ansible.builtin.file:
-      path: /etc/netplan/10-dhcp-all-interfaces.yaml
-      state: absent
+    path: /etc/netplan/10-dhcp-all-interfaces.yaml
+    state: absent
   tags: network
 
 - name: Configure netplan
   ansible.builtin.template:
-      src: 01-netcfg.yaml.j2
-      dest: /etc/netplan/01-netcfg.yaml
-      owner: root
-      group: root
-      mode: "0600"
+    src: 01-netcfg.yaml.j2
+    dest: /etc/netplan/01-netcfg.yaml
+    owner: root
+    group: root
+    mode: "0600"
   notify: Apply netplan
   tags: network
+
+- name: Allow fzymgc user to run all commands without a password
+  community.general.sudoers:
+    name: fzymgc
+    user: fzymgc
+    commands: ALL
+    nopassword: true
+  tags: sudoers

@@ -32,7 +32,7 @@
         }
       }
     dest: /etc/multipath.conf
-    mode: '0644'
+    mode: "0644"
     owner: root
     group: root
   tags:
@@ -60,7 +60,7 @@
   ansible.builtin.copy:
     src: docker-sock.conf
     dest: /etc/tmpfiles.d/docker-sock.conf
-    mode: '0644'
+    mode: "0644"
     owner: root
     group: root
   tags:

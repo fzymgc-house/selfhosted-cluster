@@ -36,16 +36,16 @@
 - name: Plan k3s install
   ansible.builtin.shell:
     cmd: |
-        set -o pipefail
-        env | sort
-        pwd
-        k3sup plan /tmp/k3sup-plan.json \
-          --context {{ k8s_context }} \
-          --local-path $HOME/.kube/configs/{{ k8s_context }}-admin.yml \
-          --servers 3 \
-          --tls-san {{ k8s_cluster_sans }} \
-          --user {{ k8s_user_name }} \
-          > /tmp/k3sup-install.sh
+      set -o pipefail
+      env | sort
+      pwd
+      k3sup plan /tmp/k3sup-plan.json \
+        --context {{ k8s_context }} \
+        --local-path $HOME/.kube/configs/{{ k8s_context }}-admin.yml \
+        --servers 3 \
+        --tls-san {{ k8s_cluster_sans }} \
+        --user {{ k8s_user_name }} \
+        > /tmp/k3sup-install.sh
     executable: /bin/bash
   changed_when: false
   run_once: true
@@ -81,8 +81,8 @@
 - name: Check if k3s is already installed using k3sup ready
   ansible.builtin.shell:
     cmd: |
-        set -o pipefail
-        k3sup ready --attempts=2 --kubeconfig $HOME/.kube/configs/{{ k8s_context }}-admin.yml --context {{ k8s_context }}
+      set -o pipefail
+      k3sup ready --attempts=2 --kubeconfig $HOME/.kube/configs/{{ k8s_context }}-admin.yml --context {{ k8s_context }}
     executable: /bin/bash
   failed_when: false
   changed_when: false
@@ -96,10 +96,10 @@
 - name: Install k3s
   ansible.builtin.shell:
     cmd: |
-        set -o pipefail
-        env | sort
-        pwd
-        bash /tmp/k3sup-install.sh | tee /tmp/k3sup-install.log
+      set -o pipefail
+      env | sort
+      pwd
+      bash /tmp/k3sup-install.sh | tee /tmp/k3sup-install.log
     creates: "/Users/sean/.kube/configs/tpi-beta-admin.yml"
     executable: /bin/bash
   tags:
@@ -117,9 +117,9 @@
 - name: Create CSI snapshot controller
   ansible.builtin.shell:
     cmd: |
-        set -o pipefail
-        export KUBECONFIG=$HOME/.kube/configs/{{ k8s_context }}-admin.yml
-        kubectl apply -k {{ role_path }}/files/csi-snapshot-setup
+      set -o pipefail
+      export KUBECONFIG=$HOME/.kube/configs/{{ k8s_context }}-admin.yml
+      kubectl apply -k {{ role_path }}/files/csi-snapshot-setup
     executable: /bin/bash
   run_once: true
   delegate_to: localhost
@@ -142,8 +142,8 @@
   ansible.builtin.lineinfile:
     state: present
     path: /Users/sean/.kube/configs/{{ k8s_context }}-admin.yml
-    regexp: '^(\s*)server: https://.*$'
-    line: '\1server: https://{{ k8s_cluster_endpoint_name }}:6443'
+    regexp: "^(\\s*)server: https://.*$"
+    line: "\\1server: https://{{ k8s_cluster_endpoint_name }}:6443"
     backrefs: true
   run_once: true
   delegate_to: localhost

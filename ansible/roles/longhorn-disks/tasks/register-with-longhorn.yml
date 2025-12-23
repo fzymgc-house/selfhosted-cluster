@@ -82,6 +82,35 @@
         longhorn_existing_disks: {}
       when: longhorn_is_installed and (longhorn_node_info.resources | length == 0)
 
+    # Detect orphaned disks (in Longhorn but not in config)
+    # These are disks that were previously configured but have been removed from host_vars
+    - name: Detect orphaned disks in Longhorn
+      ansible.builtin.set_fact:
+        longhorn_orphaned_disks: |
+          {% set configured_names = longhorn_additional_disks | map(attribute='name') | list %}
+          {% set orphaned = [] %}
+          {% for disk_name, disk_spec in longhorn_existing_disks.items() %}
+          {% if disk_name != 'default' and disk_name not in configured_names %}
+          {% set _ = orphaned.append({'name': disk_name, 'path': disk_spec.path | default('unknown')}) %}
+          {% endif %}
+          {% endfor %}
+          {{ orphaned }}
+      when: longhorn_is_installed and longhorn_existing_disks | length > 0
+
+    - name: Warn about orphaned disks in Longhorn
+      ansible.builtin.debug:
+        msg: |
+          WARNING: Found {{ longhorn_orphaned_disks | length }} disk(s) in Longhorn that are not in host_vars config:
+          {% for disk in longhorn_orphaned_disks %}
+            - {{ disk.name }} ({{ disk.path }})
+          {% endfor %}
+          These disks may have been removed from config but still exist in Longhorn.
+          To remove them safely, follow the disk removal procedure in defaults/main.yml.
+      when:
+        - longhorn_is_installed
+        - longhorn_orphaned_disks is defined
+        - longhorn_orphaned_disks | length > 0
+
     # Patch Longhorn Node CRD - merge existing config with new disks
     # Preserves existing disk settings (storageReserved, tags, etc.) when disk already exists
     - name: Patch Longhorn Node with additional disks

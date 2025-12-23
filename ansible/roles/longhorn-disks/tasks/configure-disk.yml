@@ -93,19 +93,26 @@
         state: absent
 
   rescue:
+    # Defensive cleanup - handle cases where temp_mount_dir may not exist or be incomplete
     - name: Cleanup - attempt to unmount on failure - {{ disk.name }}
       ansible.posix.mount:
-        path: "{{ temp_mount_dir.path }}"
+        path: "{{ temp_mount_dir.path | default(omit) }}"
         state: unmounted
       failed_when: false
-      when: temp_mount_dir is defined and temp_mount_dir.path is defined
+      when:
+        - temp_mount_dir is defined
+        - temp_mount_dir.path is defined
+        - temp_mount_dir.path | length > 0
 
     - name: Cleanup - remove temp directory on failure - {{ disk.name }}
       ansible.builtin.file:
-        path: "{{ temp_mount_dir.path }}"
+        path: "{{ temp_mount_dir.path | default(omit) }}"
         state: absent
       failed_when: false
-      when: temp_mount_dir is defined and temp_mount_dir.path is defined
+      when:
+        - temp_mount_dir is defined
+        - temp_mount_dir.path is defined
+        - temp_mount_dir.path | length > 0
 
     - name: Report disk configuration failure - {{ disk.name }}
       ansible.builtin.fail:

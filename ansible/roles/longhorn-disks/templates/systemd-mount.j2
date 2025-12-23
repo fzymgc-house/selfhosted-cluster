@@ -1,6 +1,7 @@
 [Unit]
 Description=Mount {{ mount_path }} for Longhorn storage ({{ disk_name }})
-After=systemd-modules-load.service local-fs-pre.target
+# Ordering: After block devices are ready, before k3s starts
+After=systemd-modules-load.service local-fs-pre.target blockdev@{{ disk_uuid | regex_replace('-', '\\x2d') }}.target
 Before=local-fs.target k3s.service
 Requires=systemd-modules-load.service
 ConditionPathIsDirectory={{ mount_path }}
@@ -14,3 +15,5 @@ TimeoutSec={{ longhorn_disk_mount_timeout | default(300) }}
 
 [Install]
 WantedBy=local-fs.target
+# Ensure k3s waits for this mount before starting
+RequiredBy=k3s.service

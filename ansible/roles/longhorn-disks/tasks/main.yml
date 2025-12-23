@@ -50,6 +50,16 @@
           Found names: {{ longhorn_additional_disks | map(attribute='name') | list | join(', ') }}
         quiet: true
 
+    - name: Validate disk device paths are unique
+      ansible.builtin.assert:
+        that:
+          - longhorn_additional_disks | map(attribute='device') | list | length == longhorn_additional_disks | map(attribute='device') | unique | list | length
+        fail_msg: |
+          Duplicate device paths found in longhorn_additional_disks!
+          Each disk must use a unique device path.
+          Found devices: {{ longhorn_additional_disks | map(attribute='device') | list | join(', ') }}
+        quiet: true
+
     - name: Validate disk devices exist
       ansible.builtin.stat:
         path: "{{ item.device }}"
@@ -78,14 +88,17 @@
         label: "{{ item.item.name }}"
       when: item.stat.exists and not (item.stat.isblk | default(false))
 
-    # Compute partition paths early (NVMe/MMC use 'p1', others use '1')
+    # Compute partition paths early (NVMe/MMC/loop use 'p1', others use '1')
     # This is the single source of truth for partition path logic
+    # Uses basename to handle /dev/disk/by-id paths correctly
     - name: Compute partition paths for all disks
       ansible.builtin.set_fact:
         longhorn_disks_with_partitions: |
           {% set result = [] %}
           {% for disk in longhorn_additional_disks %}
-          {% set partition = disk.device ~ ('p1' if 'nvme' in disk.device or 'mmcblk' in disk.device or 'loop' in disk.device else '1') %}
+          {% set device_basename = disk.device | basename %}
+          {% set needs_p_suffix = device_basename.startswith('nvme') or device_basename.startswith('mmcblk') or device_basename.startswith('loop') %}
+          {% set partition = disk.device ~ ('p1' if needs_p_suffix else '1') %}
           {% set _ = result.append(disk | combine({'partition': partition})) %}
           {% endfor %}
           {{ result }}
@@ -175,12 +188,17 @@
         label: "{{ item.0.name }}"
       notify: Reload systemd
 
+    # Note: daemon_reload is handled by the "Reload systemd" handler triggered above
+    # when mount unit files are created/modified. The handler approach is preferred
+    # because it ensures reload happens once, even if multiple units are changed.
+    - name: Flush handlers to reload systemd before starting mounts
+      ansible.builtin.meta: flush_handlers
+
     - name: Enable and start mount units
       ansible.builtin.systemd:
         name: "{{ longhorn_disk_mount_base | regex_replace('/', '-') | regex_replace('^-', '') }}-longhorn-{{ item.name }}.mount"
         state: started
         enabled: true
-        daemon_reload: true
       loop: "{{ longhorn_additional_disks }}"
       loop_control:
         label: "{{ item.name }}"

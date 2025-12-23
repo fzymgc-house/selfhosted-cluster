@@ -5,10 +5,30 @@
 #
 # This role configures additional block devices for Longhorn distributed storage.
 #
-# LIMITATIONS:
-# - Check mode (--check) will not fully validate disk operations
-# - Disk partitioning/formatting tasks always show as changed in check mode
-# - Use --check --diff to preview mount unit changes only
+# VARIABLE NAMING CONVENTION:
+# - longhorn_additional_disks: List of disk definitions (input from host_vars)
+# - longhorn_disk_*: Settings related to disk configuration (mount, subvol, etc.)
+# - longhorn_default_*: Settings for the pre-existing default Longhorn disk
+# - longhorn_kubeconfig: Kubernetes access configuration
+#
+# CHECK MODE LIMITATIONS:
+# The --check flag provides limited validation for this role:
+#
+# ✓ CAN validate in check mode:
+#   - Disk name format (regex validation)
+#   - Disk name/device uniqueness
+#   - Device existence and type (block device check)
+#   - Mount unit template rendering (--diff shows changes)
+#   - Longhorn registration logic flow
+#
+# ✗ CANNOT validate in check mode:
+#   - Actual partitioning (parted commands)
+#   - Filesystem creation (mkfs.btrfs)
+#   - BTRFS subvolume creation
+#   - Mount operations
+#
+# Recommendation: Use --check --diff to preview mount unit changes, but
+# always test on a non-production node first for actual disk operations.
 #
 # DISK REMOVAL (manual process by design):
 # This role does NOT automatically remove disks from Longhorn when entries are
@@ -54,4 +74,8 @@ longhorn_disk_mount_timeout: 300
 longhorn_disk_partition_timeout: 60
 
 # Kubeconfig path for Longhorn registration
+# Default uses KUBECONFIG env var or ~/.kube/config
+# Override in playbook for project-specific configs, e.g.:
+#   longhorn_kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml"
+# Note: The playbook should validate the kubeconfig file exists before including this role
 longhorn_kubeconfig: "{{ lookup('env', 'KUBECONFIG') | default('~/.kube/config') }}"

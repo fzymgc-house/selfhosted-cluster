@@ -15,3 +15,7 @@ galaxy_info:
         - noble
 
 dependencies: []
+
+# Required collections (install with: ansible-galaxy collection install -r requirements.yml)
+# - ansible.posix >= 1.5.0
+# - kubernetes.core >= 2.4.0

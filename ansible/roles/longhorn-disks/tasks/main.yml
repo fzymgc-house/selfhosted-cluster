@@ -22,6 +22,36 @@
   tags:
     - longhorn-disks
   block:
+    - name: Validate disk names contain only safe characters
+      ansible.builtin.assert:
+        that:
+          - item.name is regex('^[a-zA-Z0-9][a-zA-Z0-9_-]*$')
+        fail_msg: |
+          Invalid disk name: {{ item.name }}
+          Disk names must start with alphanumeric and contain only: a-z A-Z 0-9 _ -
+        quiet: true
+      loop: "{{ longhorn_additional_disks }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Validate disk devices exist
+      ansible.builtin.stat:
+        path: "{{ item.device }}"
+      register: disk_device_check
+      loop: "{{ longhorn_additional_disks }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Fail if any disk device does not exist
+      ansible.builtin.fail:
+        msg: |
+          Disk device not found: {{ item.item.device }}
+          Ensure the device exists and is a valid block device.
+      loop: "{{ disk_device_check.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when: not item.stat.exists
+
     - name: Check existing mounts for each disk
       ansible.builtin.command:
         cmd: findmnt -n {{ longhorn_disk_mount_base }}/longhorn-{{ item.name }}

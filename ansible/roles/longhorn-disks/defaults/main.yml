@@ -2,12 +2,29 @@
 # code: language=ansible
 ---
 # defaults file for longhorn-disks
+#
+# This role configures additional block devices for Longhorn distributed storage.
+#
+# LIMITATIONS:
+# - Check mode (--check) will not fully validate disk operations
+# - Disk partitioning/formatting tasks always show as changed in check mode
+# - Use --check --diff to preview mount unit changes only
+#
+# DISK REMOVAL:
+# To remove a disk from Longhorn:
+# 1. Disable scheduling on the disk in Longhorn UI
+# 2. Wait for data evacuation to complete (check Longhorn UI)
+# 3. Remove the disk entry from longhorn_additional_disks in host_vars
+# 4. Run playbook to update Longhorn Node CRD
+# 5. Manually unmount and remove: systemctl disable --now <mount-unit>
+# 6. Optionally wipe the disk: wipefs -a /dev/sdX
 
 # Additional disks for Longhorn - set per host in host_vars
+# Disk names must match: ^[a-zA-Z0-9][a-zA-Z0-9_-]*$
 # longhorn_additional_disks:
-#   - device: /dev/sda
-#     name: sata-storage-1
-#     tags:
+#   - device: /dev/sda       # Block device (must exist)
+#     name: sata-storage-1   # Unique identifier (alphanumeric, _, -)
+#     tags:                  # Optional Longhorn scheduling tags
 #       - sata
 #       - bulk
 

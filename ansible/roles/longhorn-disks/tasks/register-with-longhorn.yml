@@ -53,8 +53,30 @@
       become: false
       when: not longhorn_is_installed
 
-    # For existing clusters - patch Longhorn Node CRD directly
-    # Note: We must include the default disk to avoid clobbering existing config
+    # For existing clusters - fetch current config and merge with new disks
+    - name: Get existing Longhorn Node configuration
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ longhorn_kubeconfig }}"
+        api_version: longhorn.io/v1beta2
+        kind: Node
+        name: "{{ inventory_hostname }}"
+        namespace: longhorn-system
+      register: longhorn_node_info
+      delegate_to: localhost
+      become: false
+      when: longhorn_is_installed
+
+    - name: Extract existing disk configuration
+      ansible.builtin.set_fact:
+        longhorn_existing_disks: "{{ longhorn_node_info.resources[0].spec.disks | default({}) }}"
+      when: longhorn_is_installed and longhorn_node_info.resources | length > 0
+
+    - name: Set empty existing disks if node not found
+      ansible.builtin.set_fact:
+        longhorn_existing_disks: {}
+      when: longhorn_is_installed and (longhorn_node_info.resources | length == 0)
+
+    # Patch Longhorn Node CRD - merge existing config with new disks
     - name: Patch Longhorn Node with additional disks
       kubernetes.core.k8s:
         kubeconfig: "{{ longhorn_kubeconfig }}"
@@ -68,14 +90,7 @@
             disks: "{{ longhorn_node_disks_spec }}"
       vars:
         longhorn_node_disks_spec: |
-          {% set disks = {
-            "default": {
-              "path": longhorn_disk_mount_base + "/longhorn",
-              "allowScheduling": true,
-              "evictionRequested": false,
-              "storageReserved": 0
-            }
-          } %}
+          {% set disks = longhorn_existing_disks | default({}) %}
           {% for disk in longhorn_additional_disks %}
           {% set disk_spec = {
             "path": longhorn_disk_mount_base + "/longhorn-" + disk.name,

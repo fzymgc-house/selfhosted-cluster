@@ -1,6 +1,8 @@
 [Unit]
 Description=Mount {{ mount_path }} for Longhorn storage ({{ disk_name }})
 # Ordering: After block devices are ready, before k3s starts
+# Note: UUID escaping uses \x2d for hyphens. Standard UUIDs only contain [0-9a-f-]
+# which are safe for systemd unit names. Non-standard UUIDs would need systemd-escape.
 After=systemd-modules-load.service local-fs-pre.target blockdev@{{ disk_uuid | regex_replace('-', '\\x2d') }}.target
 Before=local-fs.target k3s.service
 Requires=systemd-modules-load.service

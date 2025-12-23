@@ -28,7 +28,7 @@
         kubeconfig: "{{ longhorn_kubeconfig }}"
         kind: Deployment
         name: longhorn-driver-deployer
-        namespace: longhorn-system
+        namespace: "{{ longhorn_namespace }}"
       register: longhorn_deployment_check
       delegate_to: localhost
       become: false
@@ -63,7 +63,7 @@
         api_version: longhorn.io/v1beta2
         kind: Node
         name: "{{ inventory_hostname }}"
-        namespace: longhorn-system
+        namespace: "{{ longhorn_namespace }}"
       register: longhorn_node_info
       delegate_to: localhost
       become: false
@@ -128,8 +128,40 @@
         - longhorn_orphaned_disks | length > 0
         - orphaned_disk_mounts is defined
 
-    # Patch Longhorn Node CRD - merge existing config with new disks
-    # Preserves existing disk settings (storageReserved, tags, etc.) when disk already exists
+    # Build new disk specs using Ansible's native combine filter
+    # This is cleaner than inline Jinja2 and easier to debug
+    - name: Build new disk specifications
+      ansible.builtin.set_fact:
+        longhorn_new_disk_specs: >-
+          {{
+            longhorn_additional_disks | map('dict2items') | map('items2dict') |
+            map('combine', {'_base': {'path': '', 'allowScheduling': true, 'evictionRequested': false, 'storageReserved': 0}}) |
+            list
+          }}
+      when: longhorn_is_installed
+
+    # Build the final disk spec by merging existing disks with new disk configs
+    # Existing disk settings (storageReserved, etc.) are preserved; only path and tags update
+    - name: Build merged disk configuration
+      ansible.builtin.set_fact:
+        longhorn_merged_disks: |
+          {% set result = longhorn_existing_disks | default({}) | dict2items | items2dict %}
+          {% for disk in longhorn_additional_disks %}
+          {% set disk_path = longhorn_disk_mount_base ~ '/longhorn-' ~ disk.name %}
+          {% set base_spec = {'path': disk_path, 'allowScheduling': true, 'evictionRequested': false, 'storageReserved': 0} %}
+          {% if disk.tags is defined %}{% set base_spec = base_spec | combine({'tags': disk.tags}) %}{% endif %}
+          {% if disk.name in result %}
+          {% set updates = {'path': disk_path} %}
+          {% if disk.tags is defined %}{% set updates = updates | combine({'tags': disk.tags}) %}{% endif %}
+          {% set _ = result.update({disk.name: result[disk.name] | combine(updates)}) %}
+          {% else %}
+          {% set _ = result.update({disk.name: base_spec}) %}
+          {% endif %}
+          {% endfor %}
+          {{ result }}
+      when: longhorn_is_installed
+
+    # Patch Longhorn Node CRD with merged disk configuration
     - name: Patch Longhorn Node with additional disks
       kubernetes.core.k8s:
         kubeconfig: "{{ longhorn_kubeconfig }}"
@@ -137,36 +169,10 @@
         kind: Node
         api_version: longhorn.io/v1beta2
         name: "{{ inventory_hostname }}"
-        namespace: longhorn-system
+        namespace: "{{ longhorn_namespace }}"
         definition:
           spec:
-            disks: "{{ longhorn_node_disks_spec }}"
-      vars:
-        longhorn_node_disks_spec: |
-          {% set disks = longhorn_existing_disks | default({}) %}
-          {% for disk in longhorn_additional_disks %}
-          {% set new_disk_spec = {
-            "path": longhorn_disk_mount_base + "/longhorn-" + disk.name,
-            "allowScheduling": true,
-            "evictionRequested": false,
-            "storageReserved": 0
-          } %}
-          {% if disk.tags is defined %}
-          {% set new_disk_spec = new_disk_spec | combine({"tags": disk.tags}) %}
-          {% endif %}
-          {% if disk.name in disks %}
-          {# Preserve existing settings, only update path and tags from config #}
-          {% set existing = disks[disk.name] %}
-          {% set merged = existing | combine({"path": new_disk_spec.path}) %}
-          {% if disk.tags is defined %}
-          {% set merged = merged | combine({"tags": disk.tags}) %}
-          {% endif %}
-          {% set _ = disks.update({disk.name: merged}) %}
-          {% else %}
-          {% set _ = disks.update({disk.name: new_disk_spec}) %}
-          {% endif %}
-          {% endfor %}
-          {{ disks }}
+            disks: "{{ longhorn_merged_disks | trim }}"
       delegate_to: localhost
       become: false
       when: longhorn_is_installed

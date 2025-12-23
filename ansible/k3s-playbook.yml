@@ -179,6 +179,21 @@
   vars:
     longhorn_kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml"
   tasks:
+    - name: Validate k8s_context is defined
+      ansible.builtin.assert:
+        that:
+          - k8s_context is defined
+          - k8s_context | length > 0
+        fail_msg: |
+          k8s_context variable is not defined or is empty.
+          This variable is required to locate the kubeconfig file.
+          Set it in inventory or pass via -e k8s_context=your-context
+        quiet: true
+      run_once: true
+      tags:
+        - longhorn-disks
+        - longhorn-register
+
     - name: Verify kubeconfig exists
       ansible.builtin.stat:
         path: "{{ longhorn_kubeconfig }}"

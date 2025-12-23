@@ -35,12 +35,22 @@
 # removed from longhorn_additional_disks. This is intentional because automatic
 # removal could cause data loss if replicas exist on the disk.
 #
+# ORPHANED MOUNT UNITS WARNING:
+# When you remove a disk from host_vars, the systemd mount unit remains on the
+# system. The playbook will warn about orphaned disks but NOT remove the units
+# automatically. You must clean them up manually (see step 4 below).
+#
 # To safely remove a disk from Longhorn:
 # 1. In Longhorn UI: Set "Scheduling" to "Disable" for the disk
 # 2. In Longhorn UI: Wait for all replicas to evacuate (disk shows 0 replicas)
 # 3. Remove the disk entry from longhorn_additional_disks in host_vars
-# 4. SSH to the node and stop/disable the mount unit:
-#    systemctl disable --now <mount-base>-longhorn-<disk-name>.mount
+# 4. SSH to the node and clean up the mount unit:
+#    # Stop and disable the mount
+#    systemctl disable --now data-longhorn-<disk-name>.mount
+#    # Remove the unit file
+#    rm /etc/systemd/system/data-longhorn-<disk-name>.mount
+#    # Reload systemd
+#    systemctl daemon-reload
 # 5. (Optional) In Longhorn UI: Delete the disk entry from the node
 # 6. (Optional) Wipe the disk: wipefs -a /dev/sdX
 
@@ -67,11 +77,19 @@ longhorn_default_disk_path: "{{ longhorn_disk_mount_base }}/longhorn"
 # Set to "defaults,noatime,compress=no" to disable compression
 longhorn_disk_mount_options: "defaults,noatime,compress=zstd"
 
+# Minimum disk size in bytes (default 10GB = 10737418240 bytes)
+# Disks smaller than this will be rejected to prevent issues with Longhorn storage
+longhorn_disk_min_size_bytes: 10737418240
+
 # Systemd mount timeout in seconds (for slow disk initialization)
 longhorn_disk_mount_timeout: 300
 
 # Timeout for partition to appear after creation (seconds)
 longhorn_disk_partition_timeout: 60
+
+# Longhorn namespace (where Longhorn is installed)
+# Override if using a custom namespace for Longhorn deployment
+longhorn_namespace: longhorn-system
 
 # Kubeconfig path for Longhorn registration
 # Default uses KUBECONFIG env var or ~/.kube/config

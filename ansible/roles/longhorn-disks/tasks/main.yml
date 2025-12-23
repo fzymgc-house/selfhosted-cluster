@@ -108,18 +108,45 @@
         label: "{{ item.item.name }}"
       when: item.stat.exists and not (item.stat.isblk | default(false))
 
+    # Validate disk sizes meet minimum requirement
+    - name: Get disk sizes
+      ansible.builtin.command:
+        cmd: blockdev --getsize64 "{{ item.device }}"
+      loop: "{{ longhorn_additional_disks }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: disk_sizes
+      changed_when: false
+      check_mode: false
+
+    - name: Validate disk sizes meet minimum requirement
+      ansible.builtin.fail:
+        msg: |
+          Disk {{ item.item.device }} ({{ item.item.name }}) is too small: {{ (item.stdout | int / 1073741824) | round(2) }} GB
+          Minimum required size: {{ (longhorn_disk_min_size_bytes | int / 1073741824) | round(2) }} GB
+          Longhorn requires adequate storage for replicas and metadata.
+      loop: "{{ disk_sizes.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when: (item.stdout | int) < (longhorn_disk_min_size_bytes | int)
+
     # Compute partition paths early (NVMe/MMC/loop use 'p1', others use '1')
     # This is the single source of truth for partition path logic
-    # Uses basename to handle /dev/disk/by-id paths correctly
+    # Uses resolved symlink target from disk_device_check for accurate device type detection
     - name: Compute partition paths for all disks
       ansible.builtin.set_fact:
         longhorn_disks_with_partitions: |
           {% set result = [] %}
-          {% for disk in longhorn_additional_disks %}
-          {% set device_basename = disk.device | basename %}
+          {% for idx in range(longhorn_additional_disks | length) %}
+          {% set disk = longhorn_additional_disks[idx] %}
+          {% set stat_result = disk_device_check.results[idx].stat %}
+          {# Use resolved symlink target if available, otherwise use original device path #}
+          {% set real_device = stat_result.lnk_target | default(disk.device) if stat_result.islnk | default(false) else disk.device %}
+          {% set device_basename = real_device | basename %}
           {% set needs_p_suffix = device_basename.startswith('nvme') or device_basename.startswith('mmcblk') or device_basename.startswith('loop') %}
+          {# Partition path uses original device path (symlink) for consistency with systemd #}
           {% set partition = disk.device ~ ('p1' if needs_p_suffix else '1') %}
-          {% set _ = result.append(disk | combine({'partition': partition})) %}
+          {% set _ = result.append(disk | combine({'partition': partition, 'real_device': real_device})) %}
           {% endfor %}
           {{ result }}
 

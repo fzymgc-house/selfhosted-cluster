@@ -59,6 +59,17 @@
         state: present
         timeout: "{{ longhorn_disk_partition_timeout | default(60) }}"
 
+    # Verify partition is accessible before formatting
+    # blockdev --getro returns 0 for read-write devices, ensuring the partition is ready
+    - name: Verify partition is accessible - {{ disk.name }}
+      ansible.builtin.command:
+        cmd: blockdev --getro "{{ disk.partition }}"
+      register: partition_ready_check
+      changed_when: false
+      retries: 3
+      delay: 2
+      until: partition_ready_check.rc == 0
+
     - name: Format partition as BTRFS - {{ disk.name }}
       ansible.builtin.command:
         cmd: mkfs.btrfs -f -L longhorn-{{ disk.name }} "{{ disk.partition }}"
@@ -98,21 +109,33 @@
       ansible.posix.mount:
         path: "{{ temp_mount_dir.path | default(omit) }}"
         state: unmounted
+      register: cleanup_unmount
       failed_when: false
       when:
         - temp_mount_dir is defined
         - temp_mount_dir.path is defined
         - temp_mount_dir.path | length > 0
 
+    - name: Log unmount cleanup result - {{ disk.name }}
+      ansible.builtin.debug:
+        msg: "{{ 'Cleanup unmount succeeded' if cleanup_unmount.changed | default(false) else 'Cleanup unmount skipped or failed (may already be unmounted)' }}"
+      when: cleanup_unmount is defined
+
     - name: Cleanup - remove temp directory on failure - {{ disk.name }}
       ansible.builtin.file:
         path: "{{ temp_mount_dir.path | default(omit) }}"
         state: absent
+      register: cleanup_rmdir
       failed_when: false
       when:
         - temp_mount_dir is defined
         - temp_mount_dir.path is defined
         - temp_mount_dir.path | length > 0
+
+    - name: Log directory cleanup result - {{ disk.name }}
+      ansible.builtin.debug:
+        msg: "{{ 'Cleanup directory removed' if cleanup_rmdir.changed | default(false) else 'Cleanup directory removal skipped or failed' }}"
+      when: cleanup_rmdir is defined
 
     - name: Report disk configuration failure - {{ disk.name }}
       ansible.builtin.fail:

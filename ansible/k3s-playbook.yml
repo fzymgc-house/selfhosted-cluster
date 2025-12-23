@@ -139,7 +139,7 @@
       ansible.builtin.shell:
         cmd: |
           kubectl --kubeconfig {{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml \
-            apply -k {{ playbook_dir }}/roles/k3sup/files/csi-snapshot-setup
+            apply -k {{ playbook_dir }}/files/csi-snapshot-setup
       delegate_to: localhost
       become: false
       changed_when: false

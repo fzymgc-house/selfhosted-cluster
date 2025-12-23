@@ -1,1 +1,0 @@
-[{% for host in groups[host_group_name] -%}{ "name": "{{ host }}", "ip": "{{ hostvars[host].host_address }}" }{% if not loop.last %},{% endif %}{% endfor %}]

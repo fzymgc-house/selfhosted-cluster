@@ -73,7 +73,7 @@
     - name: Mount partition temporarily - {{ disk.name }}
       ansible.posix.mount:
         path: "{{ temp_mount_dir.path }}"
-        src: "{{ disk_partition_path }}"
+        src: "{{ disk.partition }}"
         fstype: btrfs
         state: mounted
 

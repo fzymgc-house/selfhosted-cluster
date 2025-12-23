@@ -48,6 +48,7 @@ spec:
   containers:
   - name: kube-vip
     image: ghcr.io/kube-vip/kube-vip:v1.0.3
+    imagePullPolicy: IfNotPresent
     args:
       - manager
     env:
@@ -55,8 +56,10 @@ spec:
         value: "true"
       - name: vip_interface
         value: "end0"
-      - name: vip_address
+      - name: address
         value: "192.168.20.140"
+      - name: port
+        value: "6443"
       - name: vip_leaderelection
         value: "true"
       - name: cp_enable
@@ -65,13 +68,23 @@ spec:
         value: "kube-system"
     securityContext:
       capabilities:
-        add: ["NET_ADMIN", "NET_RAW"]
+        add: ["NET_ADMIN", "NET_RAW", "SYS_TIME"]
+    volumeMounts:
+      - name: kubeconfig
+        mountPath: /etc/rancher/k3s/k3s.yaml
+        readOnly: true
+  volumes:
+    - name: kubeconfig
+      hostPath:
+        path: /etc/rancher/k3s/k3s.yaml
+        type: File
 ```
 
 **Key settings:**
 - `hostNetwork: true` — Required for ARP announcements
 - `vip_leaderelection` — Uses Kubernetes Lease for leader election
-- `NET_ADMIN`, `NET_RAW` — Capabilities for ARP manipulation
+- `NET_ADMIN`, `NET_RAW`, `SYS_TIME` — Capabilities for ARP and time operations
+- Kubeconfig volume mount — Required for leader election via Kubernetes Lease
 - `end0` — Primary network interface on RK1 nodes (Armbian naming)
 
 **Note:** Interface must be specified explicitly—kube-vip has no auto-detection.
@@ -106,7 +119,7 @@ Run on control plane nodes only, before k3s server starts:
 ```yaml
 # In k3s-playbook.yml - before k3s-server role
 - name: Deploy kube-vip on control plane
-  hosts: tpi_alpha_control_plane
+  hosts: tp_cluster_controlplane
   become: true
   roles:
     - role: kube-vip
@@ -143,7 +156,7 @@ k8s_cluster_sans:
 **Phase 1: Update TLS SANs + Deploy kube-vip**
 ```bash
 ansible-playbook -i ansible/inventory/hosts.yml ansible/k3s-playbook.yml \
-  --tags k3s-server,kube-vip --limit tpi_alpha_control_plane
+  --tags k3s-server,kube-vip --limit tp_cluster_controlplane
 ```
 
 Verify:
@@ -179,7 +192,7 @@ ping -c 1 192.168.20.140  # Should fail (no response)
 
 | Check | Command | Expected |
 |-------|---------|----------|
-| Pods running | `kubectl get pods -n kube-system -l app.kubernetes.io/name=kube-vip` | 3 pods, 1 leader |
+| Pods running | `kubectl get pods -n kube-system \| grep kube-vip` | 3 pods (one per control plane node) |
 | VIP responds | `curl -k https://192.168.20.140:6443/healthz` | `ok` |
 | Leader election | `kubectl get lease -n kube-system kube-vip-cp` | One holder |
 | ARP entry | `arp -n 192.168.20.140` (from another host) | Points to leader node MAC |

@@ -247,7 +247,7 @@
 
     - name: Enable and start mount units
       ansible.builtin.systemd:
-        name: "{{ longhorn_disk_mount_base | regex_replace('/', '-') | regex_replace('^-', '') }}-longhorn-{{ item.name }}.mount"
+        name: "{{ longhorn_disk_mount_base | regex_replace('/', '-') | regex_replace('^-', '') }}-longhorn_{{ item.name }}.mount"
         state: started
         enabled: true
       loop: "{{ longhorn_additional_disks }}"

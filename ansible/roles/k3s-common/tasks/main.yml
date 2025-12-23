@@ -28,6 +28,8 @@
     owner: root
     group: root
   notify: Restart k3s
+  # Skip config for existing agents - they run fine without config file
+  when: k3s_role | default('agent') == 'server' or not k3s_existing_install
   tags:
     - k3s-config
 
@@ -39,6 +41,8 @@
     owner: root
     group: root
   notify: Restart k3s
+  # Skip registries for existing agents - they run fine without it
+  when: k3s_role | default('agent') == 'server' or not k3s_existing_install
   tags:
     - k3s-registries
 

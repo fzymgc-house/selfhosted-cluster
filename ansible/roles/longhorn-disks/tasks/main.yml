@@ -22,6 +22,12 @@
   tags:
     - longhorn-disks
   block:
+    - name: Verify BTRFS kernel module is available
+      ansible.builtin.command:
+        cmd: modprobe -n btrfs
+      changed_when: false
+      check_mode: false
+
     - name: Validate disk names contain only safe characters
       ansible.builtin.assert:
         that:
@@ -72,6 +78,14 @@
             | map(attribute='0')
             | list
           }}
+
+    - name: Warn about check mode limitations for disk operations
+      ansible.builtin.debug:
+        msg: |
+          CHECK MODE WARNING: {{ longhorn_disks_to_configure | length }} disk(s) need configuration.
+          Disk partitioning and formatting cannot be validated in check mode.
+          Run without --check to actually configure disks.
+      when: ansible_check_mode and longhorn_disks_to_configure | length > 0
 
     - name: Configure each new disk
       ansible.builtin.include_tasks: configure-disk.yml

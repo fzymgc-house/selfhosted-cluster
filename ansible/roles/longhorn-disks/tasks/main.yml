@@ -58,6 +58,16 @@
         label: "{{ item.item.name }}"
       when: not item.stat.exists
 
+    - name: Validate devices are block devices
+      ansible.builtin.fail:
+        msg: |
+          {{ item.item.device }} is not a block device (isblk={{ item.stat.isblk | default(false) }})
+          Only block devices can be used for Longhorn storage.
+      loop: "{{ disk_device_check.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when: item.stat.exists and not (item.stat.isblk | default(false))
+
     - name: Check existing mounts for each disk
       ansible.builtin.command:
         cmd: findmnt -n {{ longhorn_disk_mount_base }}/longhorn-{{ item.name }}
@@ -96,13 +106,25 @@
 
     - name: Get disk info for mount units
       ansible.builtin.command:
-        cmd: blkid -s UUID -o value {{ item.device }}1
+        cmd: blkid -s UUID -o value "{{ item.device }}1"
       loop: "{{ longhorn_additional_disks }}"
       loop_control:
         label: "{{ item.name }}"
       register: longhorn_disk_uuids
       changed_when: false
       check_mode: false
+
+    - name: Validate UUID retrieval succeeded
+      ansible.builtin.assert:
+        that:
+          - item.stdout | length > 0
+        fail_msg: |
+          Failed to retrieve UUID for {{ item.item.device }}1
+          Ensure the partition exists and has a valid filesystem.
+        quiet: true
+      loop: "{{ longhorn_disk_uuids.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
 
     - name: Create mount point directories
       ansible.builtin.file:

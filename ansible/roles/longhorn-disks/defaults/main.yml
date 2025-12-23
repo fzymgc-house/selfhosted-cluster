@@ -10,14 +10,19 @@
 # - Disk partitioning/formatting tasks always show as changed in check mode
 # - Use --check --diff to preview mount unit changes only
 #
-# DISK REMOVAL:
-# To remove a disk from Longhorn:
-# 1. Disable scheduling on the disk in Longhorn UI
-# 2. Wait for data evacuation to complete (check Longhorn UI)
+# DISK REMOVAL (manual process by design):
+# This role does NOT automatically remove disks from Longhorn when entries are
+# removed from longhorn_additional_disks. This is intentional because automatic
+# removal could cause data loss if replicas exist on the disk.
+#
+# To safely remove a disk from Longhorn:
+# 1. In Longhorn UI: Set "Scheduling" to "Disable" for the disk
+# 2. In Longhorn UI: Wait for all replicas to evacuate (disk shows 0 replicas)
 # 3. Remove the disk entry from longhorn_additional_disks in host_vars
-# 4. Run playbook to update Longhorn Node CRD
-# 5. Manually unmount and remove: systemctl disable --now <mount-unit>
-# 6. Optionally wipe the disk: wipefs -a /dev/sdX
+# 4. SSH to the node and stop/disable the mount unit:
+#    systemctl disable --now <mount-base>-longhorn-<disk-name>.mount
+# 5. (Optional) In Longhorn UI: Delete the disk entry from the node
+# 6. (Optional) Wipe the disk: wipefs -a /dev/sdX
 
 # Additional disks for Longhorn - set per host in host_vars
 # Disk names must match: ^[a-zA-Z0-9][a-zA-Z0-9_-]*$

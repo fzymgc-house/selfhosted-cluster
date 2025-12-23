@@ -206,6 +206,8 @@
       ansible.builtin.include_role:
         name: longhorn-disks
         tasks_from: register-with-longhorn.yml
+      vars:
+        longhorn_kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml"
       when: longhorn_additional_disks is defined and longhorn_additional_disks | length > 0
       tags:
         - longhorn-disks

@@ -1,0 +1,167 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# tasks file for kube-vip
+# Deploys kube-vip as a static pod for Kubernetes API HA
+
+- name: Validate kube-vip configuration
+  ansible.builtin.assert:
+    that:
+      - kube_vip_address is defined
+      - kube_vip_address | ansible.utils.ipaddr
+      - kube_vip_interface is defined
+      - kube_vip_interface | length > 0
+    fail_msg: |
+      Invalid kube-vip configuration:
+        kube_vip_address: {{ kube_vip_address | default('undefined') }}
+        kube_vip_interface: {{ kube_vip_interface | default('undefined') }}
+    quiet: true
+  tags:
+    - kube-vip
+
+- name: Verify network interface exists
+  ansible.builtin.command:
+    cmd: ip link show {{ kube_vip_interface }}
+  register: kube_vip_interface_check
+  changed_when: false
+  failed_when: kube_vip_interface_check.rc != 0
+  tags:
+    - kube-vip
+
+- name: Verify kubeconfig exists
+  ansible.builtin.stat:
+    path: "{{ kube_vip_kubeconfig }}"
+  register: kube_vip_kubeconfig_stat
+  tags:
+    - kube-vip
+
+- name: Fail if kubeconfig missing
+  ansible.builtin.fail:
+    msg: |
+      Kubeconfig not found at {{ kube_vip_kubeconfig }}.
+      This role must run after k3s is installed on the node.
+      Ensure the node is a k3s server node with a valid kubeconfig.
+  when: not kube_vip_kubeconfig_stat.stat.exists
+  tags:
+    - kube-vip
+
+- name: Create static pod manifest directory
+  ansible.builtin.file:
+    path: "{{ kube_vip_manifest_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  tags:
+    - kube-vip
+
+- name: Deploy kube-vip static pod manifest
+  ansible.builtin.template:
+    src: kube-vip.yaml.j2
+    dest: "{{ kube_vip_manifest_dir }}/kube-vip.yaml"
+    owner: root
+    group: root
+    mode: "0644"
+  tags:
+    - kube-vip
+
+- name: Wait for kube-vip pod to be created
+  ansible.builtin.command:
+    cmd: crictl pods --name kube-vip -q
+  register: kube_vip_pod_check
+  until: kube_vip_pod_check.stdout | length > 0
+  retries: 24
+  delay: 5
+  changed_when: false
+  tags:
+    - kube-vip
+
+- name: Get kube-vip container ID
+  ansible.builtin.command:
+    cmd: crictl ps -a --name kube-vip -q
+  register: kube_vip_container_id
+  changed_when: false
+  tags:
+    - kube-vip
+
+- name: Wait for kube-vip container to be running
+  ansible.builtin.command:
+    cmd: crictl ps --name kube-vip --state running -q
+  register: kube_vip_running_check
+  until: kube_vip_running_check.stdout | length > 0
+  retries: 12
+  delay: 5
+  changed_when: false
+  failed_when: false
+  tags:
+    - kube-vip
+
+- name: Get kube-vip logs on failure
+  ansible.builtin.command:
+    cmd: crictl logs {{ kube_vip_container_id.stdout | trim }}
+  register: kube_vip_logs
+  when:
+    - kube_vip_running_check.stdout | length == 0
+    - kube_vip_container_id.stdout | length > 0
+  changed_when: false
+  failed_when: false
+  tags:
+    - kube-vip
+
+- name: Fail if kube-vip container not running
+  ansible.builtin.fail:
+    msg: |
+      kube-vip failed to start on {{ inventory_hostname }}.
+
+      Container logs:
+      {{ kube_vip_logs.stdout | default('No logs available - container may not have started') }}
+
+      Troubleshooting steps:
+      1. Check pod status: crictl pods --name kube-vip
+      2. Check container: crictl ps -a --name kube-vip
+      3. Verify image pull: crictl pull {{ kube_vip_image }}
+      4. Check kubeconfig: ls -la {{ kube_vip_kubeconfig }}
+      5. Check manifest: cat {{ kube_vip_manifest_dir }}/kube-vip.yaml
+  when: kube_vip_running_check.stdout | length == 0
+  tags:
+    - kube-vip
+
+- name: Wait for VIP to be bound to interface
+  ansible.builtin.command:
+    cmd: ip addr show {{ kube_vip_interface }}
+  register: kube_vip_ip_bound
+  until: kube_vip_address in kube_vip_ip_bound.stdout
+  retries: 12
+  delay: 5
+  changed_when: false
+  # Only the leader node will have the VIP bound
+  failed_when: false
+  tags:
+    - kube-vip
+
+- name: Verify Kubernetes API responds on VIP
+  ansible.builtin.uri:
+    url: "https://{{ kube_vip_address }}:{{ kube_vip_port }}/healthz"
+    validate_certs: false
+    status_code: 200
+  register: kube_vip_api_check
+  retries: 6
+  delay: 5
+  until: kube_vip_api_check.status == 200
+  # Run only once since VIP is cluster-wide
+  run_once: true
+  delegate_to: localhost
+  become: false
+  tags:
+    - kube-vip
+
+- name: Report kube-vip deployment status
+  ansible.builtin.debug:
+    msg: |
+      kube-vip deployed successfully on {{ inventory_hostname }}
+      VIP: {{ kube_vip_address }}:{{ kube_vip_port }}
+      Interface: {{ kube_vip_interface }}
+      Container: Running
+      VIP bound locally: {{ 'Yes (this node is leader)' if kube_vip_address in kube_vip_ip_bound.stdout else 'No (VIP on another node)' }}
+  tags:
+    - kube-vip

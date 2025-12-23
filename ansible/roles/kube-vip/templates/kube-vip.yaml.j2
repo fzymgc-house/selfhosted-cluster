@@ -1,0 +1,51 @@
+# {{ ansible_managed }}
+# kube-vip static pod manifest for Kubernetes API HA
+# Managed by Ansible - do not edit manually
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-vip
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: kube-vip
+    app.kubernetes.io/component: control-plane
+spec:
+  hostNetwork: true
+  containers:
+    - name: kube-vip
+      image: {{ kube_vip_image }}
+      imagePullPolicy: IfNotPresent
+      args:
+        - manager
+      env:
+        - name: vip_arp
+          value: "{{ kube_vip_arp_enabled | lower }}"
+        - name: vip_interface
+          value: "{{ kube_vip_interface }}"
+        - name: address
+          value: "{{ kube_vip_address }}"
+        - name: port
+          value: "{{ kube_vip_port }}"
+        - name: vip_leaderelection
+          value: "{{ kube_vip_leader_election | lower }}"
+        - name: cp_enable
+          value: "{{ kube_vip_cp_enable | lower }}"
+        - name: cp_namespace
+          value: "{{ kube_vip_cp_namespace }}"
+        - name: svc_enable
+          value: "false"
+      securityContext:
+        capabilities:
+          add:
+            - NET_ADMIN
+            - NET_RAW
+            - SYS_TIME
+      volumeMounts:
+        - name: kubeconfig
+          mountPath: "{{ kube_vip_kubeconfig }}"
+          readOnly: true
+  volumes:
+    - name: kubeconfig
+      hostPath:
+        path: "{{ kube_vip_kubeconfig }}"
+        type: File

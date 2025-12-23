@@ -30,41 +30,46 @@
     cmd: parted -s {{ disk.device }} mkpart primary 0% 100%
   changed_when: true
 
+- name: Wait for udev to settle - {{ disk.name }}
+  ansible.builtin.command:
+    cmd: udevadm settle --timeout=30
+  changed_when: false
+
 - name: Wait for partition to appear - {{ disk.name }}
   ansible.builtin.wait_for:
     path: "{{ disk.device }}1"
     state: present
-    timeout: 30
+    timeout: 60
 
 - name: Format partition as BTRFS - {{ disk.name }}
   ansible.builtin.command:
     cmd: mkfs.btrfs -f -L longhorn-{{ disk.name }} {{ disk.device }}1
   changed_when: true
 
-- name: Create temporary mount point - {{ disk.name }}
-  ansible.builtin.file:
-    path: /tmp/longhorn-disk-{{ disk.name }}
+- name: Create secure temporary mount point - {{ disk.name }}
+  ansible.builtin.tempfile:
     state: directory
-    mode: "0755"
+    prefix: longhorn-disk-
+  register: temp_mount_dir
 
 - name: Mount partition temporarily - {{ disk.name }}
   ansible.posix.mount:
-    path: /tmp/longhorn-disk-{{ disk.name }}
+    path: "{{ temp_mount_dir.path }}"
     src: "{{ disk.device }}1"
     fstype: btrfs
     state: mounted
 
 - name: Create BTRFS subvolume - {{ disk.name }}
   ansible.builtin.command:
-    cmd: btrfs subvolume create /tmp/longhorn-disk-{{ disk.name }}/{{ longhorn_disk_subvol_name }}
+    cmd: btrfs subvolume create {{ temp_mount_dir.path }}/{{ longhorn_disk_subvol_name }}
   changed_when: true
 
 - name: Unmount temporary mount - {{ disk.name }}
   ansible.posix.mount:
-    path: /tmp/longhorn-disk-{{ disk.name }}
+    path: "{{ temp_mount_dir.path }}"
     state: unmounted
 
 - name: Remove temporary mount point - {{ disk.name }}
   ansible.builtin.file:
-    path: /tmp/longhorn-disk-{{ disk.name }}
+    path: "{{ temp_mount_dir.path }}"
     state: absent

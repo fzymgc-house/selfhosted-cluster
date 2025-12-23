@@ -54,6 +54,7 @@
       when: not longhorn_is_installed
 
     # For existing clusters - patch Longhorn Node CRD directly
+    # Note: We must include the default disk to avoid clobbering existing config
     - name: Patch Longhorn Node with additional disks
       kubernetes.core.k8s:
         kubeconfig: "{{ longhorn_kubeconfig }}"
@@ -67,7 +68,14 @@
             disks: "{{ longhorn_node_disks_spec }}"
       vars:
         longhorn_node_disks_spec: |
-          {% set disks = {} %}
+          {% set disks = {
+            "default": {
+              "path": longhorn_disk_mount_base + "/longhorn",
+              "allowScheduling": true,
+              "evictionRequested": false,
+              "storageReserved": 0
+            }
+          } %}
           {% for disk in longhorn_additional_disks %}
           {% set disk_spec = {
             "path": longhorn_disk_mount_base + "/longhorn-" + disk.name,

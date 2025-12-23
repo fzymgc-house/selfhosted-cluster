@@ -1,6 +1,7 @@
 [Unit]
 Description=Mount {{ mount_path }} for Longhorn storage ({{ disk_name }})
-Before=local-fs.target
+After=systemd-modules-load.service
+Before=local-fs.target k3s.service
 Requires=systemd-modules-load.service
 
 [Mount]

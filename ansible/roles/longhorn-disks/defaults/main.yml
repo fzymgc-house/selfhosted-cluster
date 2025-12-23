@@ -17,6 +17,5 @@ longhorn_disk_mount_base: /data
 # BTRFS subvolume name inside each disk
 longhorn_disk_subvol_name: longhorn
 
-# Retry configuration for disk operations
-longhorn_disk_retry_count: 3
-longhorn_disk_retry_delay: 5
+# Kubeconfig path for Longhorn registration
+longhorn_kubeconfig: "{{ lookup('env', 'KUBECONFIG') | default('~/.kube/config') }}"

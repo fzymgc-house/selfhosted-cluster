@@ -4,6 +4,19 @@
 # tasks file for longhorn-disks
 # Configures additional block devices for Longhorn storage
 
+- name: Install disk management tools
+  ansible.builtin.apt:
+    name:
+      - parted
+      - btrfs-progs
+      - util-linux
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: longhorn_additional_disks is defined and longhorn_additional_disks | length > 0
+  tags:
+    - longhorn-disks
+
 - name: Process additional Longhorn disks
   when: longhorn_additional_disks is defined and longhorn_additional_disks | length > 0
   tags:

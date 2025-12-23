@@ -20,3 +20,9 @@ calico_cluster_cidr: "{{ k8s_cluster_cidr | default('10.42.0.0/16') }}"
 calico_ippool_block_size: 24
 calico_ippool_encapsulation: VXLANCrossSubnet
 calico_ippool_nat_outgoing: Enabled
+
+# Retry configuration for waiting on Calico components
+calico_retry_count: 30
+calico_retry_delay: 10
+calico_install_retry_count: 60
+calico_install_retry_delay: 10

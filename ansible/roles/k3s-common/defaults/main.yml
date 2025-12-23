@@ -32,3 +32,7 @@ k3s_disable:
 # Feature gates
 k3s_feature_gates:
   - ImageVolume=true
+
+# Retry configuration for waiting on services
+k3s_retry_count: 30
+k3s_retry_delay: 10

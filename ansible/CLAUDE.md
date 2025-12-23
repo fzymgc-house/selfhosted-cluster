@@ -189,3 +189,62 @@ roles/role-name/
   ansible.builtin.include_tasks: "{{ ansible_os_family }}.yml"
   when: ansible_os_family in ['Debian', 'RedHat']
 ```
+
+## k3s Playbook Testing
+
+### Pre-Deployment Checklist
+
+Before running the k3s playbook on a production cluster:
+
+1. **Create a Velero backup**
+   ```bash
+   velero backup create pre-deploy-$(date +%Y%m%d-%H%M%S) --wait
+   ```
+
+2. **Syntax check**
+   ```bash
+   ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --syntax-check
+   ```
+
+3. **Dry run on a single node**
+   ```bash
+   ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --check --diff --limit alpha-1
+   ```
+
+### Testing Scenarios
+
+#### Fresh Install
+- Run playbook against nodes with no k3s installation
+- Verify all nodes register and become Ready
+- Confirm Calico CNI is operational
+
+#### In-Place Update (No Changes)
+- Run playbook against existing cluster
+- Verify no changes are made (idempotent)
+- Confirm all services remain running
+
+#### Version Upgrade
+- Update `k3s_version` variable or let cluster propagate version
+- Run playbook
+- Verify nodes upgrade sequentially without service disruption
+
+#### Failed Node Recovery
+- Uninstall k3s from a worker node
+- Run playbook to reinstall
+- Verify node rejoins cluster with correct version
+
+### Post-Deployment Verification
+
+```bash
+# Check all nodes are Ready
+kubectl --context fzymgc-house get nodes
+
+# Verify k3s versions match
+kubectl --context fzymgc-house get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.nodeInfo.kubeletVersion}{"\n"}{end}'
+
+# Check Calico is healthy
+kubectl --context fzymgc-house get pods -n calico-system
+
+# Verify CSI snapshot controller
+kubectl --context fzymgc-house get pods -n kube-system -l app=snapshot-controller
+```

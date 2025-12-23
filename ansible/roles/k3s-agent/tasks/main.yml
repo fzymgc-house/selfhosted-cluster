@@ -4,17 +4,15 @@
 # tasks file for k3s-agent
 
 - name: Install k3s agent
-  ansible.builtin.shell:
-    cmd: >
-      K3S_URL={{ k3s_server_url }}
-      K3S_TOKEN={{ k3s_join_token }}
-      {% if k3s_target_version %}INSTALL_K3S_VERSION={{ k3s_target_version }}{% endif %}
-      /tmp/k3s-install.sh
+  ansible.builtin.command:
+    cmd: /tmp/k3s-install.sh
   environment:
     K3S_URL: "{{ k3s_server_url }}"
     K3S_TOKEN: "{{ k3s_join_token }}"
+    INSTALL_K3S_VERSION: "{{ k3s_target_version | default(omit) }}"
   when: k3s_needs_install or k3s_needs_upgrade
   changed_when: true
+  no_log: true
   notify: Restart k3s
   tags:
     - k3s-install
@@ -35,8 +33,8 @@
   delegate_to: "{{ groups['tp_cluster_controlplane'][0] }}"
   register: k3s_agent_registered
   until: k3s_agent_registered.rc == 0
-  retries: 30
-  delay: 10
+  retries: "{{ k3s_retry_count }}"
+  delay: "{{ k3s_retry_delay }}"
   changed_when: false
   tags:
     - k3s-install
@@ -48,8 +46,8 @@
   delegate_to: "{{ groups['tp_cluster_controlplane'][0] }}"
   register: k3s_agent_node_ready
   until: k3s_agent_node_ready.stdout == "True"
-  retries: 30
-  delay: 10
+  retries: "{{ k3s_retry_count }}"
+  delay: "{{ k3s_retry_delay }}"
   changed_when: false
   tags:
     - k3s-install

@@ -28,11 +28,13 @@ mock_modules:
   - community.hashi_vault.vault_read
   - community.hashi_vault.vault_write
   - community.general.timezone
+  - community.general.sudoers
 
 # Mock roles if needed
 mock_roles: []
+
 # Enable offline mode to avoid galaxy downloads during pre-commit
-offline: false
+offline: true
 
 # Kinds mapping for file detection
 kinds:

@@ -8,7 +8,9 @@
   ansible.builtin.assert:
     that:
       - kube_vip_address is defined
-      - kube_vip_address | ansible.utils.ipaddr
+      # ipaddr filter returns string on valid IP, false on invalid
+      # Ansible 2.16+ requires explicit boolean comparison for conditionals
+      - (kube_vip_address | ansible.utils.ipaddr) != false
       - kube_vip_interface is defined
       - kube_vip_interface | length > 0
     fail_msg: |
@@ -42,6 +44,15 @@
       This role must run after k3s is installed on the node.
       Ensure the node is a k3s server node with a valid kubeconfig.
   when: not kube_vip_kubeconfig_stat.stat.exists
+  tags:
+    - kube-vip
+
+- name: Validate kubeconfig format
+  ansible.builtin.command:
+    cmd: kubectl --kubeconfig {{ kube_vip_kubeconfig }} config view --minify
+  register: kube_vip_kubeconfig_valid
+  changed_when: false
+  failed_when: kube_vip_kubeconfig_valid.rc != 0
   tags:
     - kube-vip
 
@@ -126,28 +137,27 @@
   tags:
     - kube-vip
 
-- name: Wait for VIP to be bound to interface
+- name: Check if VIP is bound locally
   ansible.builtin.command:
     cmd: ip addr show {{ kube_vip_interface }}
   register: kube_vip_ip_bound
-  until: kube_vip_address in kube_vip_ip_bound.stdout
-  retries: 12
-  delay: 5
   changed_when: false
-  # Only the leader node will have the VIP bound
-  failed_when: false
+  # VIP only bound on leader - just record status, don't wait
   tags:
     - kube-vip
 
 - name: Verify Kubernetes API responds on VIP
   ansible.builtin.uri:
-    url: "https://{{ kube_vip_address }}:{{ kube_vip_port }}/healthz"
+    url: "https://{{ kube_vip_address }}:{{ kube_vip_port }}/livez"
     validate_certs: false
-    status_code: 200
+    # Accept 200 (healthy) or 401 (auth required but API responding)
+    status_code:
+      - 200
+      - 401
   register: kube_vip_api_check
   retries: 6
   delay: 5
-  until: kube_vip_api_check.status == 200
+  until: kube_vip_api_check.status in [200, 401]
   # Run only once since VIP is cluster-wide
   run_once: true
   delegate_to: localhost

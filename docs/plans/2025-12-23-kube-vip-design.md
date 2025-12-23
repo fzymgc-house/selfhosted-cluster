@@ -66,12 +66,16 @@ spec:
         value: "true"
       - name: cp_namespace
         value: "kube-system"
+      # KUBECONFIG env var tells kube-vip where to find the kubeconfig
+      # (required since static pods don't have service account tokens)
+      - name: KUBECONFIG
+        value: "/.kube/config"
     securityContext:
       capabilities:
         add: ["NET_ADMIN", "NET_RAW", "SYS_TIME"]
     volumeMounts:
       - name: kubeconfig
-        mountPath: /etc/rancher/k3s/k3s.yaml
+        mountPath: /.kube/config
         readOnly: true
   volumes:
     - name: kubeconfig

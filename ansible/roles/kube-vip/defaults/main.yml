@@ -38,8 +38,13 @@ kube_vip_interface: "end0"
 # /var/lib/rancher/k3s/server/manifests/ = k3s auto-deployed manifests (kubectl apply)
 kube_vip_manifest_dir: "/var/lib/rancher/k3s/agent/pod-manifests"
 
-# Path to k3s kubeconfig (used for leader election via Kubernetes Lease)
+# Path to k3s kubeconfig on host (used for leader election via Kubernetes Lease)
 kube_vip_kubeconfig: "/etc/rancher/k3s/k3s.yaml"
+
+# Path where kubeconfig is mounted inside the container
+# kube-vip expects kubeconfig at /.kube/config by default when using KUBECONFIG env var
+# Static pods don't have service account tokens, so we must provide kubeconfig explicitly
+kube_vip_container_kubeconfig_path: "/.kube/config"
 
 # Enable ARP mode (required for L2 flat networks)
 # Alternative is BGP mode which requires router configuration

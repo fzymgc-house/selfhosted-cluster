@@ -34,6 +34,8 @@ spec:
           value: "{{ kube_vip_cp_namespace }}"
         - name: svc_enable
           value: "false"
+        - name: KUBECONFIG
+          value: "{{ kube_vip_container_kubeconfig_path }}"
       securityContext:
         capabilities:
           add:
@@ -42,7 +44,7 @@ spec:
             - SYS_TIME
       volumeMounts:
         - name: kubeconfig
-          mountPath: "{{ kube_vip_kubeconfig }}"
+          mountPath: "{{ kube_vip_container_kubeconfig_path }}"
           readOnly: true
   volumes:
     - name: kubeconfig

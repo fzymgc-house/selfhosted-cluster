@@ -385,7 +385,7 @@ Ingress is managed by Traefik with IngressRoute CRDs.
 
 - **Cluster CIDR**: `10.42.0.0/16` (pods)
 - **Service CIDR**: `10.43.0.0/16` (services)
-- **K8s API VIP**: `10.255.254.6` (cluster endpoint)
+- **K8s API VIP**: `192.168.20.140` (kube-vip on control plane nodes)
 - **MetalLB Pools**: `192.168.20.145-149`, `192.168.20.155-159` (LoadBalancer IPs)
 - **CNI**: Calico (installed by k3s)
 

@@ -49,7 +49,7 @@ selfhosted-cluster/
 ### Network Architecture
 - **Cluster Network**: `10.42.0.0/16` (pod CIDR)
 - **Service Network**: `10.43.0.0/16` (service CIDR)
-- **K8s API VIP**: `10.255.254.6` (cluster endpoint)
+- **K8s API VIP**: `192.168.20.140` (kube-vip on control plane nodes)
 - **MetalLB Pools**: `192.168.20.145-149`, `192.168.20.155-159` (LoadBalancer IPs)
 - **DNS**: Internal cluster DNS at `10.43.0.10`
 

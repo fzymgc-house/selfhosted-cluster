@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# defaults file for longhorn-disks
+
+# Additional disks for Longhorn - set per host in host_vars
+# longhorn_additional_disks:
+#   - device: /dev/sda
+#     name: sata-storage-1
+#     tags:
+#       - sata
+#       - bulk
+
+# Base mount path for additional Longhorn disks
+longhorn_disk_mount_base: /data
+
+# BTRFS subvolume name inside each disk
+longhorn_disk_subvol_name: longhorn
+
+# Retry configuration for disk operations
+longhorn_disk_retry_count: 3
+longhorn_disk_retry_delay: 5

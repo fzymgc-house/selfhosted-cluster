@@ -1,0 +1,104 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# Register additional disks with Longhorn
+# This task runs delegated to localhost with kubectl access
+
+- name: Build Longhorn disk configuration
+  when: longhorn_additional_disks is defined and longhorn_additional_disks | length > 0
+  tags:
+    - longhorn-disks
+    - longhorn-register
+  block:
+    - name: Build disk config JSON for node
+      ansible.builtin.set_fact:
+        longhorn_node_disk_config: >-
+          {{
+            [{"path": "/data/longhorn", "allowScheduling": true}] +
+            (longhorn_additional_disks | map('dict2items')
+              | map('selectattr', 'key', 'in', ['name', 'tags'])
+              | map('items2dict')
+              | list
+              | map('combine', {"allowScheduling": true})
+              | list
+              | map('dict_update', 'path', '/data/longhorn-')
+              | list)
+          }}
+      vars:
+        dict_update: "{{ item | combine({'path': longhorn_disk_mount_base + '/longhorn-' + item.name}) }}"
+
+    # Simpler approach - build the config explicitly
+    - name: Build disk config for Longhorn
+      ansible.builtin.set_fact:
+        longhorn_disk_config_list: |
+          {% set disks = [{"path": "/data/longhorn", "allowScheduling": true}] %}
+          {% for disk in longhorn_additional_disks %}
+          {% set disk_entry = {"path": longhorn_disk_mount_base + "/longhorn-" + disk.name, "allowScheduling": true} %}
+          {% if disk.tags is defined %}
+          {% set disk_entry = disk_entry | combine({"tags": disk.tags}) %}
+          {% endif %}
+          {% set _ = disks.append(disk_entry) %}
+          {% endfor %}
+          {{ disks | to_json }}
+
+    - name: Check if Longhorn is installed
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ longhorn_kubeconfig }}"
+        kind: Deployment
+        name: longhorn-driver-deployer
+        namespace: longhorn-system
+      register: longhorn_deployment_check
+      delegate_to: localhost
+      become: false
+
+    - name: Set Longhorn installed fact
+      ansible.builtin.set_fact:
+        longhorn_is_installed: "{{ longhorn_deployment_check.resources | length > 0 }}"
+
+    # For fresh clusters - set annotation before Longhorn is installed
+    - name: Set node annotation for Longhorn disk discovery
+      kubernetes.core.k8s:
+        kubeconfig: "{{ longhorn_kubeconfig }}"
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Node
+          metadata:
+            name: "{{ inventory_hostname }}"
+            annotations:
+              node.longhorn.io/default-disks-config: "{{ longhorn_disk_config_list | trim }}"
+      delegate_to: localhost
+      become: false
+      when: not longhorn_is_installed
+
+    # For existing clusters - patch Longhorn Node CRD directly
+    - name: Patch Longhorn Node with additional disks
+      kubernetes.core.k8s:
+        kubeconfig: "{{ longhorn_kubeconfig }}"
+        state: patched
+        kind: Node
+        api_version: longhorn.io/v1beta2
+        name: "{{ inventory_hostname }}"
+        namespace: longhorn-system
+        definition:
+          spec:
+            disks: "{{ longhorn_node_disks_spec }}"
+      vars:
+        longhorn_node_disks_spec: |
+          {% set disks = {} %}
+          {% for disk in longhorn_additional_disks %}
+          {% set disk_spec = {
+            "path": longhorn_disk_mount_base + "/longhorn-" + disk.name,
+            "allowScheduling": true,
+            "evictionRequested": false,
+            "storageReserved": 0
+          } %}
+          {% if disk.tags is defined %}
+          {% set disk_spec = disk_spec | combine({"tags": disk.tags}) %}
+          {% endif %}
+          {% set _ = disks.update({disk.name: disk_spec}) %}
+          {% endfor %}
+          {{ disks }}
+      delegate_to: localhost
+      become: false
+      when: longhorn_is_installed

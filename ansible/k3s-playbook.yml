@@ -9,6 +9,9 @@
 #   2. Additional control plane nodes join
 #   3. Worker nodes join
 #   4. Calico CNI is installed
+#   5. CSI snapshot controller is installed
+#   6. Additional Longhorn disks are configured (if defined in host_vars)
+#   7. Longhorn disk configuration is registered with cluster
 
 # Phase 1: First control plane node
 - name: Initialize k3s cluster on first control plane node
@@ -159,3 +162,28 @@
       changed_when: "'created' in csi_snapshot_result.stdout or 'configured' in csi_snapshot_result.stdout"
       tags:
         - k3s-csi-snapshot-controller
+
+# Phase 6: Configure additional Longhorn disks
+- name: Configure additional Longhorn storage disks
+  hosts: tp_cluster_nodes
+  become: true
+  roles:
+    - role: longhorn-disks
+      tags:
+        - longhorn-disks
+
+# Phase 7: Register Longhorn disk configuration
+- name: Register Longhorn disk configuration
+  hosts: tp_cluster_nodes
+  gather_facts: false
+  vars:
+    longhorn_kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml"
+  tasks:
+    - name: Register disks with Longhorn
+      ansible.builtin.include_role:
+        name: longhorn-disks
+        tasks_from: register-with-longhorn.yml
+      when: longhorn_additional_disks is defined and longhorn_additional_disks | length > 0
+      tags:
+        - longhorn-disks
+        - longhorn-register

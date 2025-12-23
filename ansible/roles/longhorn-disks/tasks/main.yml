@@ -1,0 +1,85 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# tasks file for longhorn-disks
+# Configures additional block devices for Longhorn storage
+
+- name: Process additional Longhorn disks
+  when: longhorn_additional_disks is defined and longhorn_additional_disks | length > 0
+  tags:
+    - longhorn-disks
+  block:
+    - name: Check existing mounts for each disk
+      ansible.builtin.command:
+        cmd: findmnt -n {{ longhorn_disk_mount_base }}/longhorn-{{ item.name }}
+      loop: "{{ longhorn_additional_disks }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: longhorn_disk_mount_check
+      failed_when: false
+      changed_when: false
+      check_mode: false
+
+    - name: Build list of disks needing setup
+      ansible.builtin.set_fact:
+        longhorn_disks_to_configure: >-
+          {{
+            longhorn_additional_disks | zip(longhorn_disk_mount_check.results)
+            | selectattr('1.rc', 'ne', 0)
+            | map(attribute='0')
+            | list
+          }}
+
+    - name: Configure each new disk
+      ansible.builtin.include_tasks: configure-disk.yml
+      loop: "{{ longhorn_disks_to_configure }}"
+      loop_control:
+        loop_var: disk
+        label: "{{ disk.name }}"
+
+    - name: Get disk info for mount units
+      ansible.builtin.command:
+        cmd: blkid -s UUID -o value {{ item.device }}1
+      loop: "{{ longhorn_additional_disks }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: longhorn_disk_uuids
+      changed_when: false
+      check_mode: false
+
+    - name: Create mount point directories
+      ansible.builtin.file:
+        path: "{{ longhorn_disk_mount_base }}/longhorn-{{ item.name }}"
+        state: directory
+        mode: "0755"
+        owner: root
+        group: root
+      loop: "{{ longhorn_additional_disks }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Create systemd mount units
+      ansible.builtin.template:
+        src: systemd-mount.j2
+        dest: /etc/systemd/system/{{ longhorn_disk_mount_base | regex_replace('/', '-') | regex_replace('^-', '') }}-longhorn-{{ item.0.name }}.mount
+        mode: "0644"
+        owner: root
+        group: root
+      vars:
+        disk_uuid: "{{ item.1.stdout }}"
+        mount_path: "{{ longhorn_disk_mount_base }}/longhorn-{{ item.0.name }}"
+        disk_name: "{{ item.0.name }}"
+      loop: "{{ longhorn_additional_disks | zip(longhorn_disk_uuids.results) | list }}"
+      loop_control:
+        label: "{{ item.0.name }}"
+      notify: Reload systemd
+
+    - name: Enable and start mount units
+      ansible.builtin.systemd:
+        name: "{{ longhorn_disk_mount_base | regex_replace('/', '-') | regex_replace('^-', '') }}-longhorn-{{ item.name }}.mount"
+        state: started
+        enabled: true
+        daemon_reload: true
+      loop: "{{ longhorn_additional_disks }}"
+      loop_control:
+        label: "{{ item.name }}"

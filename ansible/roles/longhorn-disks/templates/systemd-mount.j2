@@ -1,0 +1,13 @@
+[Unit]
+Description=Mount {{ mount_path }} for Longhorn storage ({{ disk_name }})
+Before=local-fs.target
+Requires=systemd-modules-load.service
+
+[Mount]
+What=UUID={{ disk_uuid }}
+Where={{ mount_path }}
+Type=btrfs
+Options=subvol=/{{ longhorn_disk_subvol_name }},defaults,noatime,compress=zstd
+
+[Install]
+WantedBy=multi-user.target

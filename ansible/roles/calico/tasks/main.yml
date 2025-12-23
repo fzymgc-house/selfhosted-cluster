@@ -36,10 +36,10 @@
     kind: Deployment
     name: tigera-operator
     namespace: tigera-operator
-  register: tigera_operator
+  register: calico_tigera_operator
   until:
-    - tigera_operator.resources | length > 0
-    - tigera_operator.resources[0].status.readyReplicas | default(0) > 0
+    - calico_tigera_operator.resources | length > 0
+    - calico_tigera_operator.resources[0].status.readyReplicas | default(0) > 0
   retries: 30
   delay: 10
   delegate_to: localhost

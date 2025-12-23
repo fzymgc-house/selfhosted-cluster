@@ -1,2 +1,5 @@
+---
 host_address: 192.168.20.141
 host_address_ipv6: fddb:f665:73f7:1:aaaa::141
+host_btrfs_root_volume: /dev/nvme0n1p1
+host_btrfs_subvolume_prefix: ""

@@ -1,0 +1,13 @@
+[Unit]
+Description=Mount {{ mount_path }} from btrfs subvolume
+Before=local-fs.target
+Requires=systemd-modules-load.service
+
+[Mount]
+What=UUID={{ uuid }}
+Where={{ mount_path }}
+Type=btrfs
+Options=subvol={{ btrfs_subvolume }},defaults,noatime,compress=zstd
+
+[Install]
+WantedBy=multi-user.target

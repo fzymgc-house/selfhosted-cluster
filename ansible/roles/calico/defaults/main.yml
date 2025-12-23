@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# defaults file for calico
+
+# Calico version - should match group_vars
+calico_version: "{{ calico_version | default('v3.30.0') }}"
+
+# Kubeconfig path for kubectl operations
+calico_kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml"
+
+# IP address for node interface auto-detection (uses canReach method)
+# Calico will detect the interface that can reach this IP
+calico_can_reach_ip: "{{ k8s_cluster_endpoint_ip | default('10.255.254.6') }}"
+
+# Cluster CIDR for IP pool
+calico_cluster_cidr: "{{ k8s_cluster_cidr | default('10.42.0.0/16') }}"
+
+# IP pool configuration
+calico_ippool_block_size: 24
+calico_ippool_encapsulation: VXLANCrossSubnet
+calico_ippool_nat_outgoing: Enabled
+
+# Retry configuration for waiting on Calico components
+calico_retry_count: 30
+calico_retry_delay: 10
+calico_install_retry_count: 60
+calico_install_retry_delay: 10

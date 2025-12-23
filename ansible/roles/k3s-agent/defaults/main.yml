@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# defaults file for k3s-agent
+
+# Server URL to join
+k3s_server_url: "https://{{ k8s_cluster_endpoint_ip | default(hostvars[groups['tp_cluster_controlplane'][0]]['host_address']) }}:6443"
+
+# Join token (fetched from first server and propagated)
+# k3s_join_token: set via delegate_facts from first server
+
+# Role indicator for config template
+k3s_role: agent

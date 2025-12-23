@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# defaults file for k3s-storage
+
+# BTRFS root volume - should be set per host in host_vars
+k3s_storage_btrfs_root: "{{ host_btrfs_root_volume }}"
+
+# BTRFS subvolume prefix (empty or path like "@")
+k3s_storage_btrfs_subvol_prefix: "{{ host_btrfs_subvolume_prefix | default('') }}"
+
+# Subvolumes to create
+k3s_storage_subvolumes:
+  - rancher
+  - kubelet
+  - longhorn
+
+# Mount configurations
+k3s_storage_mounts:
+  - name: var-lib-rancher
+    path: /var/lib/rancher
+    subvol: rancher
+  - name: var-lib-kubelet
+    path: /var/lib/kubelet
+    subvol: kubelet
+  - name: var-lib-longhorn
+    path: /var/lib/longhorn
+    subvol: longhorn

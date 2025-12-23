@@ -141,13 +141,16 @@
 
 - name: Verify Kubernetes API responds on VIP
   ansible.builtin.uri:
-    url: "https://{{ kube_vip_address }}:{{ kube_vip_port }}/healthz"
+    url: "https://{{ kube_vip_address }}:{{ kube_vip_port }}/livez"
     validate_certs: false
-    status_code: 200
+    # Accept 200 (healthy) or 401 (auth required but API responding)
+    status_code:
+      - 200
+      - 401
   register: kube_vip_api_check
   retries: 6
   delay: 5
-  until: kube_vip_api_check.status == 200
+  until: kube_vip_api_check.status in [200, 401]
   # Run only once since VIP is cluster-wide
   run_once: true
   delegate_to: localhost

@@ -14,6 +14,7 @@
   environment:
     K3S_URL: "{{ k3s_server_url }}"
     K3S_TOKEN: "{{ k3s_join_token }}"
+  when: not k3s_existing_install
   tags:
     - k3s-install
 
@@ -31,8 +32,8 @@
     cmd: |
       k3s kubectl get node {{ inventory_hostname }}
   delegate_to: "{{ groups['tp_cluster_controlplane'][0] }}"
-  register: node_registered
-  until: node_registered.rc == 0
+  register: k3s_agent_registered
+  until: k3s_agent_registered.rc == 0
   retries: 30
   delay: 10
   changed_when: false
@@ -44,8 +45,8 @@
     cmd: |
       k3s kubectl get node {{ inventory_hostname }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
   delegate_to: "{{ groups['tp_cluster_controlplane'][0] }}"
-  register: node_ready
-  until: node_ready.stdout == "True"
+  register: k3s_agent_node_ready
+  until: k3s_agent_node_ready.stdout == "True"
   retries: 30
   delay: 10
   changed_when: false

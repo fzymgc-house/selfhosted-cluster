@@ -12,6 +12,7 @@
     creates: /usr/local/bin/k3s
   environment:
     INSTALL_K3S_SKIP_START: "true"
+  when: not k3s_existing_install
   tags:
     - k3s-install
 
@@ -27,8 +28,8 @@
 - name: Wait for k3s to be ready
   ansible.builtin.command:
     cmd: k3s kubectl get nodes
-  register: k3s_nodes
-  until: k3s_nodes.rc == 0
+  register: k3s_server_nodes
+  until: k3s_server_nodes.rc == 0
   retries: 30
   delay: 10
   changed_when: false
@@ -39,8 +40,8 @@
   ansible.builtin.shell:
     cmd: |
       k3s kubectl get node {{ inventory_hostname }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
-  register: node_ready
-  until: node_ready.stdout == "True"
+  register: k3s_server_node_ready
+  until: k3s_server_node_ready.stdout == "True"
   retries: 30
   delay: 10
   changed_when: false

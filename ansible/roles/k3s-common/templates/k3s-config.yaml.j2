@@ -1,4 +1,7 @@
-{# k3s configuration template - used by both server and agent #}
+{# k3s configuration template #}
+{# Different content for server vs agent, and fresh vs existing install #}
+{% if k3s_role | default('agent') == 'server' %}
+{# Server configuration #}
 secrets-encryption: {{ k3s_secrets_encryption | lower }}
 node-ip: {{ k3s_node_ip }}
 node-name: {{ k3s_node_name }}
@@ -21,15 +24,27 @@ kubelet-arg:
 {% for gate in k3s_feature_gates %}
   - feature-gates={{ gate }}
 {% endfor %}
-{% if k3s_is_first_server | default(false) %}
-cluster-init: true
-{% elif k3s_role | default('agent') == 'server' %}
-server: https://{{ k3s_first_server_ip }}:6443
-token: {{ k3s_join_token }}
-{% endif %}
 {% if k3s_tls_san is defined %}
 tls-san:
 {% for san in k3s_tls_san %}
   - {{ san }}
+{% endfor %}
+{% endif %}
+{# Only include cluster-init/join settings for fresh install #}
+{% if not k3s_existing_install | default(false) %}
+{% if k3s_is_first_server | default(false) %}
+cluster-init: true
+{% else %}
+server: https://{{ k3s_first_server_ip }}:6443
+token: {{ k3s_join_token }}
+{% endif %}
+{% endif %}
+{% else %}
+{# Agent configuration - minimal settings only #}
+node-ip: {{ k3s_node_ip }}
+node-name: {{ k3s_node_name }}
+kubelet-arg:
+{% for gate in k3s_feature_gates %}
+  - feature-gates={{ gate }}
 {% endfor %}
 {% endif %}

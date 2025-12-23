@@ -3,14 +3,13 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 
 def main(
     module_dir: str,
     vault_addr: str = "https://vault.fzymgc.house",
     vault_token: str = "",
-    tfc_token: Optional[str] = None,
+    tfc_token: str | None = None,
 ):
     """
     Apply Terraform plan.
@@ -49,7 +48,10 @@ def main(
         capture_output=True,
         text=True,
         env=env,
-        check=True,
     )
+
+    if result.returncode != 0:
+        # Raise exception to trigger failure_module - stderr is safe (no tokens)
+        raise RuntimeError(f"Terraform apply failed (exit {result.returncode}):\n{result.stderr}")
 
     return {"module_dir": str(module_dir), "applied": True, "output": result.stdout}

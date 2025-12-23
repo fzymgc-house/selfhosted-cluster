@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# tasks file for k3s-agent
+
+- name: Install k3s agent
+  ansible.builtin.command:
+    cmd: /tmp/k3s-install.sh
+  environment:
+    K3S_URL: "{{ k3s_server_url }}"
+    K3S_TOKEN: "{{ k3s_join_token }}"
+    INSTALL_K3S_VERSION: "{{ k3s_target_version | default(omit) }}"
+  when: k3s_needs_install or k3s_needs_upgrade
+  changed_when: true
+  no_log: true
+  notify: Restart k3s
+  tags:
+    - k3s-install
+
+- name: Start k3s-agent service
+  ansible.builtin.systemd:
+    name: k3s-agent
+    state: started
+    enabled: true
+    daemon_reload: true
+  tags:
+    - k3s-install
+
+- name: Wait for node to register
+  ansible.builtin.shell:
+    cmd: |
+      k3s kubectl get node {{ inventory_hostname }}
+  delegate_to: "{{ groups['tp_cluster_controlplane'][0] }}"
+  register: k3s_agent_registered
+  until: k3s_agent_registered.rc == 0
+  retries: "{{ k3s_retry_count }}"
+  delay: "{{ k3s_retry_delay }}"
+  changed_when: false
+  tags:
+    - k3s-install
+
+- name: Wait for node to be Ready
+  ansible.builtin.shell:
+    cmd: |
+      k3s kubectl get node {{ inventory_hostname }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  delegate_to: "{{ groups['tp_cluster_controlplane'][0] }}"
+  register: k3s_agent_node_ready
+  until: k3s_agent_node_ready.stdout == "True"
+  retries: "{{ k3s_retry_count }}"
+  delay: "{{ k3s_retry_delay }}"
+  changed_when: false
+  tags:
+    - k3s-install

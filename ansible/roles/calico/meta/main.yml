@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+galaxy_info:
+  author: fzymgc-house
+  description: Calico CNI installation via Tigera operator
+  license: MIT-0
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+
+dependencies: []
+collections:
+  - kubernetes.core

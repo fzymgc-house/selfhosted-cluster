@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# defaults file for k3s-common
+
+# k3s version to install (empty = latest stable)
+k3s_version: ""
+
+# Cluster networking
+k3s_cluster_cidr: "{{ k8s_cluster_cidr | default('10.42.0.0/16') }}"
+k3s_service_cidr: "{{ k8s_service_cidr | default('10.43.0.0/16') }}"
+k3s_cluster_dns: "{{ k8s_cluster_dns_ip | default('10.43.0.10') }}"
+k3s_cluster_domain: "{{ k8s_cluster_domain | default('cluster.local') }}"
+
+# Node configuration
+k3s_node_ip: "{{ host_address }}"
+k3s_node_name: "{{ inventory_hostname }}"
+
+# Features
+k3s_secrets_encryption: true
+k3s_embedded_registry: true
+
+# CNI - disabled since we use Calico
+k3s_flannel_backend: none
+k3s_disable_network_policy: true
+
+# Disabled built-in components
+k3s_disable:
+  - traefik
+  - servicelb
+
+# Feature gates
+k3s_feature_gates:
+  - ImageVolume=true
+
+# Retry configuration for waiting on services
+k3s_retry_count: 30
+k3s_retry_delay: 10

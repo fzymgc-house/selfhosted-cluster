@@ -1,0 +1,92 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# tasks file for k3s-common
+
+- name: Check if k3s is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/k3s
+  register: k3s_binary
+
+- name: Get installed k3s version
+  ansible.builtin.command:
+    cmd: k3s --version
+  register: k3s_installed_version_raw
+  changed_when: false
+  check_mode: false
+  when: k3s_binary.stat.exists
+
+- name: Parse installed k3s version
+  ansible.builtin.set_fact:
+    k3s_installed_version: "{{ k3s_installed_version_raw.stdout | regex_search('v[0-9]+\\.[0-9]+\\.[0-9]+[^\\s]*') }}"
+  when: k3s_binary.stat.exists
+
+- name: Determine target k3s version
+  ansible.builtin.set_fact:
+    k3s_target_version: "{{ k3s_version if k3s_version else (k3s_cluster_version | default('')) }}"
+
+- name: Set installation state facts
+  ansible.builtin.set_fact:
+    k3s_existing_install: "{{ k3s_binary.stat.exists }}"
+    k3s_needs_install: "{{ not k3s_binary.stat.exists }}"
+    k3s_needs_upgrade: "{{ k3s_binary.stat.exists and k3s_target_version != '' and k3s_installed_version != k3s_target_version }}"
+
+- name: Display k3s installation state
+  ansible.builtin.debug:
+    msg: >-
+      k3s state: installed={{ k3s_existing_install }},
+      version={{ k3s_installed_version | default('none') }},
+      target={{ k3s_target_version | default('latest') }},
+      needs_install={{ k3s_needs_install }},
+      needs_upgrade={{ k3s_needs_upgrade }}
+  tags:
+    - k3s-status
+
+- name: Create k3s config directory
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Check existing k3s config
+  ansible.builtin.stat:
+    path: /etc/rancher/k3s/config.yaml
+  register: k3s_config_file
+
+- name: Template k3s configuration
+  ansible.builtin.template:
+    src: k3s-config.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml
+    mode: "0640"
+    owner: root
+    group: root
+  notify: Restart k3s
+  # Only servers use config.yaml - agents use K3S_URL/K3S_TOKEN env vars
+  when: k3s_role | default('agent') == 'server'
+  tags:
+    - k3s-config
+
+- name: Configure k3s registries
+  ansible.builtin.copy:
+    src: registries.yaml
+    dest: /etc/rancher/k3s/registries.yaml
+    mode: "0640"
+    owner: root
+    group: root
+  notify: Restart k3s
+  # Only servers need registries config managed
+  when: k3s_role | default('agent') == 'server'
+  tags:
+    - k3s-registries
+
+- name: Download k3s install script
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: /tmp/k3s-install.sh
+    mode: "0755"
+    force: true
+  when: k3s_needs_install or k3s_needs_upgrade
+  tags:
+    - k3s-install-script

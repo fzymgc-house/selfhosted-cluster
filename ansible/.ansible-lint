@@ -1,3 +1,4 @@
+---
 # Ansible-lint configuration
 # https://ansible.readthedocs.io/projects/lint/configuring/
 
@@ -9,24 +10,25 @@ exclude_paths:
 
 # Skip specific rules
 skip_list:
-  - yaml[line-length]  # Handled by yamllint config
-  - no-handler  # Many tasks intentionally use when: rather than handlers
-  - role-name  # Role names use hyphens (tp2-bootstrap-node, teleport-agent)
+  - yaml[line-length] # Handled by yamllint config
+  - no-handler # Many tasks intentionally use when: rather than handlers
+  - role-name # Role names use hyphens (tp2-bootstrap-node, teleport-agent)
 
 # Warn only (don't fail) for these rules during transition
 warn_list:
-  - name[casing]  # Task name casing - fix over time
-  - name[play]  # Unnamed plays - fix over time
-  - fqcn[action-core]  # FQCN for builtin modules - fix over time
-  - meta-incorrect  # Default role metadata - fix over time
-  - internal-error  # Syntax checks fail due to vault password requirements
-  - var-naming[no-role-prefix]  # Variable naming convention - fix over time
+  - name[casing] # Task name casing - fix over time
+  - name[play] # Unnamed plays - fix over time
+  - fqcn[action-core] # FQCN for builtin modules - fix over time
+  - meta-incorrect # Default role metadata - fix over time
+  - internal-error # Syntax checks fail due to vault password requirements
+  - var-naming[no-role-prefix] # Variable naming convention - fix over time
 
 # Mock modules that may not be available in pre-commit environment
 mock_modules:
   - community.hashi_vault.vault_read
   - community.hashi_vault.vault_write
   - community.general.timezone
+  - community.general.sudoers
 
 # Mock roles if needed
 mock_roles: []

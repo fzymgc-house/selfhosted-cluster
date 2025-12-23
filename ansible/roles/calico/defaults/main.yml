@@ -11,7 +11,8 @@ calico_kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-
 
 # IP address for node interface auto-detection (uses canReach method)
 # Calico will detect the interface that can reach this IP
-calico_can_reach_ip: "{{ k8s_cluster_endpoint_ip | default('10.255.254.6') }}"
+# Using gateway IP (always reachable) instead of cluster endpoint
+calico_can_reach_ip: "192.168.20.1"
 
 # Cluster CIDR for IP pool
 calico_cluster_cidr: "{{ k8s_cluster_cidr | default('10.42.0.0/16') }}"

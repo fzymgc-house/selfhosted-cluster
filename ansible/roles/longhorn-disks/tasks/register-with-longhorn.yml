@@ -184,7 +184,7 @@
         namespace: "{{ longhorn_namespace }}"
         definition:
           spec:
-            disks: "{{ longhorn_merged_disks | trim }}"
+            disks: "{{ longhorn_merged_disks | from_yaml }}"
       delegate_to: localhost
       become: false
       when: longhorn_is_installed

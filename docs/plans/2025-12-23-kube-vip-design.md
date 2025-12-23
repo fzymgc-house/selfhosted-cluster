@@ -2,7 +2,8 @@
 
 **Issue:** #319
 **Date:** 2025-12-23
-**Status:** Approved
+**Status:** Completed
+**Completed:** 2025-12-23
 
 ## Summary
 
@@ -180,6 +181,14 @@ curl -k https://192.168.20.140:6443/healthz
 **Phase 4: Decommission HAProxy**
 - Remove HAProxy VIP from Firewalla
 - Update `calico_can_reach_ip` to `192.168.20.1` (gateway, always reachable)
+
+### Migration Completed
+
+All phases completed on 2025-12-23:
+- ✅ Phase 1: kube-vip deployed, TLS SANs updated (PR #327)
+- ✅ Phase 2: DNS updated to point to 192.168.20.140
+- ✅ Phase 3: Kubeconfig already uses hostname (no change needed)
+- ✅ Phase 4: HAProxy decommissioned, calico updated (PR #328)
 
 ## Testing & Validation
 

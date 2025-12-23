@@ -56,9 +56,10 @@
 
 # Additional disks for Longhorn - set per host in host_vars
 # Disk names must match: ^[a-zA-Z0-9][a-zA-Z0-9_-]*$
+# NOTE: Underscores are preferred over hyphens to avoid systemd escaping issues
 # longhorn_additional_disks:
 #   - device: /dev/sda       # Block device (must exist)
-#     name: sata-storage-1   # Unique identifier (alphanumeric, _, -)
+#     name: sata_storage_1   # Unique identifier (prefer underscores)
 #     tags:                  # Optional Longhorn scheduling tags
 #       - sata
 #       - bulk

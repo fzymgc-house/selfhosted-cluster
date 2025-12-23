@@ -7,11 +7,12 @@
 # Execution order:
 #   1. First control plane node initializes cluster
 #   2. Additional control plane nodes join
-#   3. Worker nodes join
-#   4. Calico CNI is installed
-#   5. CSI snapshot controller is installed
-#   6. Additional Longhorn disks are configured (if defined in host_vars)
-#   7. Longhorn disk configuration is registered with cluster
+#   3. kube-vip deployed for API endpoint HA
+#   4. Worker nodes join
+#   5. Calico CNI is installed
+#   6. CSI snapshot controller is installed
+#   7. Additional Longhorn disks are configured (if defined in host_vars)
+#   8. Longhorn disk configuration is registered with cluster
 
 # Phase 1: First control plane node
 - name: Initialize k3s cluster on first control plane node
@@ -123,7 +124,16 @@
         - k3s-server
         - k3s-install
 
-# Phase 3: Worker nodes
+# Phase 3: Deploy kube-vip for API HA
+- name: Deploy kube-vip on control plane nodes
+  hosts: tp_cluster_controlplane
+  become: true
+  roles:
+    - role: kube-vip
+      tags:
+        - kube-vip
+
+# Phase 4: Worker nodes
 - name: Join worker nodes
   hosts: tp_cluster_workers
   become: true
@@ -136,7 +146,7 @@
         - k3s-agent
         - k3s-install
 
-# Phase 4: Install Calico CNI
+# Phase 5: Install Calico CNI
 - name: Install Calico CNI
   hosts: tp_cluster_controlplane[0]
   gather_facts: false
@@ -146,7 +156,7 @@
         - k3s-calico
         - calico
 
-# Phase 5: CSI Snapshot Controller
+# Phase 6: CSI Snapshot Controller
 - name: Install CSI snapshot controller
   hosts: tp_cluster_controlplane[0]
   gather_facts: false
@@ -163,7 +173,7 @@
       tags:
         - k3s-csi-snapshot-controller
 
-# Phase 6: Configure additional Longhorn disks
+# Phase 7: Configure additional Longhorn disks
 - name: Configure additional Longhorn storage disks
   hosts: tp_cluster_nodes
   become: true
@@ -172,7 +182,7 @@
       tags:
         - longhorn-disks
 
-# Phase 7: Register Longhorn disk configuration
+# Phase 8: Register Longhorn disk configuration
 - name: Register Longhorn disk configuration
   hosts: tp_cluster_nodes
   gather_facts: false

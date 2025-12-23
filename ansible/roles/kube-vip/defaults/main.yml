@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# defaults file for kube-vip
+#
+# This role deploys kube-vip as a static pod on control plane nodes
+# for Kubernetes API endpoint high availability using ARP-based leader election.
+#
+# kube-vip binds a virtual IP to the leader node and announces it via
+# gratuitous ARP. If the leader fails, another node takes over the VIP.
+
+# kube-vip version
+# Check https://github.com/kube-vip/kube-vip/releases for latest
+kube_vip_version: "v1.0.3"
+
+# Container image
+kube_vip_image: "ghcr.io/kube-vip/kube-vip:{{ kube_vip_version }}"
+
+# Virtual IP address for the Kubernetes API endpoint
+# This IP must be:
+# - In the same subnet as the control plane nodes
+# - Not in use by any other device
+# - Not in the DHCP range
+# - Added to k8s_cluster_sans for TLS certificate
+kube_vip_address: "192.168.20.140"
+
+# API server port
+kube_vip_port: "6443"
+
+# Network interface to bind the VIP
+# On RK1 nodes with Armbian, this is typically 'end0'
+# Verify with: ip -o link show
+kube_vip_interface: "end0"
+
+# Static pod manifest directory for k3s
+# This is the kubelet-managed static pod path, NOT the auto-deploy manifests path
+# /var/lib/rancher/k3s/agent/pod-manifests/ = kubelet static pods
+# /var/lib/rancher/k3s/server/manifests/ = k3s auto-deployed manifests (kubectl apply)
+kube_vip_manifest_dir: "/var/lib/rancher/k3s/agent/pod-manifests"
+
+# Path to k3s kubeconfig (used for leader election via Kubernetes Lease)
+kube_vip_kubeconfig: "/etc/rancher/k3s/k3s.yaml"
+
+# Enable ARP mode (required for L2 flat networks)
+# Alternative is BGP mode which requires router configuration
+kube_vip_arp_enabled: true
+
+# Enable leader election via Kubernetes Lease
+# Required for multi-node control plane
+kube_vip_leader_election: true
+
+# Enable control plane mode (manage VIP for API server)
+kube_vip_cp_enable: true
+
+# Kubernetes namespace for leader election lease
+kube_vip_cp_namespace: "kube-system"

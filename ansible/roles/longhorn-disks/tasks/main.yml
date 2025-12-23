@@ -155,7 +155,7 @@
 
     - name: Check existing mounts for each disk
       ansible.builtin.command:
-        cmd: findmnt -n {{ longhorn_disk_mount_base }}/longhorn-{{ item.name }}
+        cmd: findmnt -n {{ longhorn_disk_mount_base }}/longhorn_{{ item.name }}
       loop: "{{ longhorn_disks_with_partitions }}"
       loop_control:
         label: "{{ item.name }}"
@@ -214,7 +214,7 @@
 
     - name: Create mount point directories
       ansible.builtin.file:
-        path: "{{ longhorn_disk_mount_base }}/longhorn-{{ item.name }}"
+        path: "{{ longhorn_disk_mount_base }}/longhorn_{{ item.name }}"
         state: directory
         mode: "0755"
         owner: root
@@ -226,13 +226,13 @@
     - name: Create systemd mount units
       ansible.builtin.template:
         src: systemd-mount.j2
-        dest: /etc/systemd/system/{{ longhorn_disk_mount_base | regex_replace('/', '-') | regex_replace('^-', '') }}-longhorn-{{ item.0.name }}.mount
+        dest: /etc/systemd/system/{{ longhorn_disk_mount_base | regex_replace('/', '-') | regex_replace('^-', '') }}-longhorn_{{ item.0.name }}.mount
         mode: "0644"
         owner: root
         group: root
       vars:
         disk_uuid: "{{ item.1.stdout }}"
-        mount_path: "{{ longhorn_disk_mount_base }}/longhorn-{{ item.0.name }}"
+        mount_path: "{{ longhorn_disk_mount_base }}/longhorn_{{ item.0.name }}"
         disk_name: "{{ item.0.name }}"
       loop: "{{ longhorn_additional_disks | zip(longhorn_disk_uuids.results) | list }}"
       loop_control:

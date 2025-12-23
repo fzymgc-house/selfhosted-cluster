@@ -32,7 +32,7 @@
     msg: |
       SAFETY CHECK FAILED: {{ disk.device }} contains existing data!
       blkid output: {{ disk_blkid_check.stdout }}
-      Expected label: longhorn-{{ disk.name }}, found: {{ disk_label_check.stdout | default('none') }}
+      Expected label: longhorn_{{ disk.name }}, found: {{ disk_label_check.stdout | default('none') }}
       To proceed, manually wipe the disk first: wipefs -a {{ disk.device }}
   when: disk_blkid_check.rc == 0 and not disk_already_configured
 
@@ -74,7 +74,7 @@
 
     - name: Format partition as BTRFS - {{ disk.name }}
       ansible.builtin.command:
-        cmd: mkfs.btrfs -f -L longhorn-{{ disk.name }} "{{ disk.partition }}"
+        cmd: mkfs.btrfs -f -L longhorn_{{ disk.name }} "{{ disk.partition }}"
       changed_when: true
 
     - name: Create secure temporary mount point - {{ disk.name }}
@@ -158,5 +158,5 @@
 
 - name: Log skipped disk configuration - {{ disk.name }}
   ansible.builtin.debug:
-    msg: "Disk {{ disk.device }} already configured with label 'longhorn-{{ disk.name }}', skipping partitioning"
+    msg: "Disk {{ disk.device }} already configured with label 'longhorn_{{ disk.name }}', skipping partitioning"
   when: disk_already_configured

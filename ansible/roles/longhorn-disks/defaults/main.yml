@@ -46,9 +46,9 @@
 # 3. Remove the disk entry from longhorn_additional_disks in host_vars
 # 4. SSH to the node and clean up the mount unit:
 #    # Stop and disable the mount
-#    systemctl disable --now data-longhorn-<disk-name>.mount
+#    systemctl disable --now data-longhorn_<disk-name>.mount
 #    # Remove the unit file
-#    rm /etc/systemd/system/data-longhorn-<disk-name>.mount
+#    rm /etc/systemd/system/data-longhorn_<disk-name>.mount
 #    # Reload systemd
 #    systemctl daemon-reload
 # 5. (Optional) In Longhorn UI: Delete the disk entry from the node

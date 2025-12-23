@@ -15,7 +15,7 @@
         longhorn_disk_config_list: |
           {% set disks = [{"path": longhorn_default_disk_path, "allowScheduling": true}] %}
           {% for disk in longhorn_additional_disks %}
-          {% set disk_entry = {"path": longhorn_disk_mount_base + "/longhorn-" + disk.name, "allowScheduling": true} %}
+          {% set disk_entry = {"path": longhorn_disk_mount_base + "/longhorn_" + disk.name, "allowScheduling": true} %}
           {% if disk.tags is defined %}
           {% set disk_entry = disk_entry | combine({"tags": disk.tags}) %}
           {% endif %}
@@ -104,7 +104,7 @@
           {% set configured_names = longhorn_additional_disks | map(attribute='name') | list %}
           {% set orphaned = [] %}
           {% for disk_name, disk_spec in longhorn_existing_disks.items() %}
-          {% if disk_name != 'default' and disk_name not in configured_names %}
+          {% if not disk_name.startswith('default') and disk_name not in configured_names %}
           {% set _ = orphaned.append({'name': disk_name, 'path': disk_spec.path | default('unknown')}) %}
           {% endif %}
           {% endfor %}
@@ -159,7 +159,7 @@
         longhorn_merged_disks: |
           {% set result = longhorn_existing_disks | default({}) | dict2items | items2dict %}
           {% for disk in longhorn_additional_disks %}
-          {% set disk_path = longhorn_disk_mount_base ~ '/longhorn-' ~ disk.name %}
+          {% set disk_path = longhorn_disk_mount_base ~ '/longhorn_' ~ disk.name %}
           {% set base_spec = {'path': disk_path, 'allowScheduling': true, 'evictionRequested': false, 'storageReserved': 0} %}
           {% if disk.tags is defined %}{% set base_spec = base_spec | combine({'tags': disk.tags}) %}{% endif %}
           {% if disk.name in result %}
@@ -184,7 +184,7 @@
         namespace: "{{ longhorn_namespace }}"
         definition:
           spec:
-            disks: "{{ longhorn_merged_disks | trim }}"
+            disks: "{{ longhorn_merged_disks | from_yaml }}"
       delegate_to: localhost
       become: false
       when: longhorn_is_installed

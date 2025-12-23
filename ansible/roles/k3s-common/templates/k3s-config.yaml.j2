@@ -1,0 +1,35 @@
+{# k3s configuration template - used by both server and agent #}
+secrets-encryption: {{ k3s_secrets_encryption | lower }}
+node-ip: {{ k3s_node_ip }}
+node-name: {{ k3s_node_name }}
+cluster-cidr: {{ k3s_cluster_cidr }}
+service-cidr: {{ k3s_service_cidr }}
+cluster-dns: {{ k3s_cluster_dns }}
+cluster-domain: {{ k3s_cluster_domain }}
+embedded-registry: {{ k3s_embedded_registry | lower }}
+flannel-backend: {{ k3s_flannel_backend }}
+disable-network-policy: {{ k3s_disable_network_policy | lower }}
+disable:
+{% for item in k3s_disable %}
+  - {{ item }}
+{% endfor %}
+kube-apiserver-arg:
+{% for gate in k3s_feature_gates %}
+  - feature-gates={{ gate }}
+{% endfor %}
+kubelet-arg:
+{% for gate in k3s_feature_gates %}
+  - feature-gates={{ gate }}
+{% endfor %}
+{% if k3s_is_first_server | default(false) %}
+cluster-init: true
+{% elif k3s_role | default('agent') == 'server' %}
+server: https://{{ k3s_first_server_ip }}:6443
+token: {{ k3s_join_token }}
+{% endif %}
+{% if k3s_tls_san is defined %}
+tls-san:
+{% for san in k3s_tls_san %}
+  - {{ san }}
+{% endfor %}
+{% endif %}

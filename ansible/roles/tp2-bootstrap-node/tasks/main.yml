@@ -74,6 +74,40 @@
     mode: "0644"
   notify: Restart multipathd
 
+- name: Enable and start multipathd
+  ansible.builtin.systemd:
+    name: multipathd
+    state: started
+    enabled: true
+  tags:
+    - longhorn-prereqs
+
+- name: Enable and start open-iscsi
+  ansible.builtin.systemd:
+    name: open-iscsi
+    state: started
+    enabled: true
+  tags:
+    - longhorn-prereqs
+
+- name: Configure docker socket symlink via systemd-tmpfiles
+  ansible.builtin.copy:
+    src: docker-sock.conf
+    dest: /etc/tmpfiles.d/docker-sock.conf
+    owner: root
+    group: root
+    mode: "0644"
+  tags:
+    - docker-containerd
+
+- name: Create docker socket symlink
+  ansible.builtin.command:
+    cmd: systemd-tmpfiles --create /etc/tmpfiles.d/docker-sock.conf
+  changed_when: true
+  failed_when: false
+  tags:
+    - docker-containerd
+
 - name: Check if br_netfilter is built into kernel
   ansible.builtin.stat:
     path: /proc/sys/net/bridge/bridge-nf-call-iptables

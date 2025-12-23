@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+galaxy_info:
+  author: fzymgc-house
+  description: k3s control plane installation
+  license: MIT-0
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+
+dependencies:
+  - role: k3s-common

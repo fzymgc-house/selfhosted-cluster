@@ -18,3 +18,16 @@ packages:
   - python3-venv
   - software-properties-common
   - unattended-upgrades
+  # Longhorn prerequisites
+  - open-iscsi
+  - multipath-tools
+  - cryptsetup
+  - cifs-utils
+  - nfs-common
+  - lsscsi
+  - sg3-utils
+  - scsitools
+  - nvme-cli
+  # Utilities
+  - jq
+  - yq

@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# defaults file for calico
+
+# Calico version - should match group_vars
+calico_version: "{{ calico_version | default('v3.30.0') }}"
+
+# Kubeconfig path for kubectl operations
+calico_kubeconfig: "{{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml"
+
+# Network interface for node address detection
+calico_node_interface: end0
+
+# Cluster CIDR for IP pool
+calico_cluster_cidr: "{{ k8s_cluster_cidr | default('10.42.0.0/16') }}"
+
+# IP pool configuration
+calico_ippool_block_size: 24
+calico_ippool_encapsulation: VXLANCrossSubnet
+calico_ippool_nat_outgoing: Enabled

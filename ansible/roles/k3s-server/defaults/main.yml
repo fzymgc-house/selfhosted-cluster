@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# defaults file for k3s-server
+
+# Whether this is the first server (initializes cluster)
+k3s_is_first_server: false
+
+# First server IP for joining (set dynamically or via inventory)
+k3s_first_server_ip: "{{ hostvars[groups['tp_cluster_controlplane'][0]]['host_address'] }}"
+
+# Join token (fetched from first server and propagated)
+# k3s_join_token: set via delegate_facts from first server
+
+# TLS SANs for the API server certificate
+k3s_tls_san: "{{ k8s_cluster_sans.split(',') if k8s_cluster_sans is defined else [] }}"
+
+# Role indicator for config template
+k3s_role: server

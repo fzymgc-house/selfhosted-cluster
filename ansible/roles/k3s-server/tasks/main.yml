@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# tasks file for k3s-server
+
+- name: Install k3s server
+  ansible.builtin.shell:
+    cmd: >
+      INSTALL_K3S_SKIP_START=true
+      {% if k3s_version %}INSTALL_K3S_VERSION={{ k3s_version }}{% endif %}
+      /tmp/k3s-install.sh
+    creates: /usr/local/bin/k3s
+  environment:
+    INSTALL_K3S_SKIP_START: "true"
+  tags:
+    - k3s-install
+
+- name: Start k3s service
+  ansible.builtin.systemd:
+    name: k3s
+    state: started
+    enabled: true
+    daemon_reload: true
+  tags:
+    - k3s-install
+
+- name: Wait for k3s to be ready
+  ansible.builtin.command:
+    cmd: k3s kubectl get nodes
+  register: k3s_nodes
+  until: k3s_nodes.rc == 0
+  retries: 30
+  delay: 10
+  changed_when: false
+  tags:
+    - k3s-install
+
+- name: Wait for node to be Ready
+  ansible.builtin.shell:
+    cmd: |
+      k3s kubectl get node {{ inventory_hostname }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  register: node_ready
+  until: node_ready.stdout == "True"
+  retries: 30
+  delay: 10
+  changed_when: false
+  tags:
+    - k3s-install

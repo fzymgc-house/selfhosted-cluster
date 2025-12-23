@@ -1,9 +1,125 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
 ---
-- name: Manage k3s
-  hosts: tp_cluster_nodes
+# k3s Cluster Deployment Playbook
+#
+# This playbook deploys a k3s cluster using native Ansible roles.
+# Execution order:
+#   1. First control plane node initializes cluster
+#   2. Additional control plane nodes join
+#   3. Worker nodes join
+#   4. Calico CNI is installed
+
+# Phase 1: First control plane node
+- name: Initialize k3s cluster on first control plane node
+  hosts: tp_cluster_controlplane[0]
   become: true
   roles:
-    - role: k3sup
+    - role: k3s-storage
       tags:
-        - k3s
-        - k8s
+        - k3s-storage
+    - role: k3s-server
+      vars:
+        k3s_is_first_server: true
+      tags:
+        - k3s-server
+        - k3s-install
+  tasks:
+    - name: Fetch join token from first server
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: k3s_token_raw
+      tags:
+        - k3s-token
+
+    - name: Propagate join token to all cluster nodes
+      ansible.builtin.set_fact:
+        k3s_join_token: "{{ k3s_token_raw.content | b64decode | trim }}"
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: "{{ groups['tp_cluster_nodes'] }}"
+      tags:
+        - k3s-token
+
+    - name: Copy kubeconfig to local machine
+      ansible.builtin.fetch:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: "{{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml"
+        flat: true
+      tags:
+        - k3s-kubeconfig
+
+    - name: Update kubeconfig server URL
+      ansible.builtin.replace:
+        path: "{{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml"
+        regexp: "server: https://127.0.0.1:6443"
+        replace: "server: https://{{ k8s_cluster_endpoint_name }}:6443"
+      delegate_to: localhost
+      become: false
+      tags:
+        - k3s-kubeconfig
+
+    - name: Update kubeconfig context name
+      ansible.builtin.replace:
+        path: "{{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml"
+        regexp: "name: default"
+        replace: "name: {{ k8s_context }}"
+      delegate_to: localhost
+      become: false
+      tags:
+        - k3s-kubeconfig
+
+# Phase 2: Additional control plane nodes
+- name: Join additional control plane nodes
+  hosts: tp_cluster_controlplane[1:]
+  become: true
+  serial: 1
+  roles:
+    - role: k3s-storage
+      tags:
+        - k3s-storage
+    - role: k3s-server
+      vars:
+        k3s_is_first_server: false
+      tags:
+        - k3s-server
+        - k3s-install
+
+# Phase 3: Worker nodes
+- name: Join worker nodes
+  hosts: tp_cluster_workers
+  become: true
+  roles:
+    - role: k3s-storage
+      tags:
+        - k3s-storage
+    - role: k3s-agent
+      tags:
+        - k3s-agent
+        - k3s-install
+
+# Phase 4: Install Calico CNI
+- name: Install Calico CNI
+  hosts: tp_cluster_controlplane[0]
+  gather_facts: false
+  roles:
+    - role: calico
+      tags:
+        - k3s-calico
+        - calico
+
+# Phase 5: CSI Snapshot Controller
+- name: Install CSI snapshot controller
+  hosts: tp_cluster_controlplane[0]
+  gather_facts: false
+  tasks:
+    - name: Apply CSI snapshot controller
+      ansible.builtin.shell:
+        cmd: |
+          kubectl --kubeconfig {{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml \
+            apply -k {{ playbook_dir }}/roles/k3sup/files/csi-snapshot-setup
+      delegate_to: localhost
+      become: false
+      changed_when: false
+      tags:
+        - k3s-csi-snapshot-controller

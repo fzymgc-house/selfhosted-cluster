@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# tasks file for k3s-common
+
+- name: Create k3s config directory
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    mode: "0755"
+    owner: root
+    group: root
+
+- name: Template k3s configuration
+  ansible.builtin.template:
+    src: k3s-config.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml
+    mode: "0640"
+    owner: root
+    group: root
+  tags:
+    - k3s-config
+
+- name: Configure k3s registries
+  ansible.builtin.copy:
+    src: registries.yaml
+    dest: /etc/rancher/k3s/registries.yaml
+    mode: "0640"
+    owner: root
+    group: root
+  tags:
+    - k3s-registries
+
+- name: Download k3s install script
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: /tmp/k3s-install.sh
+    mode: "0755"
+  tags:
+    - k3s-install-script

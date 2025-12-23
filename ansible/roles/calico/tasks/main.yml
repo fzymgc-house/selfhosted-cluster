@@ -1,0 +1,140 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# tasks file for calico
+# NOTE: This role runs delegated to localhost (kubectl operations)
+
+- name: Install Calico operator CRDs
+  ansible.builtin.shell:
+    cmd: |
+      kubectl --kubeconfig {{ calico_kubeconfig }} \
+        create -f https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/operator-crds.yaml
+  delegate_to: localhost
+  become: false
+  run_once: true
+  changed_when: false
+  failed_when: false
+  tags:
+    - calico-install
+
+- name: Install Tigera operator
+  ansible.builtin.shell:
+    cmd: |
+      kubectl --kubeconfig {{ calico_kubeconfig }} \
+        create -f https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/tigera-operator.yaml
+  delegate_to: localhost
+  become: false
+  run_once: true
+  changed_when: false
+  failed_when: false
+  tags:
+    - calico-install
+
+- name: Wait for Tigera operator to be ready
+  kubernetes.core.k8s_info:
+    kubeconfig: "{{ calico_kubeconfig }}"
+    kind: Deployment
+    name: tigera-operator
+    namespace: tigera-operator
+  register: tigera_operator
+  until:
+    - tigera_operator.resources | length > 0
+    - tigera_operator.resources[0].status.readyReplicas | default(0) > 0
+  retries: 30
+  delay: 10
+  delegate_to: localhost
+  become: false
+  run_once: true
+  tags:
+    - calico-install
+
+- name: Configure Calico Installation
+  kubernetes.core.k8s:
+    kubeconfig: "{{ calico_kubeconfig }}"
+    state: present
+    definition:
+      apiVersion: operator.tigera.io/v1
+      kind: Installation
+      metadata:
+        name: default
+      spec:
+        calicoNetwork:
+          nodeAddressAutodetectionV4:
+            interface: "{{ calico_node_interface }}"
+          nodeAddressAutodetectionV6:
+            interface: "{{ calico_node_interface }}"
+          ipPools:
+            - name: default-ipv4-ippool
+              blockSize: "{{ calico_ippool_block_size }}"
+              cidr: "{{ calico_cluster_cidr }}"
+              encapsulation: "{{ calico_ippool_encapsulation }}"
+              natOutgoing: "{{ calico_ippool_nat_outgoing }}"
+              nodeSelector: all()
+  delegate_to: localhost
+  become: false
+  run_once: true
+  tags:
+    - calico-config
+
+- name: Configure Calico API Server
+  kubernetes.core.k8s:
+    kubeconfig: "{{ calico_kubeconfig }}"
+    state: present
+    definition:
+      apiVersion: operator.tigera.io/v1
+      kind: APIServer
+      metadata:
+        name: default
+  delegate_to: localhost
+  become: false
+  run_once: true
+  tags:
+    - calico-config
+
+- name: Configure Calico Goldmane (flow aggregator)
+  kubernetes.core.k8s:
+    kubeconfig: "{{ calico_kubeconfig }}"
+    state: present
+    definition:
+      apiVersion: operator.tigera.io/v1
+      kind: Goldmane
+      metadata:
+        name: default
+  delegate_to: localhost
+  become: false
+  run_once: true
+  tags:
+    - calico-config
+
+- name: Configure Calico Whisker (observability UI)
+  kubernetes.core.k8s:
+    kubeconfig: "{{ calico_kubeconfig }}"
+    state: present
+    definition:
+      apiVersion: operator.tigera.io/v1
+      kind: Whisker
+      metadata:
+        name: default
+  delegate_to: localhost
+  become: false
+  run_once: true
+  tags:
+    - calico-config
+
+- name: Wait for Calico to be ready
+  kubernetes.core.k8s_info:
+    kubeconfig: "{{ calico_kubeconfig }}"
+    kind: Installation
+    name: default
+  register: calico_installation
+  until:
+    - calico_installation.resources | length > 0
+    - calico_installation.resources[0].status.conditions | default([]) | selectattr('type', 'eq', 'Ready') | selectattr('status', 'eq', 'True') | list | length
+      > 0
+  retries: 60
+  delay: 10
+  delegate_to: localhost
+  become: false
+  run_once: true
+  tags:
+    - calico-install

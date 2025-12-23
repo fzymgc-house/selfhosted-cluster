@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# handlers file for k3s-server
+
+- name: Restart k3s
+  ansible.builtin.systemd:
+    name: k3s
+    state: restarted
+    enabled: true

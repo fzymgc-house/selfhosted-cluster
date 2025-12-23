@@ -36,14 +36,17 @@
         cmd: modprobe btrfs
       when: "'btrfs' not in lsmod_output.stdout"
       changed_when: true
+      check_mode: false
 
     - name: Validate disk names contain only safe characters
       ansible.builtin.assert:
         that:
           - item.name is regex('^[a-zA-Z0-9][a-zA-Z0-9_-]*$')
+          - item.name | length <= 32
         fail_msg: |
           Invalid disk name: {{ item.name }}
-          Disk names must start with alphanumeric and contain only: a-z A-Z 0-9 _ -
+          Disk names must start with alphanumeric, contain only: a-z A-Z 0-9 _ -
+          and be at most 32 characters (BTRFS label limit is 256, but we add 'longhorn-' prefix)
         quiet: true
       loop: "{{ longhorn_additional_disks }}"
       loop_control:
@@ -157,7 +160,8 @@
       loop_control:
         label: "{{ item.name }}"
       register: longhorn_disk_mount_check
-      failed_when: false
+      # findmnt returns: 0=found, 1=not found, other=error
+      failed_when: longhorn_disk_mount_check.rc not in [0, 1]
       changed_when: false
       check_mode: false
 
@@ -233,11 +237,11 @@
       loop: "{{ longhorn_additional_disks | zip(longhorn_disk_uuids.results) | list }}"
       loop_control:
         label: "{{ item.0.name }}"
-      notify: Reload systemd
+      notify: Longhorn_disks reload systemd
 
-    # Note: daemon_reload is handled by the "Reload systemd" handler triggered above
-    # when mount unit files are created/modified. The handler approach is preferred
-    # because it ensures reload happens once, even if multiple units are changed.
+    # Note: daemon_reload is handled by the "Longhorn_disks reload systemd" handler
+    # triggered above when mount unit files are created/modified. The handler approach
+    # is preferred because it ensures reload happens once, even if multiple units change.
     - name: Flush handlers to reload systemd before starting mounts
       ansible.builtin.meta: flush_handlers
 

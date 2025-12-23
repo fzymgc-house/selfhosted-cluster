@@ -35,6 +35,20 @@
       retries: 3
       delay: 5
       until: longhorn_deployment_check is not failed
+      ignore_errors: true
+
+    - name: Fail with actionable message if Kubernetes unreachable
+      ansible.builtin.fail:
+        msg: |
+          Failed to connect to Kubernetes cluster after 3 retries.
+
+          Please check:
+            - Kubeconfig exists: {{ longhorn_kubeconfig }}
+            - Cluster is reachable: kubectl --kubeconfig {{ longhorn_kubeconfig }} get nodes
+            - Namespace exists: kubectl --kubeconfig {{ longhorn_kubeconfig }} get ns {{ longhorn_namespace }}
+
+          Error: {{ longhorn_deployment_check.msg | default('Unknown error') }}
+      when: longhorn_deployment_check is failed
 
     - name: Set Longhorn installed fact
       ansible.builtin.set_fact:
@@ -105,43 +119,41 @@
       loop_control:
         label: "{{ item.name }}"
       register: orphaned_disk_mounts
-      failed_when: false
+      # findmnt returns: 0=found, 1=not found, other=error
+      failed_when: orphaned_disk_mounts.rc not in [0, 1]
       changed_when: false
       when:
         - longhorn_is_installed
         - longhorn_orphaned_disks is defined
         - longhorn_orphaned_disks | length > 0
 
-    - name: Warn about orphaned disks in Longhorn
-      ansible.builtin.debug:
+    # Fail loudly about orphaned disks - they indicate configuration drift
+    # Use ignore_errors with longhorn_allow_orphaned_disks to suppress if needed
+    - name: Fail if orphaned disks detected in Longhorn
+      ansible.builtin.fail:
         msg: |
-          WARNING: Found {{ longhorn_orphaned_disks | length }} disk(s) in Longhorn that are not in host_vars config:
-          {% for result in orphaned_disk_mounts.results %}
-            - {{ result.item.name }} ({{ result.item.path }}) {% if result.rc == 0 %}[STILL MOUNTED - requires cleanup]{% else %}[not mounted]{% endif %}
+          ORPHANED DISKS DETECTED - Manual cleanup required!
 
+          Found {{ longhorn_orphaned_disks | length }} disk(s) in Longhorn that are not in host_vars config:
+          {% for result in orphaned_disk_mounts.results %}
+            - {{ result.item.name }} ({{ result.item.path }}) {% if result.rc == 0 %}[STILL MOUNTED]{% else %}[not mounted]{% endif %}
           {% endfor %}
-          Disks marked [STILL MOUNTED] need immediate attention - they are in Longhorn but not managed by this role.
+
+          Disks marked [STILL MOUNTED] need immediate attention.
           To remove them safely, follow the disk removal procedure in defaults/main.yml.
+
+          To suppress this error (not recommended), set: longhorn_allow_orphaned_disks: true
       when:
         - longhorn_is_installed
         - longhorn_orphaned_disks is defined
         - longhorn_orphaned_disks | length > 0
         - orphaned_disk_mounts is defined
-
-    # Build new disk specs using Ansible's native combine filter
-    # This is cleaner than inline Jinja2 and easier to debug
-    - name: Build new disk specifications
-      ansible.builtin.set_fact:
-        longhorn_new_disk_specs: >-
-          {{
-            longhorn_additional_disks | map('dict2items') | map('items2dict') |
-            map('combine', {'_base': {'path': '', 'allowScheduling': true, 'evictionRequested': false, 'storageReserved': 0}}) |
-            list
-          }}
-      when: longhorn_is_installed
+        - not (longhorn_allow_orphaned_disks | default(false))
 
     # Build the final disk spec by merging existing disks with new disk configs
     # Existing disk settings (storageReserved, etc.) are preserved; only path and tags update
+    # NOTE: Uses Jinja2 dict mutation pattern (result.update()) which works in Ansible 2.9+/Jinja2 2.10+
+    # This pattern mutates the dict in-place; if behavior changes in future versions, refactor to loop
     - name: Build merged disk configuration
       ansible.builtin.set_fact:
         longhorn_merged_disks: |

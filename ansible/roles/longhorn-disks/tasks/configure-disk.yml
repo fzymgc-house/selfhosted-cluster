@@ -8,7 +8,8 @@
   ansible.builtin.command:
     cmd: blkid -p "{{ disk.device }}"
   register: disk_blkid_check
-  failed_when: false
+  # blkid -p returns: 0=signatures found, 2=no signatures, other=error
+  failed_when: disk_blkid_check.rc not in [0, 2]
   changed_when: false
   check_mode: false
 
@@ -16,7 +17,8 @@
   ansible.builtin.command:
     cmd: blkid -s LABEL -o value "{{ disk.partition }}"
   register: disk_label_check
-  failed_when: false
+  # blkid returns: 0=found, 2=not found, other=error
+  failed_when: disk_label_check.rc not in [0, 2]
   changed_when: false
   check_mode: false
   when: disk_blkid_check.rc == 0
@@ -59,16 +61,16 @@
         state: present
         timeout: "{{ longhorn_disk_partition_timeout | default(60) }}"
 
-    # Verify partition is accessible before formatting
-    # blockdev --getro returns 0 for read-write devices, ensuring the partition is ready
-    - name: Verify partition is accessible - {{ disk.name }}
+    # Verify partition is accessible and writable before formatting
+    # blockdev --getro prints 0 (read-write) or 1 (read-only) to stdout; rc=0 means command succeeded
+    - name: Verify partition is accessible and writable - {{ disk.name }}
       ansible.builtin.command:
         cmd: blockdev --getro "{{ disk.partition }}"
       register: partition_ready_check
       changed_when: false
       retries: 3
       delay: 2
-      until: partition_ready_check.rc == 0
+      until: partition_ready_check.rc == 0 and partition_ready_check.stdout | trim == '0'
 
     - name: Format partition as BTRFS - {{ disk.name }}
       ansible.builtin.command:
@@ -118,7 +120,11 @@
 
     - name: Log unmount cleanup result - {{ disk.name }}
       ansible.builtin.debug:
-        msg: "{{ 'Cleanup unmount succeeded' if cleanup_unmount.changed | default(false) else 'Cleanup unmount skipped or failed (may already be unmounted)' }}"
+        msg: |
+          Cleanup unmount for {{ disk.name }}:
+            Result: {{ 'succeeded' if cleanup_unmount.changed | default(false) else 'skipped or already unmounted' }}
+            {% if cleanup_unmount.msg is defined %}Message: {{ cleanup_unmount.msg }}{% endif %}
+            {% if cleanup_unmount.stderr is defined and cleanup_unmount.stderr %}Stderr: {{ cleanup_unmount.stderr }}{% endif %}
       when: cleanup_unmount is defined
 
     - name: Cleanup - remove temp directory on failure - {{ disk.name }}
@@ -134,7 +140,10 @@
 
     - name: Log directory cleanup result - {{ disk.name }}
       ansible.builtin.debug:
-        msg: "{{ 'Cleanup directory removed' if cleanup_rmdir.changed | default(false) else 'Cleanup directory removal skipped or failed' }}"
+        msg: |
+          Cleanup directory for {{ disk.name }}:
+            Result: {{ 'removed' if cleanup_rmdir.changed | default(false) else 'skipped or failed' }}
+            {% if cleanup_rmdir.msg is defined %}Message: {{ cleanup_rmdir.msg }}{% endif %}
       when: cleanup_rmdir is defined
 
     - name: Report disk configuration failure - {{ disk.name }}

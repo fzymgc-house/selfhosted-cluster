@@ -3,6 +3,6 @@
 ---
 # handlers file for longhorn-disks
 
-- name: Reload systemd
+- name: Longhorn_disks reload systemd
   ansible.builtin.systemd:
     daemon_reload: true

@@ -2,7 +2,7 @@
 
 **Issue:** #320
 **Date:** 2025-12-23
-**Status:** Approved
+**Status:** Implemented (PRs #321, #323)
 
 ## Summary
 
@@ -21,7 +21,7 @@ host_btrfs_subvolume_prefix: ""
 # NEW: Additional Longhorn storage disks
 longhorn_additional_disks:
   - device: /dev/sda
-    name: sata-storage-1
+    name: sata_storage_1    # Prefer underscores to avoid systemd escaping
     tags:
       - sata
       - bulk
@@ -30,7 +30,7 @@ longhorn_additional_disks:
 | Field | Required | Description |
 |-------|----------|-------------|
 | `device` | Yes | Block device path (must be empty/unpartitioned) |
-| `name` | Yes | Unique identifier, used in mount path `/data/longhorn-<name>` |
+| `name` | Yes | Unique identifier, used in mount path `/data/longhorn_<name>` |
 | `tags` | No | Longhorn disk tags for scheduling policies |
 
 Nodes without extra disks omit `longhorn_additional_disks`.
@@ -48,7 +48,7 @@ Nodes without extra disks omit `longhorn_additional_disks`.
 3. **Create GPT partition table** - Single partition spanning disk
 4. **Format as BTRFS** - Create filesystem on partition
 5. **Create BTRFS subvolume** - Subvolume named `longhorn`
-6. **Create systemd mount unit** - Mount at `/data/longhorn-<name>`
+6. **Create systemd mount unit** - Mount at `/data/longhorn_<name>`
 7. **Enable and start mount** - Persist across reboots
 
 **File structure:**
@@ -122,7 +122,7 @@ wipefs -a /dev/sda
 
 | State | Action |
 |-------|--------|
-| Mount active at `/data/longhorn-<name>` | Skip all steps |
+| Mount active at `/data/longhorn_<name>` | Skip all steps |
 | Partition exists with BTRFS | Create subvolume if missing, mount |
 | Disk has data | **FAIL** (safety) |
 | Disk empty | Full setup: partition, format, mount |
@@ -136,7 +136,7 @@ For fresh clusters (Longhorn not yet installed):
 ```json
 [
   {"path":"/data/longhorn","allowScheduling":true},
-  {"path":"/data/longhorn-sata-storage-1","allowScheduling":true,"tags":["sata","bulk"]}
+  {"path":"/data/longhorn_sata_storage_1","allowScheduling":true,"tags":["sata","bulk"]}
 ]
 ```
 
@@ -157,7 +157,7 @@ For existing clusters (Longhorn already running):
       - op: add
         path: /spec/disks/{{ item.name }}
         value:
-          path: "/data/longhorn-{{ item.name }}"
+          path: "/data/longhorn_{{ item.name }}"
           allowScheduling: true
           tags: "{{ item.tags | default([]) }}"
 ```

@@ -8,6 +8,8 @@
   ansible.builtin.assert:
     that:
       - kube_vip_address is defined
+      # ipaddr filter returns string on valid IP, false on invalid
+      # Ansible 2.16+ requires explicit boolean comparison for conditionals
       - (kube_vip_address | ansible.utils.ipaddr) != false
       - kube_vip_interface is defined
       - kube_vip_interface | length > 0
@@ -42,6 +44,15 @@
       This role must run after k3s is installed on the node.
       Ensure the node is a k3s server node with a valid kubeconfig.
   when: not kube_vip_kubeconfig_stat.stat.exists
+  tags:
+    - kube-vip
+
+- name: Validate kubeconfig format
+  ansible.builtin.command:
+    cmd: kubectl --kubeconfig {{ kube_vip_kubeconfig }} config view --minify
+  register: kube_vip_kubeconfig_valid
+  changed_when: false
+  failed_when: kube_vip_kubeconfig_valid.rc != 0
   tags:
     - kube-vip
 

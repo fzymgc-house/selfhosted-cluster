@@ -22,11 +22,20 @@
   tags:
     - longhorn-disks
   block:
-    - name: Verify BTRFS kernel module is available
+    # Load BTRFS kernel module (not just check availability)
+    # This ensures the module is ready before disk formatting operations
+    - name: Check if BTRFS kernel module is loaded
       ansible.builtin.command:
-        cmd: modprobe -n btrfs
+        cmd: lsmod
+      register: lsmod_output
       changed_when: false
       check_mode: false
+
+    - name: Load BTRFS kernel module
+      ansible.builtin.command:
+        cmd: modprobe btrfs
+      when: "'btrfs' not in lsmod_output.stdout"
+      changed_when: true
 
     - name: Validate disk names contain only safe characters
       ansible.builtin.assert:
@@ -60,19 +69,27 @@
           Found devices: {{ longhorn_additional_disks | map(attribute='device') | list | join(', ') }}
         quiet: true
 
-    - name: Validate disk devices exist
+    # Validate device paths exist and resolve symlinks (e.g., /dev/disk/by-id paths)
+    # Using follow: true catches broken symlinks early with a clear error message
+    - name: Validate disk devices exist and resolve symlinks
       ansible.builtin.stat:
         path: "{{ item.device }}"
+        follow: true
       register: disk_device_check
       loop: "{{ longhorn_additional_disks }}"
       loop_control:
         label: "{{ item.name }}"
 
-    - name: Fail if any disk device does not exist
+    - name: Fail if any disk device does not exist or is a broken symlink
       ansible.builtin.fail:
         msg: |
           Disk device not found: {{ item.item.device }}
+          {% if '/dev/disk/by-id' in item.item.device or '/dev/disk/by-path' in item.item.device %}
+          This appears to be a symlink path. Ensure the underlying device exists and the symlink is valid.
+          Check with: ls -la {{ item.item.device }}
+          {% else %}
           Ensure the device exists and is a valid block device.
+          {% endif %}
       loop: "{{ disk_device_check.results }}"
       loop_control:
         label: "{{ item.item.name }}"
@@ -83,6 +100,9 @@
         msg: |
           {{ item.item.device }} is not a block device (isblk={{ item.stat.isblk | default(false) }})
           Only block devices can be used for Longhorn storage.
+          {% if item.stat.islnk | default(false) %}
+          Note: This path is a symlink. The target may not be a block device.
+          {% endif %}
       loop: "{{ disk_device_check.results }}"
       loop_control:
         label: "{{ item.item.name }}"

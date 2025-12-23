@@ -97,19 +97,36 @@
           {{ orphaned }}
       when: longhorn_is_installed and longhorn_existing_disks | length > 0
 
+    # Check if orphaned disks are still mounted (more actionable warning)
+    - name: Check if orphaned disk paths are still mounted
+      ansible.builtin.command:
+        cmd: findmnt -n {{ item.path }}
+      loop: "{{ longhorn_orphaned_disks }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: orphaned_disk_mounts
+      failed_when: false
+      changed_when: false
+      when:
+        - longhorn_is_installed
+        - longhorn_orphaned_disks is defined
+        - longhorn_orphaned_disks | length > 0
+
     - name: Warn about orphaned disks in Longhorn
       ansible.builtin.debug:
         msg: |
           WARNING: Found {{ longhorn_orphaned_disks | length }} disk(s) in Longhorn that are not in host_vars config:
-          {% for disk in longhorn_orphaned_disks %}
-            - {{ disk.name }} ({{ disk.path }})
+          {% for result in orphaned_disk_mounts.results %}
+            - {{ result.item.name }} ({{ result.item.path }}) {% if result.rc == 0 %}[STILL MOUNTED - requires cleanup]{% else %}[not mounted]{% endif %}
+
           {% endfor %}
-          These disks may have been removed from config but still exist in Longhorn.
+          Disks marked [STILL MOUNTED] need immediate attention - they are in Longhorn but not managed by this role.
           To remove them safely, follow the disk removal procedure in defaults/main.yml.
       when:
         - longhorn_is_installed
         - longhorn_orphaned_disks is defined
         - longhorn_orphaned_disks | length > 0
+        - orphaned_disk_mounts is defined
 
     # Patch Longhorn Node CRD - merge existing config with new disks
     # Preserves existing disk settings (storageReserved, tags, etc.) when disk already exists

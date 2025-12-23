@@ -104,7 +104,7 @@
           {% set configured_names = longhorn_additional_disks | map(attribute='name') | list %}
           {% set orphaned = [] %}
           {% for disk_name, disk_spec in longhorn_existing_disks.items() %}
-          {% if disk_name != 'default' and disk_name not in configured_names %}
+          {% if not disk_name.startswith('default') and disk_name not in configured_names %}
           {% set _ = orphaned.append({'name': disk_name, 'path': disk_spec.path | default('unknown')}) %}
           {% endif %}
           {% endfor %}

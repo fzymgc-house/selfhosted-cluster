@@ -8,6 +8,7 @@
     cmd: blkid -s UUID -o value {{ k3s_storage_btrfs_root }}
   register: btrfs_uuid
   changed_when: false
+  check_mode: false
   tags:
     - k3s-storage
 

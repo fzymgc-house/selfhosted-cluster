@@ -13,6 +13,7 @@
     cmd: k3s --version
   register: k3s_installed_version_raw
   changed_when: false
+  check_mode: false
   when: k3s_binary.stat.exists
 
 - name: Parse installed k3s version

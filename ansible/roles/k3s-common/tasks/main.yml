@@ -63,9 +63,8 @@
     owner: root
     group: root
   notify: Restart k3s
-  # For servers: always manage config
-  # For agents: only create config on fresh install (existing agents have no config)
-  when: k3s_role | default('agent') == 'server' or not k3s_existing_install
+  # Only servers use config.yaml - agents use K3S_URL/K3S_TOKEN env vars
+  when: k3s_role | default('agent') == 'server'
   tags:
     - k3s-config
 
@@ -77,8 +76,8 @@
     owner: root
     group: root
   notify: Restart k3s
-  # Same logic as config
-  when: k3s_role | default('agent') == 'server' or not k3s_existing_install
+  # Only servers need registries config managed
+  when: k3s_role | default('agent') == 'server'
   tags:
     - k3s-registries
 

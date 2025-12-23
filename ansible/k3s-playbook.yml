@@ -60,12 +60,25 @@
       tags:
         - k3s-kubeconfig
 
+    - name: Validate existing kubeconfig
+      ansible.builtin.command:
+        cmd: kubectl --kubeconfig {{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml cluster-info
+      delegate_to: localhost
+      become: false
+      register: kubeconfig_valid
+      failed_when: false
+      changed_when: false
+      when: local_kubeconfig.stat.exists
+      tags:
+        - k3s-kubeconfig
+
     - name: Copy kubeconfig to local machine
       ansible.builtin.fetch:
         src: /etc/rancher/k3s/k3s.yaml
         dest: "{{ lookup('env', 'HOME') }}/.kube/configs/{{ k8s_context }}-admin.yml"
         flat: true
-      when: not local_kubeconfig.stat.exists
+      when: not local_kubeconfig.stat.exists or (kubeconfig_valid.rc | default(0)) != 0
+      register: kubeconfig_fetched
       tags:
         - k3s-kubeconfig
 
@@ -76,7 +89,7 @@
         replace: "server: https://{{ k8s_cluster_endpoint_name }}:6443"
       delegate_to: localhost
       become: false
-      when: not local_kubeconfig.stat.exists
+      when: kubeconfig_fetched.changed | default(false)
       tags:
         - k3s-kubeconfig
 
@@ -87,7 +100,7 @@
         replace: "name: {{ k8s_context }}"
       delegate_to: localhost
       become: false
-      when: not local_kubeconfig.stat.exists
+      when: kubeconfig_fetched.changed | default(false)
       tags:
         - k3s-kubeconfig
 
@@ -142,6 +155,7 @@
             apply -k {{ playbook_dir }}/files/csi-snapshot-setup
       delegate_to: localhost
       become: false
-      changed_when: false
+      register: csi_snapshot_result
+      changed_when: "'created' in csi_snapshot_result.stdout or 'configured' in csi_snapshot_result.stdout"
       tags:
         - k3s-csi-snapshot-controller

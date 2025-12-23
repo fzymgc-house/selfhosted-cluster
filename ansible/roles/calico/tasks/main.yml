@@ -8,12 +8,12 @@
   ansible.builtin.shell:
     cmd: |
       kubectl --kubeconfig {{ calico_kubeconfig }} \
-        create -f https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/operator-crds.yaml
+        apply --server-side -f https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/operator-crds.yaml
   delegate_to: localhost
   become: false
   run_once: true
-  changed_when: false
-  failed_when: false
+  register: calico_crds_result
+  changed_when: "'created' in calico_crds_result.stdout or 'configured' in calico_crds_result.stdout"
   tags:
     - calico-install
 
@@ -21,12 +21,12 @@
   ansible.builtin.shell:
     cmd: |
       kubectl --kubeconfig {{ calico_kubeconfig }} \
-        create -f https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/tigera-operator.yaml
+        apply --server-side -f https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/tigera-operator.yaml
   delegate_to: localhost
   become: false
   run_once: true
-  changed_when: false
-  failed_when: false
+  register: calico_operator_result
+  changed_when: "'created' in calico_operator_result.stdout or 'configured' in calico_operator_result.stdout"
   tags:
     - calico-install
 
@@ -60,9 +60,9 @@
       spec:
         calicoNetwork:
           nodeAddressAutodetectionV4:
-            interface: "{{ calico_node_interface }}"
+            canReach: "{{ calico_can_reach_ip }}"
           nodeAddressAutodetectionV6:
-            interface: "{{ calico_node_interface }}"
+            canReach: "{{ calico_can_reach_ip }}"
           ipPools:
             - name: default-ipv4-ippool
               blockSize: "{{ calico_ippool_block_size }}"

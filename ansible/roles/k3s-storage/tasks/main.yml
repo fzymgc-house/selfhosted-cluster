@@ -12,11 +12,22 @@
   tags:
     - k3s-storage
 
-- name: Create btrfs subvolumes
-  ansible.builtin.shell:
-    cmd: btrfs subvolume create -p /data/{{ item }} || true
+- name: Check if btrfs subvolumes exist
+  ansible.builtin.stat:
+    path: /data/{{ item }}
   loop: "{{ k3s_storage_subvolumes }}"
-  changed_when: false
+  register: k3s_storage_subvol_stat
+  tags:
+    - k3s-storage
+
+- name: Create btrfs subvolumes
+  ansible.builtin.command:
+    cmd: btrfs subvolume create /data/{{ item.item }}
+  loop: "{{ k3s_storage_subvol_stat.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: not item.stat.exists
+  changed_when: true
   tags:
     - k3s-storage
 

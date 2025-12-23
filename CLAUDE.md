@@ -104,7 +104,12 @@ See `docs/vault-migration.md` for detailed migration documentation from 1Passwor
    gh pr create --title "feat: Description" --body "PR description"
    ```
 
-3. **Pull Request Requirements**
+3. **Code Review:**
+  - When asked to "request a review", use the `/review-pr` skill or `pr-review-toolkit:review-pr` agent
+  - Do NOT use `gh pr edit --add-reviewer` to request reviews from GitHub users
+  - AI-powered review provides immediate, thorough feedback without waiting for human availability
+
+4. **Pull Request Requirements**
    - All PRs must pass automated checks (validation, linting, reviews)
    - PRs are merged to `main` after approval
    - Use meaningful commit messages following conventional commits format

@@ -3,3 +3,12 @@ host_address: 192.168.20.141
 host_address_ipv6: fddb:f665:73f7:1:aaaa::141
 host_btrfs_root_volume: /dev/nvme0n1p1
 host_btrfs_subvolume_prefix: ""
+
+# Additional Longhorn storage disks (optional)
+# Uncomment and configure to add extra disks to Longhorn storage pool
+# longhorn_additional_disks:
+#   - name: sata-ssd-1        # Unique identifier for this disk
+#     device: /dev/sda        # Block device path (must be empty/unpartitioned)
+#     tags:                   # Optional tags for Longhorn scheduling
+#       - sata
+#       - bulk-storage

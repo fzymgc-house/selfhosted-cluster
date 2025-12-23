@@ -1,0 +1,255 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# tasks file for longhorn-disks
+# Configures additional block devices for Longhorn storage
+
+- name: Install disk management tools
+  ansible.builtin.apt:
+    name:
+      - parted
+      - btrfs-progs
+      - util-linux
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: longhorn_additional_disks is defined and longhorn_additional_disks | length > 0
+  tags:
+    - longhorn-disks
+
+- name: Process additional Longhorn disks
+  when: longhorn_additional_disks is defined and longhorn_additional_disks | length > 0
+  tags:
+    - longhorn-disks
+  block:
+    # Load BTRFS kernel module (not just check availability)
+    # This ensures the module is ready before disk formatting operations
+    - name: Check if BTRFS kernel module is loaded
+      ansible.builtin.command:
+        cmd: lsmod
+      register: lsmod_output
+      changed_when: false
+      check_mode: false
+
+    - name: Load BTRFS kernel module
+      ansible.builtin.command:
+        cmd: modprobe btrfs
+      when: "'btrfs' not in lsmod_output.stdout"
+      changed_when: true
+      check_mode: false
+
+    - name: Validate disk names contain only safe characters
+      ansible.builtin.assert:
+        that:
+          - item.name is regex('^[a-zA-Z0-9][a-zA-Z0-9_-]*$')
+          - item.name | length <= 32
+        fail_msg: |
+          Invalid disk name: {{ item.name }}
+          Disk names must start with alphanumeric, contain only: a-z A-Z 0-9 _ -
+          and be at most 32 characters (BTRFS label limit is 256, but we add 'longhorn-' prefix)
+        quiet: true
+      loop: "{{ longhorn_additional_disks }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Validate disk names are unique
+      ansible.builtin.assert:
+        that:
+          - longhorn_additional_disks | map(attribute='name') | list | length == longhorn_additional_disks | map(attribute='name') | unique | list | length
+        fail_msg: |
+          Duplicate disk names found in longhorn_additional_disks!
+          Each disk must have a unique name within the host configuration.
+          Found names: {{ longhorn_additional_disks | map(attribute='name') | list | join(', ') }}
+        quiet: true
+
+    - name: Validate disk device paths are unique
+      ansible.builtin.assert:
+        that:
+          - longhorn_additional_disks | map(attribute='device') | list | length == longhorn_additional_disks | map(attribute='device') | unique | list | length
+        fail_msg: |
+          Duplicate device paths found in longhorn_additional_disks!
+          Each disk must use a unique device path.
+          Found devices: {{ longhorn_additional_disks | map(attribute='device') | list | join(', ') }}
+        quiet: true
+
+    # Validate device paths exist and resolve symlinks (e.g., /dev/disk/by-id paths)
+    # Using follow: true catches broken symlinks early with a clear error message
+    - name: Validate disk devices exist and resolve symlinks
+      ansible.builtin.stat:
+        path: "{{ item.device }}"
+        follow: true
+      register: disk_device_check
+      loop: "{{ longhorn_additional_disks }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Fail if any disk device does not exist or is a broken symlink
+      ansible.builtin.fail:
+        msg: |
+          Disk device not found: {{ item.item.device }}
+          {% if '/dev/disk/by-id' in item.item.device or '/dev/disk/by-path' in item.item.device %}
+          This appears to be a symlink path. Ensure the underlying device exists and the symlink is valid.
+          Check with: ls -la {{ item.item.device }}
+          {% else %}
+          Ensure the device exists and is a valid block device.
+          {% endif %}
+      loop: "{{ disk_device_check.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when: not item.stat.exists
+
+    - name: Validate devices are block devices
+      ansible.builtin.fail:
+        msg: |
+          {{ item.item.device }} is not a block device (isblk={{ item.stat.isblk | default(false) }})
+          Only block devices can be used for Longhorn storage.
+          {% if item.stat.islnk | default(false) %}
+          Note: This path is a symlink. The target may not be a block device.
+          {% endif %}
+      loop: "{{ disk_device_check.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when: item.stat.exists and not (item.stat.isblk | default(false))
+
+    # Validate disk sizes meet minimum requirement
+    - name: Get disk sizes
+      ansible.builtin.command:
+        cmd: blockdev --getsize64 "{{ item.device }}"
+      loop: "{{ longhorn_additional_disks }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: disk_sizes
+      changed_when: false
+      check_mode: false
+
+    - name: Validate disk sizes meet minimum requirement
+      ansible.builtin.fail:
+        msg: |
+          Disk {{ item.item.device }} ({{ item.item.name }}) is too small: {{ (item.stdout | int / 1073741824) | round(2) }} GB
+          Minimum required size: {{ (longhorn_disk_min_size_bytes | int / 1073741824) | round(2) }} GB
+          Longhorn requires adequate storage for replicas and metadata.
+      loop: "{{ disk_sizes.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when: (item.stdout | int) < (longhorn_disk_min_size_bytes | int)
+
+    # Compute partition paths early (NVMe/MMC/loop use 'p1', others use '1')
+    # This is the single source of truth for partition path logic
+    # Uses resolved symlink target from disk_device_check for accurate device type detection
+    - name: Compute partition paths for all disks
+      ansible.builtin.set_fact:
+        longhorn_disks_with_partitions: |
+          {% set result = [] %}
+          {% for idx in range(longhorn_additional_disks | length) %}
+          {% set disk = longhorn_additional_disks[idx] %}
+          {% set stat_result = disk_device_check.results[idx].stat %}
+          {# Use resolved symlink target if available, otherwise use original device path #}
+          {% set real_device = stat_result.lnk_target | default(disk.device) if stat_result.islnk | default(false) else disk.device %}
+          {% set device_basename = real_device | basename %}
+          {% set needs_p_suffix = device_basename.startswith('nvme') or device_basename.startswith('mmcblk') or device_basename.startswith('loop') %}
+          {# Partition path uses original device path (symlink) for consistency with systemd #}
+          {% set partition = disk.device ~ ('p1' if needs_p_suffix else '1') %}
+          {% set _ = result.append(disk | combine({'partition': partition, 'real_device': real_device})) %}
+          {% endfor %}
+          {{ result }}
+
+    - name: Check existing mounts for each disk
+      ansible.builtin.command:
+        cmd: findmnt -n {{ longhorn_disk_mount_base }}/longhorn-{{ item.name }}
+      loop: "{{ longhorn_disks_with_partitions }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: longhorn_disk_mount_check
+      # findmnt returns: 0=found, 1=not found, other=error
+      failed_when: longhorn_disk_mount_check.rc not in [0, 1]
+      changed_when: false
+      check_mode: false
+
+    - name: Build list of disks needing setup
+      ansible.builtin.set_fact:
+        longhorn_disks_to_configure: >-
+          {{
+            longhorn_disks_with_partitions | zip(longhorn_disk_mount_check.results)
+            | selectattr('1.rc', 'ne', 0)
+            | map(attribute='0')
+            | list
+          }}
+
+    - name: Warn about check mode limitations for disk operations
+      ansible.builtin.debug:
+        msg: |
+          CHECK MODE WARNING: {{ longhorn_disks_to_configure | length }} disk(s) need configuration.
+          Disk partitioning and formatting cannot be validated in check mode.
+          Run without --check to actually configure disks.
+      when: ansible_check_mode and longhorn_disks_to_configure | length > 0
+
+    - name: Configure each new disk
+      ansible.builtin.include_tasks: configure-disk.yml
+      loop: "{{ longhorn_disks_to_configure }}"
+      loop_control:
+        loop_var: disk
+        label: "{{ disk.name }}"
+
+    - name: Get disk info for mount units
+      ansible.builtin.command:
+        cmd: blkid -s UUID -o value "{{ item.partition }}"
+      loop: "{{ longhorn_disks_with_partitions }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: longhorn_disk_uuids
+      changed_when: false
+      check_mode: false
+
+    - name: Validate UUID retrieval succeeded
+      ansible.builtin.assert:
+        that:
+          - item.stdout | length > 0
+        fail_msg: |
+          Failed to retrieve UUID for {{ item.item.partition }}
+          Ensure the partition exists and has a valid filesystem.
+        quiet: true
+      loop: "{{ longhorn_disk_uuids.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+    - name: Create mount point directories
+      ansible.builtin.file:
+        path: "{{ longhorn_disk_mount_base }}/longhorn-{{ item.name }}"
+        state: directory
+        mode: "0755"
+        owner: root
+        group: root
+      loop: "{{ longhorn_additional_disks }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Create systemd mount units
+      ansible.builtin.template:
+        src: systemd-mount.j2
+        dest: /etc/systemd/system/{{ longhorn_disk_mount_base | regex_replace('/', '-') | regex_replace('^-', '') }}-longhorn-{{ item.0.name }}.mount
+        mode: "0644"
+        owner: root
+        group: root
+      vars:
+        disk_uuid: "{{ item.1.stdout }}"
+        mount_path: "{{ longhorn_disk_mount_base }}/longhorn-{{ item.0.name }}"
+        disk_name: "{{ item.0.name }}"
+      loop: "{{ longhorn_additional_disks | zip(longhorn_disk_uuids.results) | list }}"
+      loop_control:
+        label: "{{ item.0.name }}"
+      notify: Longhorn_disks reload systemd
+
+    # Note: daemon_reload is handled by the "Longhorn_disks reload systemd" handler
+    # triggered above when mount unit files are created/modified. The handler approach
+    # is preferred because it ensures reload happens once, even if multiple units change.
+    - name: Flush handlers to reload systemd before starting mounts
+      ansible.builtin.meta: flush_handlers
+
+    - name: Enable and start mount units
+      ansible.builtin.systemd:
+        name: "{{ longhorn_disk_mount_base | regex_replace('/', '-') | regex_replace('^-', '') }}-longhorn-{{ item.name }}.mount"
+        state: started
+        enabled: true
+      loop: "{{ longhorn_additional_disks }}"
+      loop_control:
+        label: "{{ item.name }}"

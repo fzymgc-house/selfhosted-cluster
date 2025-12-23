@@ -23,6 +23,14 @@ rules:
     ignore-shebangs: true
     min-spaces-from-content: 1
 
+  # Required by ansible-lint for compatibility
+  comments-indentation: false
+
+  # Octal values - required by ansible-lint
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
+
   # Truthy values - be explicit
   truthy:
     allowed-values: ['true', 'false', 'yes', 'no']

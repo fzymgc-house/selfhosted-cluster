@@ -1,0 +1,162 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# Configure a single disk for Longhorn storage
+# Called with loop_var: disk (includes disk.partition from main.yml)
+
+- name: Check if disk has partition table - {{ disk.name }}
+  ansible.builtin.command:
+    cmd: blkid -p "{{ disk.device }}"
+  register: disk_blkid_check
+  # blkid -p returns: 0=signatures found, 2=no signatures, other=error
+  failed_when: disk_blkid_check.rc not in [0, 2]
+  changed_when: false
+  check_mode: false
+
+- name: Check if partition has our BTRFS label - {{ disk.name }}
+  ansible.builtin.command:
+    cmd: blkid -s LABEL -o value "{{ disk.partition }}"
+  register: disk_label_check
+  # blkid returns: 0=found, 2=not found, other=error
+  failed_when: disk_label_check.rc not in [0, 2]
+  changed_when: false
+  check_mode: false
+  when: disk_blkid_check.rc == 0
+
+- name: Set disk already configured fact - {{ disk.name }}
+  ansible.builtin.set_fact:
+    disk_already_configured: "{{ disk_blkid_check.rc == 0 and disk_label_check.stdout | default('') == 'longhorn-' + disk.name }}"
+
+- name: Fail if disk has existing data from another source - {{ disk.name }}
+  ansible.builtin.fail:
+    msg: |
+      SAFETY CHECK FAILED: {{ disk.device }} contains existing data!
+      blkid output: {{ disk_blkid_check.stdout }}
+      Expected label: longhorn-{{ disk.name }}, found: {{ disk_label_check.stdout | default('none') }}
+      To proceed, manually wipe the disk first: wipefs -a {{ disk.device }}
+  when: disk_blkid_check.rc == 0 and not disk_already_configured
+
+# Skip disk setup if already configured by this role
+- name: Configure new disk - {{ disk.name }}
+  when: not disk_already_configured
+  block:
+    - name: Create GPT partition table - {{ disk.name }}
+      ansible.builtin.command:
+        cmd: parted -s -a optimal "{{ disk.device }}" mklabel gpt
+      changed_when: true
+
+    - name: Create partition spanning entire disk - {{ disk.name }}
+      ansible.builtin.command:
+        cmd: parted -s -a optimal "{{ disk.device }}" mkpart primary 0% 100%
+      changed_when: true
+
+    - name: Wait for udev to settle - {{ disk.name }}
+      ansible.builtin.command:
+        cmd: udevadm settle --timeout=30
+      changed_when: false
+
+    - name: Wait for partition to appear - {{ disk.name }}
+      ansible.builtin.wait_for:
+        path: "{{ disk.partition }}"
+        state: present
+        timeout: "{{ longhorn_disk_partition_timeout | default(60) }}"
+
+    # Verify partition is accessible and writable before formatting
+    # blockdev --getro prints 0 (read-write) or 1 (read-only) to stdout; rc=0 means command succeeded
+    - name: Verify partition is accessible and writable - {{ disk.name }}
+      ansible.builtin.command:
+        cmd: blockdev --getro "{{ disk.partition }}"
+      register: partition_ready_check
+      changed_when: false
+      retries: 3
+      delay: 2
+      until: partition_ready_check.rc == 0 and partition_ready_check.stdout | trim == '0'
+
+    - name: Format partition as BTRFS - {{ disk.name }}
+      ansible.builtin.command:
+        cmd: mkfs.btrfs -f -L longhorn-{{ disk.name }} "{{ disk.partition }}"
+      changed_when: true
+
+    - name: Create secure temporary mount point - {{ disk.name }}
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: longhorn-disk-
+      register: temp_mount_dir
+
+    - name: Mount partition temporarily - {{ disk.name }}
+      ansible.posix.mount:
+        path: "{{ temp_mount_dir.path }}"
+        src: "{{ disk.partition }}"
+        fstype: btrfs
+        state: mounted
+
+    - name: Create BTRFS subvolume - {{ disk.name }}
+      ansible.builtin.command:
+        cmd: btrfs subvolume create "{{ temp_mount_dir.path }}/{{ longhorn_disk_subvol_name }}"
+      changed_when: true
+
+    - name: Unmount temporary mount - {{ disk.name }}
+      ansible.posix.mount:
+        path: "{{ temp_mount_dir.path }}"
+        state: unmounted
+
+    - name: Remove temporary mount point - {{ disk.name }}
+      ansible.builtin.file:
+        path: "{{ temp_mount_dir.path }}"
+        state: absent
+
+  rescue:
+    # Defensive cleanup - handle cases where temp_mount_dir may not exist or be incomplete
+    - name: Cleanup - attempt to unmount on failure - {{ disk.name }}
+      ansible.posix.mount:
+        path: "{{ temp_mount_dir.path | default(omit) }}"
+        state: unmounted
+      register: cleanup_unmount
+      failed_when: false
+      when:
+        - temp_mount_dir is defined
+        - temp_mount_dir.path is defined
+        - temp_mount_dir.path | length > 0
+
+    - name: Log unmount cleanup result - {{ disk.name }}
+      ansible.builtin.debug:
+        msg: |
+          Cleanup unmount for {{ disk.name }}:
+            Result: {{ 'succeeded' if cleanup_unmount.changed | default(false) else 'skipped or already unmounted' }}
+            {% if cleanup_unmount.msg is defined %}Message: {{ cleanup_unmount.msg }}{% endif %}
+            {% if cleanup_unmount.stderr is defined and cleanup_unmount.stderr %}Stderr: {{ cleanup_unmount.stderr }}{% endif %}
+      when: cleanup_unmount is defined
+
+    - name: Cleanup - remove temp directory on failure - {{ disk.name }}
+      ansible.builtin.file:
+        path: "{{ temp_mount_dir.path | default(omit) }}"
+        state: absent
+      register: cleanup_rmdir
+      failed_when: false
+      when:
+        - temp_mount_dir is defined
+        - temp_mount_dir.path is defined
+        - temp_mount_dir.path | length > 0
+
+    - name: Log directory cleanup result - {{ disk.name }}
+      ansible.builtin.debug:
+        msg: |
+          Cleanup directory for {{ disk.name }}:
+            Result: {{ 'removed' if cleanup_rmdir.changed | default(false) else 'skipped or failed' }}
+            {% if cleanup_rmdir.msg is defined %}Message: {{ cleanup_rmdir.msg }}{% endif %}
+      when: cleanup_rmdir is defined
+
+    - name: Report disk configuration failure - {{ disk.name }}
+      ansible.builtin.fail:
+        msg: |
+          Failed to configure disk {{ disk.device }} ({{ disk.name }}).
+          The disk may be in a partially configured state.
+          Manual intervention may be required:
+            - Check if disk is mounted: findmnt {{ disk.partition }}
+            - Check disk state: blkid {{ disk.device }}
+            - To retry from scratch: wipefs -a {{ disk.device }}
+
+- name: Log skipped disk configuration - {{ disk.name }}
+  ansible.builtin.debug:
+    msg: "Disk {{ disk.device }} already configured with label 'longhorn-{{ disk.name }}', skipping partitioning"
+  when: disk_already_configured

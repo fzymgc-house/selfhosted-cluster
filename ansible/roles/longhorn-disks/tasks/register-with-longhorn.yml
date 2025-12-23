@@ -1,0 +1,194 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# Register additional disks with Longhorn
+# This task runs delegated to localhost with kubectl access
+
+- name: Build Longhorn disk configuration
+  when: longhorn_additional_disks is defined and longhorn_additional_disks | length > 0
+  tags:
+    - longhorn-disks
+    - longhorn-register
+  block:
+    - name: Build disk config for Longhorn
+      ansible.builtin.set_fact:
+        longhorn_disk_config_list: |
+          {% set disks = [{"path": longhorn_default_disk_path, "allowScheduling": true}] %}
+          {% for disk in longhorn_additional_disks %}
+          {% set disk_entry = {"path": longhorn_disk_mount_base + "/longhorn-" + disk.name, "allowScheduling": true} %}
+          {% if disk.tags is defined %}
+          {% set disk_entry = disk_entry | combine({"tags": disk.tags}) %}
+          {% endif %}
+          {% set _ = disks.append(disk_entry) %}
+          {% endfor %}
+          {{ disks | to_json }}
+
+    - name: Check if Longhorn is installed
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ longhorn_kubeconfig }}"
+        kind: Deployment
+        name: longhorn-driver-deployer
+        namespace: "{{ longhorn_namespace }}"
+      register: longhorn_deployment_check
+      delegate_to: localhost
+      become: false
+      retries: 3
+      delay: 5
+      until: longhorn_deployment_check is not failed
+      ignore_errors: true
+
+    - name: Fail with actionable message if Kubernetes unreachable
+      ansible.builtin.fail:
+        msg: |
+          Failed to connect to Kubernetes cluster after 3 retries.
+
+          Please check:
+            - Kubeconfig exists: {{ longhorn_kubeconfig }}
+            - Cluster is reachable: kubectl --kubeconfig {{ longhorn_kubeconfig }} get nodes
+            - Namespace exists: kubectl --kubeconfig {{ longhorn_kubeconfig }} get ns {{ longhorn_namespace }}
+
+          Error: {{ longhorn_deployment_check.msg | default('Unknown error') }}
+      when: longhorn_deployment_check is failed
+
+    - name: Set Longhorn installed fact
+      ansible.builtin.set_fact:
+        longhorn_is_installed: "{{ longhorn_deployment_check.resources | length > 0 }}"
+
+    # For fresh clusters - set annotation before Longhorn is installed
+    - name: Set node annotation for Longhorn disk discovery
+      kubernetes.core.k8s:
+        kubeconfig: "{{ longhorn_kubeconfig }}"
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Node
+          metadata:
+            name: "{{ inventory_hostname }}"
+            annotations:
+              node.longhorn.io/default-disks-config: "{{ longhorn_disk_config_list | trim }}"
+      delegate_to: localhost
+      become: false
+      when: not longhorn_is_installed
+
+    # For existing clusters - fetch current config and merge with new disks
+    - name: Get existing Longhorn Node configuration
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ longhorn_kubeconfig }}"
+        api_version: longhorn.io/v1beta2
+        kind: Node
+        name: "{{ inventory_hostname }}"
+        namespace: "{{ longhorn_namespace }}"
+      register: longhorn_node_info
+      delegate_to: localhost
+      become: false
+      when: longhorn_is_installed
+      retries: 3
+      delay: 5
+      until: longhorn_node_info is not failed
+
+    - name: Extract existing disk configuration
+      ansible.builtin.set_fact:
+        longhorn_existing_disks: "{{ longhorn_node_info.resources[0].spec.disks | default({}) }}"
+      when: longhorn_is_installed and longhorn_node_info.resources | length > 0
+
+    - name: Set empty existing disks if node not found
+      ansible.builtin.set_fact:
+        longhorn_existing_disks: {}
+      when: longhorn_is_installed and (longhorn_node_info.resources | length == 0)
+
+    # Detect orphaned disks (in Longhorn but not in config)
+    # These are disks that were previously configured but have been removed from host_vars
+    - name: Detect orphaned disks in Longhorn
+      ansible.builtin.set_fact:
+        longhorn_orphaned_disks: |
+          {% set configured_names = longhorn_additional_disks | map(attribute='name') | list %}
+          {% set orphaned = [] %}
+          {% for disk_name, disk_spec in longhorn_existing_disks.items() %}
+          {% if disk_name != 'default' and disk_name not in configured_names %}
+          {% set _ = orphaned.append({'name': disk_name, 'path': disk_spec.path | default('unknown')}) %}
+          {% endif %}
+          {% endfor %}
+          {{ orphaned }}
+      when: longhorn_is_installed and longhorn_existing_disks | length > 0
+
+    # Check if orphaned disks are still mounted (more actionable warning)
+    - name: Check if orphaned disk paths are still mounted
+      ansible.builtin.command:
+        cmd: findmnt -n {{ item.path }}
+      loop: "{{ longhorn_orphaned_disks }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: orphaned_disk_mounts
+      # findmnt returns: 0=found, 1=not found, other=error
+      failed_when: orphaned_disk_mounts.rc not in [0, 1]
+      changed_when: false
+      when:
+        - longhorn_is_installed
+        - longhorn_orphaned_disks is defined
+        - longhorn_orphaned_disks | length > 0
+
+    # Fail loudly about orphaned disks - they indicate configuration drift
+    # Use ignore_errors with longhorn_allow_orphaned_disks to suppress if needed
+    - name: Fail if orphaned disks detected in Longhorn
+      ansible.builtin.fail:
+        msg: |
+          ORPHANED DISKS DETECTED - Manual cleanup required!
+
+          Found {{ longhorn_orphaned_disks | length }} disk(s) in Longhorn that are not in host_vars config:
+          {% for result in orphaned_disk_mounts.results %}
+            - {{ result.item.name }} ({{ result.item.path }}) {% if result.rc == 0 %}[STILL MOUNTED]{% else %}[not mounted]{% endif %}
+          {% endfor %}
+
+          Disks marked [STILL MOUNTED] need immediate attention.
+          To remove them safely, follow the disk removal procedure in defaults/main.yml.
+
+          To suppress this error (not recommended), set: longhorn_allow_orphaned_disks: true
+      when:
+        - longhorn_is_installed
+        - longhorn_orphaned_disks is defined
+        - longhorn_orphaned_disks | length > 0
+        - orphaned_disk_mounts is defined
+        - not (longhorn_allow_orphaned_disks | default(false))
+
+    # Build the final disk spec by merging existing disks with new disk configs
+    # Existing disk settings (storageReserved, etc.) are preserved; only path and tags update
+    # NOTE: Uses Jinja2 dict mutation pattern (result.update()) which works in Ansible 2.9+/Jinja2 2.10+
+    # This pattern mutates the dict in-place; if behavior changes in future versions, refactor to loop
+    - name: Build merged disk configuration
+      ansible.builtin.set_fact:
+        longhorn_merged_disks: |
+          {% set result = longhorn_existing_disks | default({}) | dict2items | items2dict %}
+          {% for disk in longhorn_additional_disks %}
+          {% set disk_path = longhorn_disk_mount_base ~ '/longhorn-' ~ disk.name %}
+          {% set base_spec = {'path': disk_path, 'allowScheduling': true, 'evictionRequested': false, 'storageReserved': 0} %}
+          {% if disk.tags is defined %}{% set base_spec = base_spec | combine({'tags': disk.tags}) %}{% endif %}
+          {% if disk.name in result %}
+          {% set updates = {'path': disk_path} %}
+          {% if disk.tags is defined %}{% set updates = updates | combine({'tags': disk.tags}) %}{% endif %}
+          {% set _ = result.update({disk.name: result[disk.name] | combine(updates)}) %}
+          {% else %}
+          {% set _ = result.update({disk.name: base_spec}) %}
+          {% endif %}
+          {% endfor %}
+          {{ result }}
+      when: longhorn_is_installed
+
+    # Patch Longhorn Node CRD with merged disk configuration
+    - name: Patch Longhorn Node with additional disks
+      kubernetes.core.k8s:
+        kubeconfig: "{{ longhorn_kubeconfig }}"
+        state: patched
+        kind: Node
+        api_version: longhorn.io/v1beta2
+        name: "{{ inventory_hostname }}"
+        namespace: "{{ longhorn_namespace }}"
+        definition:
+          spec:
+            disks: "{{ longhorn_merged_disks | trim }}"
+      delegate_to: localhost
+      become: false
+      when: longhorn_is_installed
+      register: longhorn_patch_result
+      retries: 3
+      delay: 5
+      until: longhorn_patch_result is not failed

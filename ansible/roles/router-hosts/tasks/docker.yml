@@ -1,5 +1,31 @@
 # SPDX-License-Identifier: MIT-0
 # code: language=ansible
 ---
-# Docker deployment for router-hosts role
-# TODO: Implement in Task 8
+# Deploy router-hosts Docker Compose service
+
+- name: Pull Vault Agent image
+  ansible.builtin.command:
+    cmd: docker pull {{ router_hosts_vault_image }}
+  register: router_hosts_vault_pull
+  changed_when: "'Pull complete' in router_hosts_vault_pull.stdout or 'Downloaded newer' in router_hosts_vault_pull.stdout"
+  tags:
+    - router-hosts
+    - router-hosts-docker
+
+- name: Pull router-hosts image
+  ansible.builtin.command:
+    cmd: docker pull {{ router_hosts_image }}:{{ router_hosts_version }}
+  register: router_hosts_pull
+  changed_when: "'Pull complete' in router_hosts_pull.stdout or 'Downloaded newer' in router_hosts_pull.stdout"
+  tags:
+    - router-hosts
+    - router-hosts-docker
+
+- name: Start Docker Compose service
+  ansible.builtin.systemd:
+    name: docker-compose@router-hosts
+    state: started
+    enabled: true
+  tags:
+    - router-hosts
+    - router-hosts-docker

@@ -176,3 +176,32 @@ When adding a new technology, populate these fields:
 | Version upgraded | Update Tech References version |
 | Operations docs changed | Update relevant Operations Guide page |
 | New design document created | Add entry to Design Plans database |
+
+### Notion Page IDs
+
+| Page/Database | ID |
+|---------------|-----|
+| Home Lab (root) | `17027a0a-d688-8053-b8cb-f2584d07c33c` |
+| Services Catalog | `50a1adf14f1d4d3fbd78ccc2ca36facc` |
+| Tech References | `f7548c57375542b395694ae433ff07a4` |
+| Quick Reference | `2d327a0ad688818b9d89c9e00a08bbad` |
+| Operations Guide | `2d327a0ad688818a9fb7f14fea22e3d9` |
+
+### Editing Notion Pages (Critical)
+
+**MUST** follow these rules when editing Notion pages via MCP:
+
+1. **NEVER use `replace_content`** on pages with children - it orphans/trashes all child pages and databases
+2. **ALWAYS use `replace_content_range`** for targeted updates to preserve parent-child relationships
+3. **Use `insert_content_after`** when adding new content without modifying existing content
+
+**Notion-flavored Markdown syntax:**
+- Inline page links: `<mention-page url="https://www.notion.so/PAGE_ID">Title</mention-page>`
+- Inline database links: `<mention-database url="https://www.notion.so/DB_ID">Title</mention-database>`
+- Child page blocks (MOVES the page): `<page url="...">Title</page>`
+- Child database blocks (MOVES the database): `<database url="...">Title</database>`
+
+**Verification after edits:**
+- Fetch the page to confirm `<ancestor-path>` shows correct parent
+- Check that child pages/databases still appear at bottom of content
+- Verify mentions resolve (not showing "In Trash")

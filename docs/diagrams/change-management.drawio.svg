@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1100" height="700" viewBox="-0.5 -0.5 1100 700" style="background-color: white;">
+  <defs/>
+  <!-- Change Management: Three Paths from Git to Cluster -->
+
+  <!-- Title -->
+  <text x="550" y="30" text-anchor="middle" font-family="Helvetica" font-size="20" font-weight="bold" fill="#333">Change Management</text>
+  <text x="550" y="50" text-anchor="middle" font-family="Helvetica" font-size="12" fill="#666">How changes flow from Git to the cluster</text>
+
+  <!-- GitHub Repository Box -->
+  <rect x="150" y="70" width="800" height="80" fill="#F5F5F5" stroke="#424242" stroke-width="2" rx="10"/>
+  <text x="550" y="95" text-anchor="middle" font-family="Helvetica" font-size="16" font-weight="bold" fill="#212121">GitHub Repository</text>
+
+  <!-- Directory boxes inside GitHub -->
+  <rect x="190" y="110" width="160" height="30" fill="#E3F2FD" stroke="#1976D2" stroke-width="1.5" rx="5"/>
+  <text x="270" y="130" text-anchor="middle" font-family="Helvetica" font-size="12" fill="#1976D2">ansible/</text>
+
+  <rect x="470" y="110" width="160" height="30" fill="#F3E5F5" stroke="#7B1FA2" stroke-width="1.5" rx="5"/>
+  <text x="550" y="130" text-anchor="middle" font-family="Helvetica" font-size="12" fill="#7B1FA2">tf/</text>
+
+  <rect x="750" y="110" width="160" height="30" fill="#E8F5E9" stroke="#388E3C" stroke-width="1.5" rx="5"/>
+  <text x="830" y="130" text-anchor="middle" font-family="Helvetica" font-size="12" fill="#388E3C">argocd/</text>
+
+  <!-- Vertical connectors from directories -->
+  <path d="M 270 140 L 270 180" stroke="#1976D2" stroke-width="2"/>
+  <polygon points="270,180 265,170 275,170" fill="#1976D2"/>
+
+  <path d="M 550 140 L 550 180" stroke="#7B1FA2" stroke-width="2"/>
+  <polygon points="550,180 545,170 555,170" fill="#7B1FA2"/>
+
+  <path d="M 830 140 L 830 180" stroke="#388E3C" stroke-width="2"/>
+  <polygon points="830,180 825,170 835,170" fill="#388E3C"/>
+
+  <!-- Lane 1: Ansible Path -->
+  <rect x="170" y="190" width="200" height="400" fill="#E3F2FD" stroke="#1976D2" stroke-width="2" rx="10"/>
+  <rect x="170" y="190" width="200" height="40" fill="#1976D2" rx="10"/>
+  <rect x="170" y="220" width="200" height="10" fill="#1976D2"/>
+  <text x="270" y="215" text-anchor="middle" font-family="Helvetica" font-size="14" font-weight="bold" fill="white">ANSIBLE</text>
+  <text x="270" y="250" text-anchor="middle" font-family="Helvetica" font-size="11" fill="#1976D2">Manual / Rare</text>
+
+  <rect x="195" y="275" width="150" height="35" fill="#BBDEFB" stroke="#1565C0" stroke-width="1.5" rx="5"/>
+  <text x="270" y="297" text-anchor="middle" font-family="Helvetica" font-size="11" fill="#0D47A1">PR Merged</text>
+
+  <path d="M 270 310 L 270 330" stroke="#1976D2" stroke-width="2"/>
+  <polygon points="270,330 265,322 275,322" fill="#1976D2"/>
+
+  <rect x="195" y="335" width="150" height="35" fill="#BBDEFB" stroke="#1565C0" stroke-width="1.5" rx="5"/>
+  <text x="270" y="357" text-anchor="middle" font-family="Helvetica" font-size="11" fill="#0D47A1">Manual Trigger</text>
+
+  <path d="M 270 370 L 270 390" stroke="#1976D2" stroke-width="2"/>
+  <polygon points="270,390 265,382 275,382" fill="#1976D2"/>
+
+  <rect x="195" y="395" width="150" height="35" fill="#BBDEFB" stroke="#1565C0" stroke-width="1.5" rx="5"/>
+  <text x="270" y="417" text-anchor="middle" font-family="Helvetica" font-size="11" fill="#0D47A1">Run Playbook</text>
+
+  <path d="M 270 430 L 270 450" stroke="#1976D2" stroke-width="2"/>
+  <polygon points="270,450 265,442 275,442" fill="#1976D2"/>
+
+  <rect x="195" y="455" width="150" height="35" fill="#BBDEFB" stroke="#1565C0" stroke-width="1.5" rx="5"/>
+  <text x="270" y="477" text-anchor="middle" font-family="Helvetica" font-size="11" fill="#0D47A1">Verify Nodes</text>
+
+  <path d="M 270 490 L 270 510" stroke="#1976D2" stroke-width="2"/>
+  <polygon points="270,510 265,502 275,502" fill="#1976D2"/>
+
+  <rect x="195" y="515" width="150" height="40" fill="#64B5F6" stroke="#1565C0" stroke-width="2" rx="8"/>
+  <text x="270" y="540" text-anchor="middle" font-family="Helvetica" font-size="12" font-weight="bold" fill="#0D47A1">✅ Complete</text>
+
+  <!-- Lane 2: Terraform Path -->
+  <rect x="450" y="190" width="200" height="400" fill="#F3E5F5" stroke="#7B1FA2" stroke-width="2" rx="10"/>
+  <rect x="450" y="190" width="200" height="40" fill="#7B1FA2" rx="10"/>
+  <rect x="450" y="220" width="200" height="10" fill="#7B1FA2"/>
+  <text x="550" y="215" text-anchor="middle" font-family="Helvetica" font-size="14" font-weight="bold" fill="white">TERRAFORM</text>
+  <text x="550" y="250" text-anchor="middle" font-family="Helvetica" font-size="11" fill="#7B1FA2">Windmill Automated</text>
+
+  <rect x="475" y="275" width="150" height="35" fill="#E1BEE7" stroke="#6A1B9A" stroke-width="1.5" rx="5"/>
+  <text x="550" y="297" text-anchor="middle" font-family="Helvetica" font-size="11" fill="#4A148C">PR Merged</text>
+
+  <path d="M 550 310 L 550 330" stroke="#7B1FA2" stroke-width="2"/>
+  <polygon points="550,330 545,322 555,322" fill="#7B1FA2"/>
+
+  <rect x="475" y="335" width="150" height="35" fill="#E1BEE7" stroke="#6A1B9A" stroke-width="1.5" rx="5"/>
+  <text x="550" y="357" text-anchor="middle" font-family="Helvetica" font-size="11" fill="#4A148C">GitHub Webhook</text>
+
+  <path d="M 550 370 L 550 390" stroke="#7B1FA2" stroke-width="2"/>
+  <polygon points="550,390 545,382 555,382" fill="#7B1FA2"/>
+
+  <rect x="475" y="395" width="150" height="35" fill="#CE93D8" stroke="#6A1B9A" stroke-width="2" rx="5"/>
+  <text x="550" y="417" text-anchor="middle" font-family="Helvetica" font-size="11" font-weight="bold" fill="#4A148C">Windmill Flow</text>
+
+  <path d="M 550 430 L 550 450" stroke="#7B1FA2" stroke-width="2"/>
+  <polygon points="550,450 545,442 555,442" fill="#7B1FA2"/>
+
+  <rect x="475" y="455" width="150" height="35" fill="#FFB74D" stroke="#E65100" stroke-width="2" rx="5"/>
+  <text x="550" y="477" text-anchor="middle" font-family="Helvetica" font-size="11" font-weight="bold" fill="#E65100">Discord Approval</text>
+
+  <path d="M 550 490 L 550 510" stroke="#7B1FA2" stroke-width="2"/>
+  <polygon points="550,510 545,502 555,502" fill="#7B1FA2"/>
+
+  <rect x="475" y="515" width="150" height="40" fill="#BA68C8" stroke="#6A1B9A" stroke-width="2" rx="8"/>
+  <text x="550" y="540" text-anchor="middle" font-family="Helvetica" font-size="12" font-weight="bold" fill="#4A148C">✅ Complete</text>
+
+  <!-- Detail link arrow -->
+  <text x="550" y="575" text-anchor="middle" font-family="Helvetica" font-size="10" fill="#7B1FA2" font-style="italic">See: windmill-terraform-flow.drawio.svg</text>
+
+  <!-- Lane 3: ArgoCD Path -->
+  <rect x="730" y="190" width="200" height="400" fill="#E8F5E9" stroke="#388E3C" stroke-width="2" rx="10"/>
+  <rect x="730" y="190" width="200" height="40" fill="#388E3C" rx="10"/>
+  <rect x="730" y="220" width="200" height="10" fill="#388E3C"/>
+  <text x="830" y="215" text-anchor="middle" font-family="Helvetica" font-size="14" font-weight="bold" fill="white">ARGOCD</text>
+  <text x="830" y="250" text-anchor="middle" font-family="Helvetica" font-size="11" fill="#388E3C">Auto-sync</text>
+
+  <rect x="755" y="275" width="150" height="35" fill="#C8E6C9" stroke="#2E7D32" stroke-width="1.5" rx="5"/>
+  <text x="830" y="297" text-anchor="middle" font-family="Helvetica" font-size="11" fill="#1B5E20">PR Merged</text>
+
+  <path d="M 830 310 L 830 330" stroke="#388E3C" stroke-width="2"/>
+  <polygon points="830,330 825,322 835,322" fill="#388E3C"/>
+
+  <rect x="755" y="335" width="150" height="35" fill="#C8E6C9" stroke="#2E7D32" stroke-width="1.5" rx="5"/>
+  <text x="830" y="357" text-anchor="middle" font-family="Helvetica" font-size="11" fill="#1B5E20">ArgoCD Detects</text>
+
+  <path d="M 830 370 L 830 390" stroke="#388E3C" stroke-width="2"/>
+  <polygon points="830,390 825,382 835,382" fill="#388E3C"/>
+
+  <rect x="755" y="395" width="150" height="35" fill="#C8E6C9" stroke="#2E7D32" stroke-width="1.5" rx="5"/>
+  <text x="830" y="417" text-anchor="middle" font-family="Helvetica" font-size="11" fill="#1B5E20">Auto-sync</text>
+
+  <path d="M 830 430 L 830 450" stroke="#388E3C" stroke-width="2"/>
+  <polygon points="830,450 825,442 835,442" fill="#388E3C"/>
+
+  <rect x="755" y="455" width="150" height="35" fill="#C8E6C9" stroke="#2E7D32" stroke-width="1.5" rx="5"/>
+  <text x="830" y="477" text-anchor="middle" font-family="Helvetica" font-size="11" fill="#1B5E20">Resources Applied</text>
+
+  <path d="M 830 490 L 830 510" stroke="#388E3C" stroke-width="2"/>
+  <polygon points="830,510 825,502 835,502" fill="#388E3C"/>
+
+  <rect x="755" y="515" width="150" height="40" fill="#81C784" stroke="#2E7D32" stroke-width="2" rx="8"/>
+  <text x="830" y="540" text-anchor="middle" font-family="Helvetica" font-size="12" font-weight="bold" fill="#1B5E20">✅ Complete</text>
+
+  <!-- Legend -->
+  <rect x="170" y="610" width="320" height="70" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="1" rx="5"/>
+  <text x="185" y="630" font-family="Helvetica" font-size="11" font-weight="bold" fill="#333">Path Characteristics</text>
+  <rect x="185" y="642" width="12" height="12" fill="#1976D2"/>
+  <text x="205" y="652" font-family="Helvetica" font-size="10" fill="#333">Ansible: Manual, rare (cluster changes)</text>
+  <rect x="185" y="658" width="12" height="12" fill="#7B1FA2"/>
+  <text x="205" y="668" font-family="Helvetica" font-size="10" fill="#333">Terraform: Automated with human approval</text>
+
+  <rect x="520" y="610" width="410" height="70" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="1" rx="5"/>
+  <rect x="535" y="642" width="12" height="12" fill="#388E3C"/>
+  <text x="555" y="652" font-family="Helvetica" font-size="10" fill="#333">ArgoCD: Fully automated GitOps</text>
+  <rect x="535" y="658" width="12" height="12" fill="#FFB74D" stroke="#E65100"/>
+  <text x="555" y="668" font-family="Helvetica" font-size="10" fill="#333">Orange = Requires human action</text>
+</svg>

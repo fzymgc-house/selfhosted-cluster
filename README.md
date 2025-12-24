@@ -17,6 +17,20 @@ A production-ready Kubernetes cluster for home infrastructure using k3s on Turin
 | Monitoring | VictoriaMetrics + Grafana stack |
 | GitOps | ArgoCD for application deployment |
 
+### Bootstrap Sequence
+
+How the cluster is built from prepared nodes to operational state:
+
+![Bootstrap Sequence](docs/diagrams/bootstrap-sequence.drawio.svg)
+
+### Change Management
+
+How changes flow from Git to the cluster:
+
+![Change Management](docs/diagrams/change-management.drawio.svg)
+
+For detailed Terraform approval workflow, see [Windmill Terraform Flow](docs/diagrams/windmill-terraform-flow.drawio.svg).
+
 ## Repository Structure
 
 ```

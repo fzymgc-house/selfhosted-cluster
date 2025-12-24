@@ -1,6 +1,10 @@
 # CLAUDE.md - Ansible Directory
 
-This file provides guidance to Claude Code when working with Ansible code in this directory.
+Guidance for Claude Code when working with Ansible code in this directory.
+
+**See also:**
+- `../CLAUDE.md` - Repository overview, workflow, MCP/skill guidance
+- `../tf/CLAUDE.md` - Vault policies when adding new secret paths
 
 ## Roles Inventory
 

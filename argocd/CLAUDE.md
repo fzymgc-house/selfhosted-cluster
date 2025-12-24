@@ -2,6 +2,10 @@
 
 Guidance for Claude Code when working with ArgoCD application configurations.
 
+**See also:**
+- `../CLAUDE.md` - Repository overview, workflow, MCP/skill guidance
+- `../tf/CLAUDE.md` - Vault policies and Kubernetes auth roles for ExternalSecrets
+
 ## Directory Structure
 
 ```

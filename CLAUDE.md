@@ -88,13 +88,28 @@ terraform -chdir=tf/vault plan
 
 ## Context-Specific Instructions
 
-Subdirectory CLAUDE.md files provide detailed guidance:
+**MUST** read the relevant subdirectory CLAUDE.md before working in that directory:
 
-| File | Coverage |
-|------|----------|
-| `ansible/CLAUDE.md` | Roles inventory, k3s playbook phases, FQCN requirements, node groups |
-| `tf/CLAUDE.md` | Module structure, Vault policy patterns, provider conventions |
-| `argocd/CLAUDE.md` | ExternalSecrets patterns, Kustomization structure, RBAC |
+### `ansible/CLAUDE.md`
+**Read when:** Modifying playbooks, roles, or inventory files
+- Roles inventory (k3s-server, k3s-agent, kube-vip, calico, longhorn-disks, etc.)
+- k3s-playbook.yml 8-phase execution order with tags
+- Hardware node groups (tp_cluster_controlplane, tp_cluster_workers, etc.)
+- FQCN requirements, variable naming, security patterns
+
+### `tf/CLAUDE.md`
+**Read when:** Modifying Terraform modules or Vault policies
+- Module structure (versions.tf, terraform.tf, variables.tf, etc.)
+- All modules: cluster-bootstrap, vault, authentik, grafana, cloudflare, teleport, core-services
+- Resource naming (underscore_separated), Vault policy patterns
+- Provider versions (vault 5.6.0, kubernetes 2.38.0)
+
+### `argocd/CLAUDE.md`
+**Read when:** Modifying Kubernetes manifests or application configs
+- Application directory structure and kustomization patterns
+- ExternalSecret integration with Vault ClusterSecretStore
+- Naming conventions (kebab-case), RBAC scoping
+- GitOps workflow (changes sync via ArgoCD after merge)
 
 ## Security
 

@@ -2,6 +2,10 @@
 
 Guidance for Claude Code when working with Terraform code in this directory.
 
+**See also:**
+- `../CLAUDE.md` - Repository overview, workflow, MCP/skill guidance
+- `../argocd/CLAUDE.md` - ExternalSecrets that consume Vault policies defined here
+
 ## Module Structure
 
 Each Terraform module **MUST** include these files:

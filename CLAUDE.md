@@ -125,8 +125,8 @@ terraform -chdir=tf/vault plan
 ## Hardware
 
 Two TuringPi 2 boards (alpha/beta), 8 compute nodes total:
-- **Control plane**: `tpi-alpha-[1:3]` (RK1, 32GB)
-- **Workers**: `tpi-alpha-4`, `tpi-beta-[1:4]` (RK1, 32GB)
+- **Control plane**: `tpi-alpha-[1:3]` (RK1)
+- **Workers**: `tpi-alpha-4`, `tpi-beta-[1:4]` (RK1)
 - **OS**: Armbian 25.08, systemd-networkd
 - **Interface**: `end0` (Armbian naming)
 

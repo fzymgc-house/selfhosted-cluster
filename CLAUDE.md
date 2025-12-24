@@ -26,6 +26,7 @@ Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1 compute modules). Thr
 | Firecrawl | Web scraping and search (fastest, most reliable) |
 | Exa | Deep research, company research, code context |
 | Notion | Workspace documentation (Services Catalog, Tech References, Operations Guide) |
+| Kubernetes | Cluster investigation (pods, logs, events, resources) - **readonly mode** |
 
 ### Skills (Check Before Every Task)
 
@@ -43,6 +44,7 @@ Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1 compute modules). Thr
 - **MUST** use feature branches; **MUST NOT** commit directly to `main`
 - **MUST** check for applicable skills before responding (even 1% chance → invoke skill)
 - **SHOULD** use Filesystem MCP for file operations
+- **SHOULD** use Kubernetes MCP for cluster investigation (pods, logs, events, node stats) instead of raw kubectl
 - **MUST NOT** apply kubectl changes directly (ArgoCD manages deployments)
 - **MUST NOT** delete the `windmill-staging` branch
 - **MUST** update Notion documentation when changes affect services, technologies, or operations (see below)

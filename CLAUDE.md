@@ -4,7 +4,7 @@ Guidance for Claude Code when working with this repository.
 
 ## Repository Overview
 
-Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1/Jetson Orin NX). Three-layer architecture:
+Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1 compute modules). Three-layer architecture:
 
 | Layer | Location | Purpose |
 |-------|----------|---------|
@@ -126,7 +126,7 @@ terraform -chdir=tf/vault plan
 
 Two TuringPi 2 boards (alpha/beta), 8 compute nodes total:
 - **Control plane**: `tpi-alpha-[1:3]` (RK1, 32GB)
-- **Workers**: `tpi-alpha-4`, `tpi-beta-[1:4]` (RK1/Jetson mix)
+- **Workers**: `tpi-alpha-4`, `tpi-beta-[1:4]` (RK1, 32GB)
 - **OS**: Armbian 25.08, systemd-networkd
 - **Interface**: `end0` (Armbian naming)
 
@@ -153,7 +153,7 @@ When adding a new service, populate these fields:
 - **Alt Hostnames**: Alternative DNS entries (if applicable)
 - **Ingress Type**: Traefik IngressRoute, TCP Passthrough, Helm Managed, kube-vip VIP, Cloudflare Tunnel, or External
 - **Auth Method**: OIDC, Forward-Auth, Certificate, LDAP, or None
-- **Vault Path**: Secret location (e.g., `secret/fzymgc-house/cluster/app`)
+- **Vault Path**: Secret location (e.g., `secret/fzymgc-house/cluster/authentik`)
 - **Namespace**: Kubernetes namespace
 - **Status**: Operational, Degraded, or Maintenance
 

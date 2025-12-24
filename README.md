@@ -21,15 +21,108 @@ A production-ready Kubernetes cluster for home infrastructure using k3s on Turin
 
 How the cluster is built from prepared nodes to operational state:
 
-![Bootstrap Sequence](docs/diagrams/bootstrap-sequence.drawio.svg)
+```mermaid
+flowchart LR
+    subgraph Nodes["Prepared Nodes"]
+        N[tpi-alpha/beta<br/>Armbian ready]
+    end
+
+    subgraph Ansible["Ansible: k3s-playbook.yml"]
+        A1[k3s-storage] --> A2[k3s-server<br/>first CP]
+        A2 --> A3[kube-vip<br/>API HA]
+        A3 --> A4[k3s-server<br/>join CP]
+        A4 --> A5[k3s-agent<br/>workers]
+        A5 --> A6[calico<br/>CNI]
+        A6 --> A7[longhorn-disks]
+    end
+
+    subgraph Terraform["Terraform: cluster-bootstrap"]
+        T1[cert-manager] --> T2[External Secrets]
+        T2 --> T3[Longhorn]
+        T3 --> T4[MetalLB]
+        T4 --> T5[ArgoCD]
+    end
+
+    subgraph GitOps["Handoff"]
+        G1[ArgoCD syncs<br/>app-configs]
+        G2[✅ Operational]
+    end
+
+    N --> A1
+    A7 -.-> T1
+    T5 -.-> G1 --> G2
+
+    style Ansible fill:#e3f2fd,stroke:#1976d2
+    style Terraform fill:#f3e5f5,stroke:#7b1fa2
+    style GitOps fill:#e8f5e9,stroke:#388e3c
+```
 
 ### Change Management
 
 How changes flow from Git to the cluster:
 
-![Change Management](docs/diagrams/change-management.drawio.svg)
+```mermaid
+flowchart TD
+    subgraph GitHub["GitHub Repository"]
+        direction LR
+        GH1[ansible/]
+        GH2[tf/]
+        GH3[argocd/]
+    end
 
-For detailed Terraform approval workflow, see [Windmill Terraform Flow](docs/diagrams/windmill-terraform-flow.drawio.svg).
+    subgraph Ansible["Ansible Path"]
+        A1[PR Merged] --> A2[Manual Run]
+        A2 --> A3[Playbook]
+        A3 --> A4[✅ Complete]
+    end
+
+    subgraph Terraform["Terraform Path"]
+        T1[PR Merged] --> T2[Webhook]
+        T2 --> T3[Windmill Plan]
+        T3 --> T4[Discord Approval]
+        T4 --> T5[Apply]
+        T5 --> T6[✅ Complete]
+    end
+
+    subgraph ArgoCD["ArgoCD Path"]
+        C1[PR Merged] --> C2[Auto-detect]
+        C2 --> C3[Sync]
+        C3 --> C4[✅ Complete]
+    end
+
+    GH1 --> A1
+    GH2 --> T1
+    GH3 --> C1
+
+    style Ansible fill:#e3f2fd,stroke:#1976d2
+    style Terraform fill:#f3e5f5,stroke:#7b1fa2
+    style ArgoCD fill:#e8f5e9,stroke:#388e3c
+    style T4 fill:#fff3e0,stroke:#ff6f00
+```
+
+<details>
+<summary>Windmill Terraform Flow (detailed)</summary>
+
+```mermaid
+sequenceDiagram
+    participant GH as GitHub
+    participant WM as Windmill
+    participant DC as Discord
+    participant OP as Operator
+    participant K8s as Cluster
+
+    GH->>WM: PR merged (webhook)
+    WM->>WM: terraform plan
+    WM->>DC: Send notification + buttons
+    Note over DC: 🔍 Review & Approve<br/>⏩ Quick Approve<br/>❌ Reject<br/>📋 Run Details
+    DC->>OP: Sees notification
+    OP->>DC: Clicks Approve
+    DC->>WM: Resume URL
+    WM->>K8s: terraform apply
+    WM->>DC: Status update ✅
+```
+
+</details>
 
 ## Repository Structure
 

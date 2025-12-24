@@ -1,37 +1,97 @@
 # CLAUDE.md - Ansible Directory
 
-This file provides guidance to Claude Code when working with Ansible code in this directory.
+Guidance for Claude Code when working with Ansible code in this directory.
 
-## File Headers
+**See also:**
+- `../CLAUDE.md` - Repository overview, workflow, MCP/skill guidance
+- `../tf/CLAUDE.md` - Vault policies when adding new secret paths
 
-Always include these headers in playbooks and role files:
+## Roles Inventory
+
+| Role | Purpose | Target Hosts |
+|------|---------|--------------|
+| `k3s-server` | Control plane node installation | `tp_cluster_controlplane` |
+| `k3s-agent` | Worker node installation | `tp_cluster_workers` |
+| `k3s-common` | Shared k3s configuration | All k3s nodes |
+| `k3s-storage` | Storage preparation (partitioning, formatting) | All cluster nodes |
+| `kube-vip` | VIP for API endpoint HA (ARP mode, static pod) | `tp_cluster_controlplane` |
+| `calico` | Calico CNI installation | First control plane node |
+| `longhorn-disks` | Additional storage disk configuration | Nodes with `longhorn_additional_disks` defined |
+| `teleport-agent` | Teleport agent installation | All nodes |
+| `tp2-bootstrap-node` | OS configuration, networking, security | All TuringPi 2 nodes |
+
+## k3s-playbook.yml Execution Phases
+
+The k3s deployment follows a strict phase order:
+
+| Phase | Description | Tags |
+|-------|-------------|------|
+| 1 | First control plane node initializes cluster, fetches join token | `k3s-server`, `k3s-install`, `k3s-token`, `k3s-kubeconfig` |
+| 2 | Additional control plane nodes join (serial: 1) | `k3s-server`, `k3s-install` |
+| 3 | kube-vip deployed for API endpoint HA | `kube-vip` |
+| 4 | Worker nodes join cluster | `k3s-agent`, `k3s-install` |
+| 5 | Calico CNI installed | `k3s-calico`, `calico` |
+| 6 | CSI snapshot controller installed | `k3s-csi-snapshot-controller` |
+| 7 | Additional Longhorn disks configured | `longhorn-disks` |
+| 8 | Longhorn disk configuration registered | `longhorn-disks`, `longhorn-register` |
+
+**Run specific phases:**
+```bash
+ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --tags kube-vip
+ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --tags longhorn-disks
+```
+
+## Hardware and Node Groups
+
+### TuringPi 2 Cluster
+
+Two TuringPi 2 boards (alpha/beta), each with 4 compute slots:
+
+| Group | Nodes | Hardware | Role |
+|-------|-------|----------|------|
+| `tp_cluster_controlplane` | `tpi-alpha-1`, `tpi-alpha-2`, `tpi-alpha-3` | RK1 (32GB) | Control plane |
+| `tp_cluster_workers` | `tpi-alpha-4`, `tpi-beta-[1:4]` | RK1/Jetson | Workers |
+| `tp_cluster_nodes` | All 8 nodes | Mixed | All cluster nodes |
+| `tpi_bmc_hosts` | `tpi-alpha-bmc`, `tpi-beta-bmc` | BMC | Board management |
+
+### Network Configuration
+
+- **Node subnet**: `192.168.20.0/24`
+- **Control plane IPs**: `192.168.20.141-143`
+- **Worker IPs**: `192.168.20.144`, `192.168.20.151-154`
+- **kube-vip VIP**: `192.168.20.140` (API endpoint)
+- **Primary interface**: `end0` (Armbian naming on RK1)
+
+## Code Standards
+
+### File Headers
+
+**MUST** include these headers in all playbooks and role files:
 ```yaml
 # SPDX-License-Identifier: MIT-0
 # code: language=ansible
 ```
 
-## Module Usage Standards
+### Fully Qualified Collection Names (FQCN)
 
-### Always Use Fully Qualified Collection Names (FQCN)
+**MUST** use FQCN for all modules:
 ```yaml
-# Good
+# Correct
 ansible.builtin.apt:
 ansible.builtin.file:
 ansible.builtin.template:
-ansible.builtin.systemd:
 
-# Bad
+# Wrong - MUST NOT use short names
 apt:
 file:
 template:
-systemd:
 ```
 
-## Variable Naming Conventions
+### Variable Naming
 
-- Use snake_case for all variables: `node_network_interface`
-- Prefix role variables with role name: `k3sup_version`, `k3sup_config_file`
-- Boolean variables should be questions: `enable_monitoring`, `use_external_database`
+- **MUST** use snake_case: `node_network_interface`
+- **SHOULD** prefix role variables with role name: `kube_vip_address`, `calico_version`
+- **SHOULD** name boolean variables as questions: `enable_monitoring`, `use_external_database`
 
 ## Common Task Patterns
 
@@ -84,19 +144,20 @@ ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --tags k8s-longhorn
 ansible-playbook -i inventory/hosts.yml playbook.yml --limit hostname
 ```
 
-## Security Best Practices
+## Security
 
-### Vault Usage
+### Sensitive Data
+
+- **MUST** use `no_log: true` for tasks handling passwords, tokens, or secrets
+- **MUST NOT** hardcode secrets in playbooks or variable files
+- **SHOULD** use HashiCorp Vault lookups for secrets (see `community.hashi_vault.vault_kv2_get`)
+
 ```yaml
-# Encrypt sensitive variables
-ansible-vault encrypt_string 'secret-value' --name 'variable_name'
-
-# Use no_log for sensitive tasks
 - name: Set password
   ansible.builtin.user:
     name: username
     password: "{{ vault_password }}"
-  no_log: true
+  no_log: true  # REQUIRED for sensitive data
 ```
 
 ## Error Handling
@@ -194,21 +255,21 @@ roles/role-name/
 
 ### Pre-Deployment Checklist
 
-Before running the k3s playbook on a production cluster:
+**MUST** complete before running k3s playbook on production:
 
-1. **Create a Velero backup**
+1. **MUST** create a Velero backup:
    ```bash
    velero backup create pre-deploy-$(date +%Y%m%d-%H%M%S) --wait
    ```
 
-2. **Syntax check**
+2. **MUST** syntax check:
    ```bash
    ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --syntax-check
    ```
 
-3. **Dry run on a single node**
+3. **SHOULD** dry run on a single node first:
    ```bash
-   ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --check --diff --limit alpha-1
+   ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --check --diff --limit tpi-alpha-1
    ```
 
 ### Testing Scenarios

@@ -1,5 +1,59 @@
 # SPDX-License-Identifier: MIT-0
 # code: language=ansible
 ---
-# Preflight checks for router-hosts role
-# TODO: Implement in Task 2
+# Preflight checks for router-hosts deployment
+
+- name: Verify Docker is available
+  ansible.builtin.command:
+    cmd: docker --version
+  register: router_hosts_docker_check
+  changed_when: false
+  failed_when: router_hosts_docker_check.rc != 0
+  tags:
+    - router-hosts
+    - router-hosts-preflight
+
+- name: Verify Docker daemon is running
+  ansible.builtin.command:
+    cmd: docker info
+  register: router_hosts_docker_info
+  changed_when: false
+  failed_when: router_hosts_docker_info.rc != 0
+  tags:
+    - router-hosts
+    - router-hosts-preflight
+
+- name: Verify Vault is reachable
+  ansible.builtin.uri:
+    url: "{{ router_hosts_vault_addr }}/v1/sys/health"
+    method: GET
+    validate_certs: true
+    status_code:
+      - 200
+      - 429  # Sealed but reachable
+      - 472  # Standby node
+      - 473  # Performance standby
+  register: router_hosts_vault_health
+  delegate_to: localhost
+  become: false
+  tags:
+    - router-hosts
+    - router-hosts-preflight
+
+- name: Verify external storage mount exists
+  ansible.builtin.stat:
+    path: /extdata
+  register: router_hosts_extdata_stat
+  tags:
+    - router-hosts
+    - router-hosts-preflight
+
+- name: Fail if external storage not mounted
+  ansible.builtin.fail:
+    msg: |
+      External storage /extdata not found.
+      Ensure the USB/SD storage is mounted on the Firewalla.
+  when: not router_hosts_extdata_stat.stat.exists
+  tags:
+    - router-hosts
+    - router-hosts-preflight

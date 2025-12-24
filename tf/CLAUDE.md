@@ -1,10 +1,10 @@
 # CLAUDE.md - Terraform Directory
 
-This file provides guidance to Claude Code when working with Terraform code in this directory.
+Guidance for Claude Code when working with Terraform code in this directory.
 
 ## Module Structure
 
-Each Terraform module MUST have these standard files:
+Each Terraform module **MUST** include these files:
 - `versions.tf` - Provider version constraints
 - `terraform.tf` - Provider configurations
 - `variables.tf` - Input variables
@@ -29,15 +29,15 @@ groups-and-roles.tf         # Group and role assignments
 
 ## Resource Naming
 
-### Use underscore_separated names
+**MUST** use underscore_separated names:
 ```hcl
-# Good
+# Correct
 resource "vault_policy" "cert_manager_issuer" { }
 resource "vault_kubernetes_auth_backend_role" "external_secrets_operator" { }
 
-# Bad
+# Wrong - MUST NOT use hyphens or abbreviations
 resource "vault_policy" "cert-manager-issuer" { }
-resource "vault_policy" "cm" { }  # Too abbreviated
+resource "vault_policy" "cm" { }
 ```
 
 ## Provider Configuration
@@ -199,19 +199,24 @@ resource "vault_generic_secret" "app_secrets" {
 }
 ```
 
-## Security Considerations
+## Security
 
 ### Sensitive Variables
+
+- **MUST** mark password/token variables with `sensitive = true`
+- **MUST NOT** expose secrets in outputs or logs
+- **SHOULD** use Vault data sources instead of variable inputs where possible
+
 ```hcl
 variable "database_password" {
   description = "Database password"
   type        = string
-  sensitive   = true  # Prevents exposure in logs
+  sensitive   = true  # REQUIRED - prevents log exposure
 }
 
 output "connection_string" {
   value     = "postgresql://user:${var.database_password}@host/db"
-  sensitive = true  # Prevents exposure in output
+  sensitive = true  # REQUIRED for secrets
 }
 ```
 

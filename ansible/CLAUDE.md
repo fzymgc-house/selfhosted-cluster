@@ -58,36 +58,36 @@ Two TuringPi 2 boards (alpha/beta), each with 4 compute slots:
 - **kube-vip VIP**: `192.168.20.140` (API endpoint)
 - **Primary interface**: `end0` (Armbian naming on RK1)
 
-## File Headers
+## Code Standards
 
-Always include these headers in playbooks and role files:
+### File Headers
+
+**MUST** include these headers in all playbooks and role files:
 ```yaml
 # SPDX-License-Identifier: MIT-0
 # code: language=ansible
 ```
 
-## Module Usage Standards
+### Fully Qualified Collection Names (FQCN)
 
-### Always Use Fully Qualified Collection Names (FQCN)
+**MUST** use FQCN for all modules:
 ```yaml
-# Good
+# Correct
 ansible.builtin.apt:
 ansible.builtin.file:
 ansible.builtin.template:
-ansible.builtin.systemd:
 
-# Bad
+# Wrong - MUST NOT use short names
 apt:
 file:
 template:
-systemd:
 ```
 
-## Variable Naming Conventions
+### Variable Naming
 
-- Use snake_case for all variables: `node_network_interface`
-- Prefix role variables with role name: `k3sup_version`, `k3sup_config_file`
-- Boolean variables should be questions: `enable_monitoring`, `use_external_database`
+- **MUST** use snake_case: `node_network_interface`
+- **SHOULD** prefix role variables with role name: `kube_vip_address`, `calico_version`
+- **SHOULD** name boolean variables as questions: `enable_monitoring`, `use_external_database`
 
 ## Common Task Patterns
 
@@ -140,19 +140,20 @@ ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --tags k8s-longhorn
 ansible-playbook -i inventory/hosts.yml playbook.yml --limit hostname
 ```
 
-## Security Best Practices
+## Security
 
-### Vault Usage
+### Sensitive Data
+
+- **MUST** use `no_log: true` for tasks handling passwords, tokens, or secrets
+- **MUST NOT** hardcode secrets in playbooks or variable files
+- **SHOULD** use HashiCorp Vault lookups for secrets (see `community.hashi_vault.vault_kv2_get`)
+
 ```yaml
-# Encrypt sensitive variables
-ansible-vault encrypt_string 'secret-value' --name 'variable_name'
-
-# Use no_log for sensitive tasks
 - name: Set password
   ansible.builtin.user:
     name: username
     password: "{{ vault_password }}"
-  no_log: true
+  no_log: true  # REQUIRED for sensitive data
 ```
 
 ## Error Handling
@@ -250,21 +251,21 @@ roles/role-name/
 
 ### Pre-Deployment Checklist
 
-Before running the k3s playbook on a production cluster:
+**MUST** complete before running k3s playbook on production:
 
-1. **Create a Velero backup**
+1. **MUST** create a Velero backup:
    ```bash
    velero backup create pre-deploy-$(date +%Y%m%d-%H%M%S) --wait
    ```
 
-2. **Syntax check**
+2. **MUST** syntax check:
    ```bash
    ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --syntax-check
    ```
 
-3. **Dry run on a single node**
+3. **SHOULD** dry run on a single node first:
    ```bash
-   ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --check --diff --limit alpha-1
+   ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --check --diff --limit tpi-alpha-1
    ```
 
 ### Testing Scenarios

@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# Configuration deployment for router-hosts role
+# TODO: Implement in Task 5-7

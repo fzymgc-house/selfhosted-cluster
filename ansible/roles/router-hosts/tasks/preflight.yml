@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# Preflight checks for router-hosts role
+# TODO: Implement in Task 2

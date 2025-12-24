@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# defaults file for router-hosts
+#
+# This role deploys router-hosts server on Firewalla using Docker Compose
+# with Vault Agent for automated mTLS certificate management.
+#
+# router-hosts is a gRPC server for managing DNS host entries.
+# https://github.com/fzymgc-house/router-hosts
+
+# Base directory for config, data, and credentials
+# External storage on Firewalla persists across firmware updates
+router_hosts_base_dir: "/extdata/router-hosts"
+
+# Container images
+router_hosts_image: "ghcr.io/fzymgc-house/router-hosts"
+router_hosts_version: "v0.6.0"
+router_hosts_vault_image: "hashicorp/vault:1.18"
+
+# Vault configuration
+router_hosts_vault_addr: "https://vault.fzymgc.house"
+router_hosts_vault_pki_path: "fzymgc-house/v1/ica1/v1"
+router_hosts_vault_approle_name: "router-hosts-agent"
+
+# Certificate configuration
+# Common name for the server certificate
+router_hosts_cert_cn: "router-hosts"
+
+# DNS SANs for the server certificate
+router_hosts_cert_dns_sans:
+  - "localhost"
+  - "router.fzymgc.house"
+  - "router"
+  - "router.local"
+
+# IP SANs for the server certificate
+router_hosts_cert_ip_sans:
+  - "127.0.0.1"
+  - "192.168.20.1"
+  - "fddb:f665:73f7:1::1"
+  - "fe80::226d:31ff:fe31:715"
+
+# Certificate TTL (30 days)
+router_hosts_cert_ttl: "720h"
+
+# gRPC server configuration
+router_hosts_grpc_port: 50051
+
+# Container user (pi user on Firewalla)
+router_hosts_user: "pi"
+
+# Firewalla-specific paths
+# Docker compose location (Firewalla convention)
+router_hosts_docker_compose_dir: "/home/pi/.firewalla/run/docker/router-hosts"
+
+# Boot script location (post_main.d for auto-start)
+router_hosts_post_main_dir: "/home/pi/.firewalla/config/post_main.d"

@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+galaxy_info:
+  author: fzymgc-house
+  description: Deploy router-hosts server with Vault Agent mTLS on Firewalla
+  license: MIT-0
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+
+dependencies: []
+
+# Required collections (versions in ansible/requirements.yml)
+collections:
+  - community.hashi_vault

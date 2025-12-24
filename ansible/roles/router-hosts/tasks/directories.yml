@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# Directory setup for router-hosts role
+# TODO: Implement in Task 4

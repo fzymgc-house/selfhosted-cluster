@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# Deploy router-hosts to Firewalla
+#
+# Prerequisites:
+# - Vault token available (via VAULT_TOKEN or vault login)
+# - community.hashi_vault collection installed
+#
+# Usage:
+# ansible-playbook -i inventory/hosts.yml router-hosts-playbook.yml
+#
+# Dry run:
+# ansible-playbook -i inventory/hosts.yml router-hosts-playbook.yml --check --diff
+
+- name: Deploy router-hosts to Firewalla
+  hosts: router
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Verify target is the router
+      ansible.builtin.assert:
+        that:
+          - inventory_hostname == 'router'
+        fail_msg: "This playbook should only run on the 'router' host"
+        quiet: true
+
+  roles:
+    - router-hosts
+
+  post_tasks:
+    - name: Display service status
+      ansible.builtin.command:
+        cmd: systemctl status docker-compose@router-hosts --no-pager
+      register: router_hosts_service_status
+      changed_when: false
+      failed_when: false
+
+    - name: Show service status
+      ansible.builtin.debug:
+        var: router_hosts_service_status.stdout_lines

@@ -1,5 +1,79 @@
 # SPDX-License-Identifier: MIT-0
 # code: language=ansible
 ---
-# Directory setup for router-hosts role
-# TODO: Implement in Task 4
+# Create directory structure for router-hosts
+
+- name: Get pi user info
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ router_hosts_user }}"
+  register: router_hosts_user_info
+  tags:
+    - router-hosts
+    - router-hosts-directories
+
+- name: Set user UID/GID facts
+  ansible.builtin.set_fact:
+    router_hosts_uid: "{{ router_hosts_user_info.ansible_facts.getent_passwd[router_hosts_user][1] }}"
+    router_hosts_gid: "{{ router_hosts_user_info.ansible_facts.getent_passwd[router_hosts_user][2] }}"
+  tags:
+    - router-hosts
+    - router-hosts-directories
+
+- name: Create base directory
+  ansible.builtin.file:
+    path: "{{ router_hosts_base_dir }}"
+    state: directory
+    owner: "{{ router_hosts_user }}"
+    group: "{{ router_hosts_user }}"
+    mode: "0755"
+  tags:
+    - router-hosts
+    - router-hosts-directories
+
+- name: Create subdirectories
+  ansible.builtin.file:
+    path: "{{ router_hosts_base_dir }}/{{ item }}"
+    state: directory
+    owner: "{{ router_hosts_user }}"
+    group: "{{ router_hosts_user }}"
+    mode: "0755"
+  loop:
+    - config
+    - data
+    - vault-approle
+    - scripts
+    - certs
+  tags:
+    - router-hosts
+    - router-hosts-directories
+
+- name: Set restrictive permissions on vault-approle directory
+  ansible.builtin.file:
+    path: "{{ router_hosts_base_dir }}/vault-approle"
+    mode: "0700"
+  tags:
+    - router-hosts
+    - router-hosts-directories
+
+- name: Create Docker Compose directory (Firewalla convention)
+  ansible.builtin.file:
+    path: "{{ router_hosts_docker_compose_dir }}"
+    state: directory
+    owner: "{{ router_hosts_user }}"
+    group: "{{ router_hosts_user }}"
+    mode: "0755"
+  tags:
+    - router-hosts
+    - router-hosts-directories
+
+- name: Ensure post_main.d directory exists
+  ansible.builtin.file:
+    path: "{{ router_hosts_post_main_dir }}"
+    state: directory
+    owner: "{{ router_hosts_user }}"
+    group: "{{ router_hosts_user }}"
+    mode: "0755"
+  tags:
+    - router-hosts
+    - router-hosts-directories

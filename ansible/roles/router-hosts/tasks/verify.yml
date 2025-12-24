@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# Verify router-hosts deployment
+
+- name: Wait for Vault Agent to generate certificates
+  ansible.builtin.wait_for:
+    path: "{{ router_hosts_base_dir }}/certs/server.crt"
+    state: present
+    timeout: 120
+  tags:
+    - router-hosts
+    - router-hosts-verify
+
+- name: Wait for router-hosts container to be running
+  ansible.builtin.command:
+    cmd: docker ps --filter "name=router-hosts-server" --filter "status=running" --format "{{ '{{' }}.Names{{ '}}' }}"
+  register: router_hosts_container_check
+  until: router_hosts_container_check.stdout | length > 0
+  retries: 12
+  delay: 5
+  changed_when: false
+  tags:
+    - router-hosts
+    - router-hosts-verify
+
+- name: Wait for gRPC port to be available
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: "{{ router_hosts_grpc_port }}"
+    state: started
+    timeout: 60
+  tags:
+    - router-hosts
+    - router-hosts-verify
+
+- name: Check certificate validity
+  ansible.builtin.command:
+    cmd: openssl x509 -in {{ router_hosts_base_dir }}/certs/server.crt -noout -dates
+  register: router_hosts_cert_dates
+  changed_when: false
+  tags:
+    - router-hosts
+    - router-hosts-verify
+
+- name: Report deployment status
+  ansible.builtin.debug:
+    msg: |
+      router-hosts deployed successfully on {{ inventory_hostname }}
+      gRPC: 0.0.0.0:{{ router_hosts_grpc_port }}
+      Certificates: {{ router_hosts_base_dir }}/certs/
+      {{ router_hosts_cert_dates.stdout }}
+  tags:
+    - router-hosts
+    - router-hosts-verify

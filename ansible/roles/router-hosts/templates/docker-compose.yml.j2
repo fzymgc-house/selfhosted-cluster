@@ -15,6 +15,7 @@ services:
       VAULT_CACERT: /etc/ssl/certs/ca-certificates.crt
     volumes:
       - {{ router_hosts_base_dir }}/vault-approle:/vault/approle:ro
+      - {{ router_hosts_base_dir }}/vault-token:/vault/token:rw
       - {{ router_hosts_base_dir }}/config/vault-agent.hcl:/vault/config/vault-agent.hcl:ro
       - {{ router_hosts_base_dir }}/certs:/vault/certs:rw
       - /etc/ssl/certs:/etc/ssl/certs:ro

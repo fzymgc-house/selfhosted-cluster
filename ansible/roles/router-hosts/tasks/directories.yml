@@ -42,16 +42,20 @@
     - config
     - data
     - vault-approle
+    - vault-token
     - scripts
     - certs
   tags:
     - router-hosts
     - router-hosts-directories
 
-- name: Set restrictive permissions on vault-approle directory
+- name: Set restrictive permissions on sensitive directories
   ansible.builtin.file:
-    path: "{{ router_hosts_base_dir }}/vault-approle"
+    path: "{{ router_hosts_base_dir }}/{{ item }}"
     mode: "0700"
+  loop:
+    - vault-approle
+    - vault-token
   tags:
     - router-hosts
     - router-hosts-directories

@@ -10,13 +10,20 @@ auto_auth {
     config = {
       role_id_file_path   = "/vault/approle/role_id"
       secret_id_file_path = "/vault/approle/secret_id"
+      # Keep secret_id on disk for container restarts. The Vault Agent
+      # container may restart independently (Docker restart, host reboot),
+      # and needs to re-authenticate without Ansible re-provisioning.
+      # Security: The vault-approle directory has mode 0700 and is not
+      # mounted to the router-hosts container. Credential rotation is
+      # handled by re-running the Ansible playbook.
       remove_secret_id_file_after_reading = false
     }
   }
 
   sink "file" {
     config = {
-      path = "/vault/certs/.vault-token"
+      # Token stored in dedicated directory, not in shared certs volume
+      path = "/vault/token/.vault-token"
       mode = 0600
     }
   }
@@ -54,6 +61,6 @@ template {
   EOF
   destination = "/vault/certs/ca.crt"
   perms = 0644
-  # Use share_dependencies to ensure all cert files are written atomically
-  # when any template is rendered (they share the pkiCert call)
+  # All three templates use identical pkiCert calls, so Vault Agent
+  # deduplicates the API request and writes all files atomically.
 }

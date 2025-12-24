@@ -27,6 +27,7 @@ Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1 compute modules). Thr
 | Exa | Deep research, company research, code context |
 | Notion | Workspace documentation (Services Catalog, Tech References, Operations Guide) |
 | Kubernetes | Cluster investigation (pods, logs, events, resources) - **readonly mode** |
+| Grafana | Dashboard queries, data source management, incident investigation |
 
 ### Skills (Check Before Every Task)
 

@@ -7,5 +7,9 @@ terraform {
       source  = "grafana/grafana"
       version = ">= 4.3.0"
     }
+    vault = {
+      source  = "hashicorp/vault"
+      version = ">= 5.0"
+    }
   }
 }

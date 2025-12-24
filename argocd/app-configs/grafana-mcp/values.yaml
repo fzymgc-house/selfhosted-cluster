@@ -1,0 +1,50 @@
+# Grafana MCP Server Helm values
+# Chart: grafana/grafana-mcp
+# Docs: https://github.com/grafana/helm-charts/tree/main/charts/grafana-mcp
+
+# Grafana connection configuration
+# Uses internal Kubernetes service (no TLS required for cluster-internal traffic)
+grafana:
+  url: "http://grafana-service.grafana.svc.cluster.local:3000"
+  # API key from ExternalSecret
+  apiKeySecret:
+    name: grafana-mcp-token
+    key: api-key
+
+# Run in SSE mode for network access
+# Default transport is stdio which requires direct binary execution
+extraArgs:
+  - "--transport"
+  - "sse"
+
+# Resource limits
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+# Service configuration for SSE transport
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8000
+
+# Security context (matching chart defaults)
+securityContext:
+  fsGroup: 1000
+  runAsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000

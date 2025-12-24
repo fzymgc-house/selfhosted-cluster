@@ -47,7 +47,7 @@ Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1 compute modules). Thr
 - **SHOULD** use Kubernetes MCP for cluster investigation (pods, logs, events, node stats) instead of raw kubectl
 - **MUST NOT** apply kubectl changes directly (ArgoCD manages deployments)
 - **MUST NOT** delete the `windmill-staging` branch
-- **MUST** update Notion documentation when changes affect services, technologies, or operations (see below)
+- **MUST** update documentation with every PR (see Documentation Maintenance below)
 
 ## Development Workflow
 
@@ -71,7 +71,7 @@ gh pr create --title "feat: Description" --body "..."
 1. **Ansible**: Deploy k3s cluster (`ansible/k3s-playbook.yml`)
 2. **Terraform**: Bootstrap infrastructure (`tf/cluster-bootstrap`)
 3. **ArgoCD**: Manages all application deployments (GitOps)
-4. **Windmill**: Terraform automation flows (`windmill/f/terraform/`) - see `docs/windmill-migration.md`
+4. **Windmill**: Terraform automation flows (`windmill/f/terraform/`) - see `docs/windmill.md`
 
 ## Quick Reference
 
@@ -133,9 +133,33 @@ Two TuringPi 2 boards (alpha/beta), 8 compute nodes total:
 - **OS**: Armbian 25.08, systemd-networkd
 - **Interface**: `end0` (Armbian naming)
 
+## Documentation Maintenance
+
+Documentation uses a dual-layer architecture:
+
+| Layer | Location | Purpose | Format |
+|-------|----------|---------|--------|
+| **Git** | `docs/*.md` | AI/LLM context | Concise, table-heavy, code examples |
+| **Notion** | Operations Guide | Human navigation | Detailed, linked, searchable |
+
+### With Every PR
+
+- **MUST** update evergreen docs (`docs/*.md`) when changes affect Windmill, Vault, or operational patterns
+- **MUST** update Notion when changes affect services, technologies, or operations
+- **MUST** archive completed design plans to `docs/plans/archive/`
+- **SHOULD** archive migration docs to `docs/plans/archive/migrations/` after completion
+- **MUST NOT** leave stale documentation that contradicts current implementation
+
+### Documentation Principles
+
+- **MUST** document current state (evergreen), not migration process
+- **SHOULD** prefer tables and code blocks over prose (concise for AI)
+- **MUST NOT** duplicate information across multiple docs
+- **SHOULD** archive rather than delete (preserve historical context)
+
 ## Notion Documentation
 
-**MUST** keep Notion documentation synchronized with repository changes. The Notion workspace provides human-readable and AI-consumable documentation.
+**MUST** keep Notion documentation synchronized with repository changes. The Notion workspace provides human-readable documentation.
 
 **Root Page:** [Home Lab](https://www.notion.so/Home-Lab-17027a0ad6888053b8cbf2584d07c33c)
 

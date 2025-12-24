@@ -2,6 +2,62 @@
 
 This file provides guidance to Claude Code when working with Ansible code in this directory.
 
+## Roles Inventory
+
+| Role | Purpose | Target Hosts |
+|------|---------|--------------|
+| `k3s-server` | Control plane node installation | `tp_cluster_controlplane` |
+| `k3s-agent` | Worker node installation | `tp_cluster_workers` |
+| `k3s-common` | Shared k3s configuration | All k3s nodes |
+| `k3s-storage` | Storage preparation (partitioning, formatting) | All cluster nodes |
+| `kube-vip` | VIP for API endpoint HA (ARP mode, static pod) | `tp_cluster_controlplane` |
+| `calico` | Calico CNI installation | First control plane node |
+| `longhorn-disks` | Additional storage disk configuration | Nodes with `longhorn_additional_disks` defined |
+| `teleport-agent` | Teleport agent installation | All nodes |
+| `tp2-bootstrap-node` | OS configuration, networking, security | All TuringPi 2 nodes |
+
+## k3s-playbook.yml Execution Phases
+
+The k3s deployment follows a strict phase order:
+
+| Phase | Description | Tags |
+|-------|-------------|------|
+| 1 | First control plane node initializes cluster, fetches join token | `k3s-server`, `k3s-token` |
+| 2 | Additional control plane nodes join (serial: 1) | `k3s-server` |
+| 3 | kube-vip deployed for API endpoint HA | `kube-vip` |
+| 4 | Worker nodes join cluster | `k3s-agent` |
+| 5 | Calico CNI installed | `k3s-calico`, `calico` |
+| 6 | CSI snapshot controller installed | `k3s-csi-snapshot-controller` |
+| 7 | Additional Longhorn disks configured | `longhorn-disks` |
+| 8 | Longhorn disk configuration registered | `longhorn-register` |
+
+**Run specific phases:**
+```bash
+ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --tags kube-vip
+ansible-playbook -i inventory/hosts.yml k3s-playbook.yml --tags longhorn-disks
+```
+
+## Hardware and Node Groups
+
+### TuringPi 2 Cluster
+
+Two TuringPi 2 boards (alpha/beta), each with 4 compute slots:
+
+| Group | Nodes | Hardware | Role |
+|-------|-------|----------|------|
+| `tp_cluster_controlplane` | `tpi-alpha-1`, `tpi-alpha-2`, `tpi-alpha-3` | RK1 (32GB) | Control plane |
+| `tp_cluster_workers` | `tpi-alpha-4`, `tpi-beta-[1:4]` | RK1/Jetson | Workers |
+| `tp_cluster_nodes` | All 8 nodes | Mixed | All cluster nodes |
+| `tpi_bmc_hosts` | `tpi-alpha-bmc`, `tpi-beta-bmc` | BMC | Board management |
+
+### Network Configuration
+
+- **Node subnet**: `192.168.20.0/24`
+- **Control plane IPs**: `192.168.20.141-143`
+- **Worker IPs**: `192.168.20.144`, `192.168.20.151-154`
+- **kube-vip VIP**: `192.168.20.140` (API endpoint)
+- **Primary interface**: `end0` (Armbian naming on RK1)
+
 ## File Headers
 
 Always include these headers in playbooks and role files:

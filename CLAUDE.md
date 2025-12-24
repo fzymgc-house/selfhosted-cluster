@@ -25,6 +25,7 @@ Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1 compute modules). Thr
 | Context7 | Up-to-date library/framework documentation |
 | Firecrawl | Web scraping and search (fastest, most reliable) |
 | Exa | Deep research, company research, code context |
+| Notion | Workspace documentation (Services Catalog, Tech References, Operations Guide) |
 
 ### Skills (Check Before Every Task)
 

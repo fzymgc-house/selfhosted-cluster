@@ -6,3 +6,5 @@ namespace: grafana-mcp
 resources:
   - namespace.yaml
   - external-secret.yaml
+  - certificate.yaml
+  - ingress-route.yaml

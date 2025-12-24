@@ -1,0 +1,15 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: grafana-mcp-tls
+  namespace: grafana-mcp
+spec:
+  secretName: grafana-mcp-tls
+  issuerRef:
+    name: cloudflare-acme-issuer
+    kind: ClusterIssuer
+  dnsNames:
+    - mcp.grafana.fzymgc.house
+  usages:
+    - server auth

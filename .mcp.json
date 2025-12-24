@@ -6,6 +6,17 @@
         "-y",
         "@modelcontextprotocol/server-filesystem"
       ]
+    },
+    "kubernetes-mcp-server": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "kubernetes-mcp-server@latest",
+        "--read-only"
+      ],
+      "env": {
+        "KUBECONFIG": "/Users/sean/.kube/config:/Users/sean/.kube/configs/fzymgc-house-admin.yml"
+      }
     }
   }
 }

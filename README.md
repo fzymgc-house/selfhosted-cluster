@@ -6,7 +6,7 @@ A production-ready Kubernetes cluster for home infrastructure using k3s on Turin
 
 | Component | Technology |
 |-----------|------------|
-| Hardware | TuringPi 2 boards with RK1 and Jetson Orin NX compute modules |
+| Hardware | TuringPi 2 boards with RK1 compute modules |
 | OS | Armbian 25.08 (Ubuntu Noble) with systemd-networkd |
 | Kubernetes | k3s lightweight distribution |
 | CNI | Calico with MetalLB load balancing |
@@ -173,8 +173,8 @@ selfhosted-cluster/
 
 | Board | Slots | Compute Modules | Role |
 |-------|-------|-----------------|------|
-| Alpha | 1-4 | 4x RK1 (32GB RAM) | Control plane (1-3), Worker (4) |
-| Beta | 1-4 | RK1/Jetson mix | Workers |
+| Alpha | 1-4 | 4x RK1 | Control plane (1-3), Worker (4) |
+| Beta | 1-4 | 4x RK1 | Workers |
 
 ### Network
 

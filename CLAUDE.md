@@ -4,7 +4,7 @@ Guidance for Claude Code when working with this repository.
 
 ## Repository Overview
 
-Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1/Jetson Orin NX). Three-layer architecture:
+Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1 compute modules). Three-layer architecture:
 
 | Layer | Location | Purpose |
 |-------|----------|---------|
@@ -25,6 +25,8 @@ Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1/Jetson Orin NX). Thre
 | Context7 | Up-to-date library/framework documentation |
 | Firecrawl | Web scraping and search (fastest, most reliable) |
 | Exa | Deep research, company research, code context |
+| Notion | Workspace documentation (Services Catalog, Tech References, Operations Guide) |
+| Kubernetes | Cluster investigation (pods, logs, events, resources) - **readonly mode** |
 
 ### Skills (Check Before Every Task)
 
@@ -42,8 +44,10 @@ Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1/Jetson Orin NX). Thre
 - **MUST** use feature branches; **MUST NOT** commit directly to `main`
 - **MUST** check for applicable skills before responding (even 1% chance → invoke skill)
 - **SHOULD** use Filesystem MCP for file operations
+- **SHOULD** use Kubernetes MCP for cluster investigation (pods, logs, events, node stats) instead of raw kubectl
 - **MUST NOT** apply kubectl changes directly (ArgoCD manages deployments)
 - **MUST NOT** delete the `windmill-staging` branch
+- **MUST** update Notion documentation when changes affect services, technologies, or operations (see below)
 
 ## Development Workflow
 
@@ -124,7 +128,83 @@ terraform -chdir=tf/vault plan
 ## Hardware
 
 Two TuringPi 2 boards (alpha/beta), 8 compute nodes total:
-- **Control plane**: `tpi-alpha-[1:3]` (RK1, 32GB)
-- **Workers**: `tpi-alpha-4`, `tpi-beta-[1:4]` (RK1/Jetson mix)
+- **Control plane**: `tpi-alpha-[1:3]` (RK1)
+- **Workers**: `tpi-alpha-4`, `tpi-beta-[1:4]` (RK1)
 - **OS**: Armbian 25.08, systemd-networkd
 - **Interface**: `end0` (Armbian naming)
+
+## Notion Documentation
+
+**MUST** keep Notion documentation synchronized with repository changes. The Notion workspace provides human-readable and AI-consumable documentation.
+
+**Root Page:** [Home Lab](https://www.notion.so/Home-Lab-17027a0ad6888053b8cbf2584d07c33c)
+
+### Databases to Update
+
+| Database | Update When |
+|----------|-------------|
+| **Services Catalog** | Adding/removing services, changing hostnames, updating ingress or auth methods |
+| **Tech References** | Adding new technologies, updating versions, changing documentation URLs |
+| **Design Plans** | Creating new design documents in `docs/plans/` |
+
+### Services Catalog Fields
+
+When adding a new service, populate these fields:
+- **Name**: Service name
+- **Category**: Platform, Application, Infrastructure, or External
+- **Hostname**: Primary DNS name (e.g., `vault.fzymgc.house`)
+- **Alt Hostnames**: Alternative DNS entries (if applicable)
+- **Ingress Type**: Traefik IngressRoute, TCP Passthrough, Helm Managed, kube-vip VIP, Cloudflare Tunnel, or External
+- **Auth Method**: OIDC, Forward-Auth, Certificate, LDAP, or None
+- **Vault Path**: Secret location (e.g., `secret/fzymgc-house/cluster/authentik`)
+- **Namespace**: Kubernetes namespace
+- **Status**: Operational, Degraded, or Maintenance
+
+### Tech References Fields
+
+When adding a new technology, populate these fields:
+- **Technology**: Name of the technology
+- **Category**: Kubernetes, Networking, Storage, Security, Observability, GitOps, Infrastructure, or Applications
+- **Docs URL**: Primary documentation link
+- **Version**: Current version in cluster (if applicable)
+
+### Update Triggers
+
+| Change Type | Action Required |
+|-------------|-----------------|
+| New service deployed | Add entry to Services Catalog |
+| Service removed | Update or remove Services Catalog entry |
+| DNS/hostname changed | Update Services Catalog hostname |
+| New technology adopted | Add entry to Tech References |
+| Version upgraded | Update Tech References version |
+| Operations docs changed | Update relevant Operations Guide page |
+| New design document created | Add entry to Design Plans database |
+
+### Notion Page IDs
+
+| Page/Database | ID |
+|---------------|-----|
+| Home Lab (root) | `17027a0a-d688-8053-b8cb-f2584d07c33c` |
+| Services Catalog | `50a1adf14f1d4d3fbd78ccc2ca36facc` |
+| Tech References | `f7548c57375542b395694ae433ff07a4` |
+| Quick Reference | `2d327a0ad688818b9d89c9e00a08bbad` |
+| Operations Guide | `2d327a0ad688818a9fb7f14fea22e3d9` |
+
+### Editing Notion Pages (Critical)
+
+**MUST** follow these rules when editing Notion pages via MCP:
+
+1. **NEVER use `replace_content`** on pages with children - it orphans/trashes all child pages and databases
+2. **ALWAYS use `replace_content_range`** for targeted updates to preserve parent-child relationships
+3. **Use `insert_content_after`** when adding new content without modifying existing content
+
+**Notion-flavored Markdown syntax:**
+- Inline page links: `<mention-page url="https://www.notion.so/PAGE_ID">Title</mention-page>`
+- Inline database links: `<mention-database url="https://www.notion.so/DB_ID">Title</mention-database>`
+- Child page blocks (MOVES the page): `<page url="...">Title</page>`
+- Child database blocks (MOVES the database): `<database url="...">Title</database>`
+
+**Verification after edits:**
+- Fetch the page to confirm `<ancestor-path>` shows correct parent
+- Check that child pages/databases still appear at bottom of content
+- Verify mentions resolve (not showing "In Trash")

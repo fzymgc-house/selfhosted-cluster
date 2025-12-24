@@ -49,9 +49,9 @@ Two TuringPi 2 boards (alpha/beta), each with 4 compute slots:
 
 | Group | Nodes | Hardware | Role |
 |-------|-------|----------|------|
-| `tp_cluster_controlplane` | `tpi-alpha-1`, `tpi-alpha-2`, `tpi-alpha-3` | RK1 (32GB) | Control plane |
-| `tp_cluster_workers` | `tpi-alpha-4`, `tpi-beta-[1:4]` | RK1/Jetson | Workers |
-| `tp_cluster_nodes` | All 8 nodes | Mixed | All cluster nodes |
+| `tp_cluster_controlplane` | `tpi-alpha-1`, `tpi-alpha-2`, `tpi-alpha-3` | RK1 | Control plane |
+| `tp_cluster_workers` | `tpi-alpha-4`, `tpi-beta-[1:4]` | RK1 | Workers |
+| `tp_cluster_nodes` | All 8 nodes | RK1 | All cluster nodes |
 | `tpi_bmc_hosts` | `tpi-alpha-bmc`, `tpi-beta-bmc` | BMC | Board management |
 
 ### Network Configuration

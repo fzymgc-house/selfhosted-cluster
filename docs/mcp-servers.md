@@ -30,23 +30,32 @@ Add to Claude Code settings (`~/.claude.json` or project `.mcp.json`):
 }
 ```
 
-### Vault Secret
+### Vault Secrets
 
-Service account token stored at:
-- **Path**: `secret/fzymgc-house/cluster/grafana/mcp-server`
-- **Key**: `service_account_token`
+Two tokens with different privilege levels:
 
-Retrieve token:
+| Key | Role | Use For |
+|-----|------|---------|
+| `viewer_token` | Viewer | Queries, dashboard inspection (default) |
+| `editor_token` | Editor | Creating/modifying dashboards and alerts |
+
+**Path**: `secret/fzymgc-house/cluster/grafana/mcp-server`
+
+Retrieve tokens:
 ```bash
-vault kv get -field=service_account_token secret/fzymgc-house/cluster/grafana/mcp-server
+# Viewer (recommended for most operations)
+vault kv get -field=viewer_token secret/fzymgc-house/cluster/grafana/mcp-server
+
+# Editor (when modifications needed)
+vault kv get -field=editor_token secret/fzymgc-house/cluster/grafana/mcp-server
 ```
 
 ### Terraform Resources
 
-Service account managed in `tf/grafana/service-accounts.tf`:
-- `grafana_service_account.mcp_server` - Viewer role service account
-- `grafana_service_account_token.mcp_server` - Token for MCP authentication
-- `vault_kv_secret_v2.grafana_mcp_token` - Token stored in Vault
+Service accounts managed in `tf/grafana/service-accounts.tf`:
+- `grafana_service_account.mcp_viewer` - Viewer role (read-only)
+- `grafana_service_account.mcp_editor` - Editor role (read/write)
+- `vault_kv_secret_v2.grafana_mcp_tokens` - Both tokens stored in Vault
 
 ### Capabilities
 

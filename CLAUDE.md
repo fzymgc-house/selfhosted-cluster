@@ -44,6 +44,7 @@ Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1/Jetson Orin NX). Thre
 - **SHOULD** use Filesystem MCP for file operations
 - **MUST NOT** apply kubectl changes directly (ArgoCD manages deployments)
 - **MUST NOT** delete the `windmill-staging` branch
+- **MUST** update Notion documentation when changes affect services, technologies, or operations (see below)
 
 ## Development Workflow
 
@@ -128,3 +129,46 @@ Two TuringPi 2 boards (alpha/beta), 8 compute nodes total:
 - **Workers**: `tpi-alpha-4`, `tpi-beta-[1:4]` (RK1/Jetson mix)
 - **OS**: Armbian 25.08, systemd-networkd
 - **Interface**: `end0` (Armbian naming)
+
+## Notion Documentation
+
+**MUST** keep Notion documentation synchronized with repository changes. The Notion workspace provides human-readable and AI-consumable documentation.
+
+**Root Page:** [Home Lab](https://www.notion.so/Home-Lab-17027a0ad6888053b8cbf2584d07c33c)
+
+### Databases to Update
+
+| Database | Update When |
+|----------|-------------|
+| **Services Catalog** | Adding/removing services, changing hostnames, updating ingress or auth methods |
+| **Tech References** | Adding new technologies, updating versions, changing documentation URLs |
+
+### Services Catalog Fields
+
+When adding a new service, populate these fields:
+- **Name**: Service name
+- **Category**: Platform, Application, Infrastructure, or External
+- **Hostname**: Primary DNS name (e.g., `vault.fzymgc.house`)
+- **Ingress Type**: Traefik IngressRoute, TCP Passthrough, Helm Managed, kube-vip VIP, Cloudflare Tunnel, or External
+- **Auth Method**: OIDC, Forward-Auth, Certificate, LDAP, or None
+- **Namespace**: Kubernetes namespace
+- **Status**: Operational, Degraded, or Maintenance
+
+### Tech References Fields
+
+When adding a new technology, populate these fields:
+- **Technology**: Name of the technology
+- **Category**: Kubernetes, Networking, Storage, Security, Observability, GitOps, Infrastructure, or Applications
+- **Docs URL**: Primary documentation link
+- **Version**: Current version in cluster (if applicable)
+
+### Update Triggers
+
+| Change Type | Action Required |
+|-------------|-----------------|
+| New service deployed | Add entry to Services Catalog |
+| Service removed | Update or remove Services Catalog entry |
+| DNS/hostname changed | Update Services Catalog hostname |
+| New technology adopted | Add entry to Tech References |
+| Version upgraded | Update Tech References version |
+| Operations docs changed | Update relevant Operations Guide page |

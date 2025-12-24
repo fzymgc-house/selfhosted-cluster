@@ -11,11 +11,12 @@ grafana:
     name: grafana-mcp-token
     key: api-key
 
-# Run in SSE mode for network access
+# Run in streamable-http mode for network access
 # Default transport is stdio which requires direct binary execution
+# streamable-http provides bidirectional HTTP streaming for MCP clients
 extraArgs:
   - "--transport"
-  - "sse"
+  - "streamable-http"
 
 # Resource limits
 resources:
@@ -26,7 +27,7 @@ resources:
     cpu: 50m
     memory: 64Mi
 
-# Service configuration for SSE transport
+# Service configuration for streamable-http transport
 service:
   enabled: true
   type: ClusterIP

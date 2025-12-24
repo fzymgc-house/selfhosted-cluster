@@ -15,14 +15,20 @@ Deployed via Helm chart managed by ArgoCD:
 | ArgoCD Application | `argocd/cluster-app/templates/grafana-mcp.yaml` |
 | Helm Values | `argocd/app-configs/grafana-mcp/values.yaml` |
 | ExternalSecret | `argocd/app-configs/grafana-mcp/external-secret.yaml` |
+| IngressRoute | `argocd/app-configs/grafana-mcp/ingress-route.yaml` |
+| Certificate | `argocd/app-configs/grafana-mcp/certificate.yaml` |
 | Namespace | `grafana-mcp` |
 
-**Internal Service URL**: `http://grafana-mcp.grafana-mcp.svc.cluster.local:8000/sse`
+| URL | Use For |
+|-----|---------|
+| `https://mcp.grafana.fzymgc.house/mcp` | External access (publicly trusted TLS) |
+| `http://grafana-mcp.grafana-mcp.svc.cluster.local:8000/` | Internal cluster access |
 
 The in-cluster deployment:
 - Uses internal Kubernetes service for Grafana connection (no TLS required)
-- Runs in SSE transport mode for network access
+- Runs in streamable-http transport mode for bidirectional HTTP streaming
 - Gets API token from Vault via ExternalSecrets
+- Exposes HTTPS ingress with Let's Encrypt certificate (cloudflare-acme-issuer)
 
 ### Local Installation
 
@@ -41,9 +47,6 @@ Add to Claude Code settings (`~/.claude.json` or project `.mcp.json`):
   "mcpServers": {
     "grafana": {
       "command": "mcp-grafana",
-      "args": [
-        "--tls-ca-file", "/path/to/fzymgc-ca-chain.crt"
-      ],
       "env": {
         "GRAFANA_URL": "https://grafana.fzymgc.house",
         "GRAFANA_SERVICE_ACCOUNT_TOKEN": "<token-from-vault>"
@@ -53,7 +56,25 @@ Add to Claude Code settings (`~/.claude.json` or project `.mcp.json`):
 }
 ```
 
-**Note**: External access requires the internal CA certificate for TLS verification.
+### Remote MCP Configuration
+
+Connect to the in-cluster MCP server using streamable-http transport:
+
+```json
+{
+  "mcpServers": {
+    "grafana": {
+      "type": "streamable-http",
+      "url": "https://mcp.grafana.fzymgc.house/mcp",
+      "headers": {
+        "Authorization": "Bearer <token-from-vault>"
+      }
+    }
+  }
+}
+```
+
+**Note**: The in-cluster deployment uses a publicly trusted Let's Encrypt certificate, so no CA configuration is required.
 
 ### Vault Secrets
 

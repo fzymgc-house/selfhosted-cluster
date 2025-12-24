@@ -1,0 +1,19 @@
+---
+# Traefik IngressRoute for Grafana MCP Server
+# Provides external access to the MCP server over HTTPS
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana-mcp
+  namespace: grafana-mcp
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`mcp.grafana.fzymgc.house`)
+      kind: Rule
+      services:
+        - name: grafana-mcp
+          port: 8000
+  tls:
+    secretName: grafana-mcp-tls

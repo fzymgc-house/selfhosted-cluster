@@ -1,8 +1,8 @@
 resource "grafana_contact_point" "discord" {
   name = "Discord"
 
-  webhook {
-    url = var.discord_webhook_url
+  discord {
+    url = data.vault_kv_secret_v2.grafana.data["discord_webhook_url"]
   }
 }
 

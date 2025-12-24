@@ -29,12 +29,13 @@ Shows the linear progression from prepared nodes to a self-managing cluster.
 
 | Ansible | Terraform | Handoff |
 |---------|-----------|---------|
-| k3s-storage (BTRFS mounts) | cert-manager | ArgoCD syncs app-configs |
-| k3s-server (first control plane) | External Secrets + Vault auth | ✅ Cluster Operational |
+| k3s-storage (BTRFS mounts) | Prometheus CRDs | ArgoCD syncs app-configs |
+| k3s-server (first control plane) | cert-manager | ✅ Cluster Operational |
+| k3s-server (join additional CP) | External Secrets + Vault auth | |
 | kube-vip (API HA @ 192.168.20.140) | Longhorn | |
-| k3s-server (join additional CP) | MetalLB | |
-| k3s-agent (join workers) | ArgoCD | |
-| calico (CNI) | | |
+| k3s-agent (join workers) | MetalLB | |
+| calico (CNI) | ArgoCD | |
+| CSI snapshot controller | | |
 | longhorn-disks | | |
 
 **Key points:**

@@ -26,30 +26,32 @@ flowchart TD
     N[Fresh Nodes<br/>tpi-alpha/beta] --> B1
 
     subgraph Bootstrap["Ansible: bootstrap-nodes-playbook.yml"]
-        B1[tp2-bootstrap-node<br/>networking, packages, mounts]
+        B1[tp2-bootstrap-node<br/>networking, packages, sysctl]
     end
 
     B1 --> A1
 
     subgraph Ansible["Ansible: k3s-playbook.yml"]
         A1[k3s-storage] --> A2[k3s-server first CP]
-        A2 --> A3[kube-vip API HA]
-        A3 --> A4[k3s-server join CP]
+        A2 --> A3[k3s-server join CP]
+        A3 --> A4[kube-vip API HA]
         A4 --> A5[k3s-agent workers]
         A5 --> A6[calico CNI]
-        A6 --> A7[longhorn-disks]
+        A6 --> A7[CSI snapshots]
+        A7 --> A8[longhorn-disks]
     end
 
-    A7 --> T1
+    A8 --> T1
 
     subgraph Terraform["Terraform: cluster-bootstrap"]
-        T1[cert-manager] --> T2[External Secrets]
-        T2 --> T3[Longhorn]
-        T3 --> T4[MetalLB]
-        T4 --> T5[ArgoCD]
+        T1[Prometheus CRDs] --> T2[cert-manager]
+        T2 --> T3[External Secrets]
+        T3 --> T4[Longhorn]
+        T4 --> T5[MetalLB]
+        T5 --> T6[ArgoCD]
     end
 
-    T5 --> G1
+    T6 --> G1
 
     subgraph GitOps["Handoff"]
         G1[ArgoCD syncs app-configs] --> G2[✅ Operational]
@@ -81,7 +83,7 @@ flowchart TD
     end
 
     subgraph Terraform["Terraform Path"]
-        T1[PR Merged] --> T2[Webhook]
+        T1[PR Merged] --> T2[GitHub Action]
         T2 --> T3[Windmill Plan]
         T3 --> T4[Discord Approval]
         T4 --> T5[Apply]
@@ -110,12 +112,14 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     participant GH as GitHub
+    participant GHA as GitHub Actions
     participant WM as Windmill
     participant DC as Discord
     participant OP as Operator
     participant K8s as Cluster
 
-    GH->>WM: PR merged (webhook)
+    GH->>GHA: PR merged
+    GHA->>WM: Trigger flow (API)
     WM->>WM: terraform plan
     WM->>DC: Send notification + buttons
     Note over DC: 🔍 Review & Approve<br/>⏩ Quick Approve<br/>❌ Reject<br/>📋 Run Details
@@ -127,6 +131,8 @@ sequenceDiagram
 ```
 
 </details>
+
+> **Note:** `tf/cluster-bootstrap` requires manual deployment since it installs ArgoCD and Windmill itself.
 
 ## Repository Structure
 

@@ -5,11 +5,12 @@ data "vault_pki_secret_backend_issuer" "fzymgc" {
 
 locals {
   grafana_ca_cert = join("\n", data.vault_pki_secret_backend_issuer.fzymgc.ca_chain)
+  grafana_url     = "https://grafana.fzymgc.house"
 }
 
 
 provider "grafana" {
-  url     = var.grafana_url
-  auth    = var.grafana_api_key
+  url     = local.grafana_url
+  auth    = data.vault_kv_secret_v2.grafana.data["terraform_admin_api_token"]
   ca_cert = local.grafana_ca_cert
 }

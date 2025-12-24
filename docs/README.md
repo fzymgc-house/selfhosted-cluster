@@ -8,6 +8,7 @@ This directory contains AI/LLM-consumable reference documentation. For comprehen
 |----------|---------|
 | [windmill.md](windmill.md) | Windmill Terraform GitOps automation |
 | [vault.md](vault.md) | HashiCorp Vault secrets management |
+| [mcp-servers.md](mcp-servers.md) | MCP server configuration for AI assistants |
 | [github-token-setup.md](github-token-setup.md) | GitHub PAT for Actions Runner Controller |
 
 ## Notion Resources
@@ -26,6 +27,7 @@ docs/
 ├── README.md              # This file
 ├── windmill.md            # Windmill operations reference
 ├── vault.md               # Vault operations reference
+├── mcp-servers.md         # MCP server configuration
 ├── github-token-setup.md  # GitHub token configuration
 └── plans/
     ├── archive/           # Completed plans and migrations

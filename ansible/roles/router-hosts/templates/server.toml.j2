@@ -1,0 +1,18 @@
+# {{ ansible_managed }}
+# router-hosts server configuration
+
+[server]
+listen_addr = "0.0.0.0:{{ router_hosts_grpc_port }}"
+
+[tls]
+cert_path = "/certs/server.crt"
+key_path = "/certs/server.key"
+ca_path = "/certs/ca.crt"
+require_client_cert = true
+
+[storage]
+db_path = "/data/router-hosts.db"
+hosts_file_path = "/data/hosts"
+
+[hooks]
+on_update = "/scripts/on-hosts-update.sh"

@@ -1,0 +1,59 @@
+# {{ ansible_managed }}
+# Vault Agent configuration for router-hosts mTLS certificates
+
+vault {
+  address = "{{ router_hosts_vault_addr }}"
+}
+
+auto_auth {
+  method "approle" {
+    config = {
+      role_id_file_path   = "/vault/approle/role_id"
+      secret_id_file_path = "/vault/approle/secret_id"
+      remove_secret_id_file_after_reading = false
+    }
+  }
+
+  sink "file" {
+    config = {
+      path = "/vault/certs/.vault-token"
+      mode = 0600
+    }
+  }
+}
+
+template_config {
+  static_secret_render_interval = "5m"
+}
+
+template {
+  contents = <<-EOF
+  {{ '{{' }}- with pkiCert "{{ router_hosts_vault_pki_path }}/issue/server" "common_name={{ router_hosts_cert_cn }}" "ttl={{ router_hosts_cert_ttl }}" "alt_names={{ router_hosts_cert_dns_sans | join(',') }}" "ip_sans={{ router_hosts_cert_ip_sans | join(',') }}" -{{ '}}' }}
+  {{ '{{' }} .Cert {{ '}}' }}
+  {{ '{{' }}- end {{ '}}' }}
+  EOF
+  destination = "/vault/certs/server.crt"
+  perms = 0644
+}
+
+template {
+  contents = <<-EOF
+  {{ '{{' }}- with pkiCert "{{ router_hosts_vault_pki_path }}/issue/server" "common_name={{ router_hosts_cert_cn }}" "ttl={{ router_hosts_cert_ttl }}" "alt_names={{ router_hosts_cert_dns_sans | join(',') }}" "ip_sans={{ router_hosts_cert_ip_sans | join(',') }}" -{{ '}}' }}
+  {{ '{{' }} .Key {{ '}}' }}
+  {{ '{{' }}- end {{ '}}' }}
+  EOF
+  destination = "/vault/certs/server.key"
+  perms = 0600
+}
+
+template {
+  contents = <<-EOF
+  {{ '{{' }}- with pkiCert "{{ router_hosts_vault_pki_path }}/issue/server" "common_name={{ router_hosts_cert_cn }}" "ttl={{ router_hosts_cert_ttl }}" "alt_names={{ router_hosts_cert_dns_sans | join(',') }}" "ip_sans={{ router_hosts_cert_ip_sans | join(',') }}" -{{ '}}' }}
+  {{ '{{' }} .CA {{ '}}' }}
+  {{ '{{' }}- end {{ '}}' }}
+  EOF
+  destination = "/vault/certs/ca.crt"
+  perms = 0644
+  # Use share_dependencies to ensure all cert files are written atomically
+  # when any template is rendered (they share the pkiCert call)
+}

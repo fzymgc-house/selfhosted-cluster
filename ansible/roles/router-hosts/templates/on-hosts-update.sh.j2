@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Hook script called after hosts file updates
+# Currently a no-op that logs; uncomment to restart Firewalla DNS
+
+# TODO: Uncomment to restart Firewalla DNS when ready
+# sudo systemctl restart firerouter_dns
+
+logger -t router-hosts "Hosts file updated"

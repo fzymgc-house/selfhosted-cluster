@@ -22,19 +22,19 @@ A production-ready Kubernetes cluster for home infrastructure using k3s on Turin
 How the cluster is built from prepared nodes to operational state:
 
 ```mermaid
-flowchart LR
-    subgraph Nodes["Prepared Nodes"]
-        N[tpi-alpha/beta<br/>Armbian ready]
-    end
+flowchart TD
+    N[Prepared Nodes<br/>tpi-alpha/beta] --> A1
 
     subgraph Ansible["Ansible: k3s-playbook.yml"]
-        A1[k3s-storage] --> A2[k3s-server<br/>first CP]
-        A2 --> A3[kube-vip<br/>API HA]
-        A3 --> A4[k3s-server<br/>join CP]
-        A4 --> A5[k3s-agent<br/>workers]
-        A5 --> A6[calico<br/>CNI]
+        A1[k3s-storage] --> A2[k3s-server first CP]
+        A2 --> A3[kube-vip API HA]
+        A3 --> A4[k3s-server join CP]
+        A4 --> A5[k3s-agent workers]
+        A5 --> A6[calico CNI]
         A6 --> A7[longhorn-disks]
     end
+
+    A7 --> T1
 
     subgraph Terraform["Terraform: cluster-bootstrap"]
         T1[cert-manager] --> T2[External Secrets]
@@ -43,14 +43,11 @@ flowchart LR
         T4 --> T5[ArgoCD]
     end
 
-    subgraph GitOps["Handoff"]
-        G1[ArgoCD syncs<br/>app-configs]
-        G2[✅ Operational]
-    end
+    T5 --> G1
 
-    N --> A1
-    A7 -.-> T1
-    T5 -.-> G1 --> G2
+    subgraph GitOps["Handoff"]
+        G1[ArgoCD syncs app-configs] --> G2[✅ Operational]
+    end
 
     style Ansible fill:#e3f2fd,stroke:#1976d2
     style Terraform fill:#f3e5f5,stroke:#7b1fa2

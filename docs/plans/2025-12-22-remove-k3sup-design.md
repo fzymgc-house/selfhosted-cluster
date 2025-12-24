@@ -1,8 +1,25 @@
 # Design: Remove k3sup in Favor of Native Ansible Roles
 
 **Date:** 2025-12-22
-**Branch:** `users/sebrandt/remove-k3sup`
-**Status:** Draft
+**Status:** Completed
+
+## Implementation Summary
+
+All proposed roles have been implemented and the k3sup role has been removed:
+
+| Role | Status |
+|------|--------|
+| `k3s-common` | ✅ Implemented |
+| `k3s-server` | ✅ Implemented |
+| `k3s-agent` | ✅ Implemented |
+| `k3s-storage` | ✅ Implemented |
+| `calico` | ✅ Implemented |
+| `kube-vip` | ✅ Implemented (added for API HA) |
+| `k3sup` (old) | ✅ Removed |
+
+The k3s-playbook.yml now follows an 8-phase execution order documented in `ansible/CLAUDE.md`.
+
+---
 
 ## Motivation
 

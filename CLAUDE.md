@@ -142,6 +142,7 @@ Two TuringPi 2 boards (alpha/beta), 8 compute nodes total:
 |----------|-------------|
 | **Services Catalog** | Adding/removing services, changing hostnames, updating ingress or auth methods |
 | **Tech References** | Adding new technologies, updating versions, changing documentation URLs |
+| **Design Plans** | Creating new design documents in `docs/plans/` |
 
 ### Services Catalog Fields
 
@@ -149,8 +150,10 @@ When adding a new service, populate these fields:
 - **Name**: Service name
 - **Category**: Platform, Application, Infrastructure, or External
 - **Hostname**: Primary DNS name (e.g., `vault.fzymgc.house`)
+- **Alt Hostnames**: Alternative DNS entries (if applicable)
 - **Ingress Type**: Traefik IngressRoute, TCP Passthrough, Helm Managed, kube-vip VIP, Cloudflare Tunnel, or External
 - **Auth Method**: OIDC, Forward-Auth, Certificate, LDAP, or None
+- **Vault Path**: Secret location (e.g., `secret/fzymgc-house/cluster/app`)
 - **Namespace**: Kubernetes namespace
 - **Status**: Operational, Degraded, or Maintenance
 
@@ -172,3 +175,4 @@ When adding a new technology, populate these fields:
 | New technology adopted | Add entry to Tech References |
 | Version upgraded | Update Tech References version |
 | Operations docs changed | Update relevant Operations Guide page |
+| New design document created | Add entry to Design Plans database |

@@ -1,10 +1,14 @@
 # CLAUDE.md - Terraform Directory
 
-This file provides guidance to Claude Code when working with Terraform code in this directory.
+Guidance for Claude Code when working with Terraform code in this directory.
+
+**See also:**
+- `../CLAUDE.md` - Repository overview, workflow, MCP/skill guidance
+- `../argocd/CLAUDE.md` - ExternalSecrets that consume Vault policies defined here
 
 ## Module Structure
 
-Each Terraform module MUST have these standard files:
+Each Terraform module **MUST** include these files:
 - `versions.tf` - Provider version constraints
 - `terraform.tf` - Provider configurations
 - `variables.tf` - Input variables
@@ -29,32 +33,35 @@ groups-and-roles.tf         # Group and role assignments
 
 ## Resource Naming
 
-### Use underscore_separated names
+**MUST** use underscore_separated names:
 ```hcl
-# Good
+# Correct
 resource "vault_policy" "cert_manager_issuer" { }
 resource "vault_kubernetes_auth_backend_role" "external_secrets_operator" { }
 
-# Bad
+# Wrong - MUST NOT use hyphens or abbreviations
 resource "vault_policy" "cert-manager-issuer" { }
-resource "vault_policy" "cm" { }  # Too abbreviated
+resource "vault_policy" "cm" { }
 ```
 
 ## Provider Configuration
 
 ### versions.tf Template
+
+**Note:** Provider versions vary by module. Check each module's `versions.tf` for exact versions.
+
 ```hcl
 terraform {
-  required_version = ">= 1.0"
+  required_version = ">= 1.12.2"
 
   required_providers {
     vault = {
       source  = "hashicorp/vault"
-      version = "~> 4.0"
+      version = "~> 5.0"  # Exact version varies by module
     }
-    onepassword = {
-      source  = "1Password/onepassword"
-      version = "~> 2.0"
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.38"  # Exact version varies by module
     }
   }
 }
@@ -64,11 +71,12 @@ terraform {
 ```hcl
 provider "vault" {
   address = "https://vault.fzymgc.house"
-  # Auth via environment variables or Kubernetes service account
+  # Auth via VAULT_TOKEN environment variable
 }
 
-provider "onepassword" {
-  # Configuration for external secrets
+provider "kubernetes" {
+  config_path    = "~/.kube/configs/fzymgc-house-admin.yml"
+  config_context = "fzymgc-house"
 }
 ```
 
@@ -198,19 +206,24 @@ resource "vault_generic_secret" "app_secrets" {
 }
 ```
 
-## Security Considerations
+## Security
 
 ### Sensitive Variables
+
+- **MUST** mark password/token variables with `sensitive = true`
+- **MUST NOT** expose secrets in outputs or logs
+- **SHOULD** use Vault data sources instead of variable inputs where possible
+
 ```hcl
 variable "database_password" {
   description = "Database password"
   type        = string
-  sensitive   = true  # Prevents exposure in logs
+  sensitive   = true  # REQUIRED - prevents log exposure
 }
 
 output "connection_string" {
   value     = "postgresql://user:${var.database_password}@host/db"
-  sensitive = true  # Prevents exposure in output
+  sensitive = true  # REQUIRED for secrets
 }
 ```
 
@@ -236,18 +249,34 @@ resource "kubernetes_secret" "database" {
 
 ## Module-Specific Guidance
 
-### Vault Module (/tf/vault)
+### Cluster Bootstrap (`tf/cluster-bootstrap`)
+- Deploys core infrastructure: cert-manager, External Secrets, Longhorn, MetalLB, ArgoCD
+- Run after Ansible deploys k3s
+- Single apply for full infrastructure bootstrap
+
+### Vault Module (`tf/vault`)
 - Define all policies in separate `policy-*.tf` files
-- Group related Kubernetes auth roles
+- Group related Kubernetes auth roles in `k8s-*.tf` files
 - Use descriptive policy names matching their purpose
 - Document each policy's intended use
 
-### Authentik Module (/tf/authentik)
+### Authentik Module (`tf/authentik`)
 - Configure OIDC applications systematically
 - Use consistent naming for applications
 - Group related configurations
 
-### Grafana Module (/tf/grafana)
+### Grafana Module (`tf/grafana`)
 - Manage dashboards as code
 - Configure data sources programmatically
 - Set up proper folder structure
+
+### Cloudflare Module (`tf/cloudflare`)
+- DNS record management
+- Cloudflare Tunnel configuration
+
+### Teleport Module (`tf/teleport`)
+- Teleport cluster configuration
+- Access control policies
+
+### Core Services (`tf/core-services`)
+- Cross-cutting service configurations

@@ -1,6 +1,10 @@
 # CLAUDE.md - ArgoCD Directory
 
-This file provides guidance to Claude Code when working with ArgoCD application configurations.
+Guidance for Claude Code when working with ArgoCD application configurations.
+
+**See also:**
+- `../CLAUDE.md` - Repository overview, workflow, MCP/skill guidance
+- `../tf/CLAUDE.md` - Vault policies and Kubernetes auth roles for ExternalSecrets
 
 ## Directory Structure
 
@@ -16,10 +20,12 @@ argocd/
 
 ## Application Configuration Patterns
 
-Each application directory should contain:
+Each application directory **MUST** contain:
 - `kustomization.yaml` - Kustomize configuration
 - Application-specific YAML manifests
-- External secrets configurations
+
+Each application directory **SHOULD** contain:
+- `*-secrets.yaml` - ExternalSecret definitions (if secrets needed)
 
 ### Standard Kustomization
 ```yaml
@@ -35,9 +41,9 @@ resources:
 
 ## Naming Conventions
 
-- Use kebab-case for resource names: `grafana-config`, `monitoring-prometheus`
-- Namespace names should match application purpose
-- Service accounts should be descriptive: `grafana-dashboard-updater`
+- **MUST** use kebab-case for resource names: `grafana-config`, `monitoring-prometheus`
+- **SHOULD** match namespace names to application purpose
+- **SHOULD** use descriptive service account names: `grafana-dashboard-updater`
 
 ## External Secrets Integration
 
@@ -59,26 +65,33 @@ spec:
   data:
     - secretKey: password
       remoteRef:
-        key: secret/fzymgc-house/app
+        key: fzymgc-house/cluster/app
         property: password
 ```
 
-## Security Best Practices
+## Security
 
-### Service Account Configuration
+### Service Accounts
+
+- **SHOULD** set `automountServiceAccountToken: false` unless token needed
+- **MUST** match service account name to Vault Kubernetes auth role
+
 ```yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: app-sa
   namespace: app-namespace
-  annotations:
-    vault.hashicorp.com/agent-inject: "true"
-    vault.hashicorp.com/role: "app-role"
-automountServiceAccountToken: false  # Only mount when needed
+automountServiceAccountToken: false
 ```
 
-### RBAC Configuration
+**Note:** Secrets are injected via ExternalSecrets Operator (not Vault agent).
+
+### RBAC
+
+- **MUST** scope Roles to specific namespaces (not ClusterRoles unless required)
+- **SHOULD** use `resourceNames` to limit access to specific resources
+
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -89,7 +102,7 @@ rules:
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["get", "list", "create", "update", "patch"]
-    resourceNames: ["specific-configmap"]  # Be specific when possible
+    resourceNames: ["specific-configmap"]  # Scope access
 ```
 
 ## Common Commands
@@ -145,8 +158,8 @@ See `docs/windmill-migration.md` for details.
 
 ## Best Practices
 
-1. **Namespace Isolation**: Each application in its own namespace
-2. **Resource Limits**: Set appropriate resource requests/limits
-3. **Health Checks**: Include readiness and liveness probes
-4. **Monitoring**: Add appropriate labels for Prometheus scraping
-5. **Documentation**: Include comments explaining non-obvious configurations
+1. **MUST** isolate each application in its own namespace
+2. **SHOULD** set appropriate resource requests/limits
+3. **SHOULD** include readiness and liveness probes
+4. **SHOULD** add labels for Prometheus scraping where applicable
+5. **SHOULD** include comments explaining non-obvious configurations

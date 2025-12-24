@@ -17,6 +17,10 @@
       "env": {
         "KUBECONFIG": "/Users/sean/.kube/config:/Users/sean/.kube/configs/fzymgc-house-admin.yml"
       }
+    },
+    "grafana": {
+      "type": "http",
+      "url": "https://mcp.grafana.fzymgc.house/mcp"
     }
   }
 }

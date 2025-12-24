@@ -65,7 +65,7 @@ spec:
   data:
     - secretKey: password
       remoteRef:
-        key: secret/fzymgc-house/app
+        key: fzymgc-house/cluster/app
         property: password
 ```
 

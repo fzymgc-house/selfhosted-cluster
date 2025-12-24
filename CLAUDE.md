@@ -52,6 +52,7 @@ Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1/Jetson Orin NX). Thre
 ./setup-venv.sh              # One-time
 source .venv/bin/activate    # Before Ansible work
 export VAULT_ADDR=https://vault.fzymgc.house && vault login
+./scripts/vault-helper.sh status  # Check Vault connectivity
 ```
 
 ### Branch Workflow
@@ -66,6 +67,7 @@ gh pr create --title "feat: Description" --body "..."
 1. **Ansible**: Deploy k3s cluster (`ansible/k3s-playbook.yml`)
 2. **Terraform**: Bootstrap infrastructure (`tf/cluster-bootstrap`)
 3. **ArgoCD**: Manages all application deployments (GitOps)
+4. **Windmill**: Terraform automation flows (`windmill/f/terraform/`) - see `docs/windmill-migration.md`
 
 ## Quick Reference
 
@@ -102,7 +104,7 @@ terraform -chdir=tf/vault plan
 - Module structure (versions.tf, terraform.tf, variables.tf, etc.)
 - All modules: cluster-bootstrap, vault, authentik, grafana, cloudflare, teleport, core-services
 - Resource naming (underscore_separated), Vault policy patterns
-- Provider versions (vault 5.6.0, kubernetes 2.38.0)
+- Provider version constraints (vary by module)
 
 ### `argocd/CLAUDE.md`
 **Read when:** Modifying Kubernetes manifests or application configs

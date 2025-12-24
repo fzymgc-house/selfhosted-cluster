@@ -47,6 +47,9 @@ resource "vault_policy" "cm" { }
 ## Provider Configuration
 
 ### versions.tf Template
+
+**Note:** Provider versions vary by module. Check each module's `versions.tf` for exact versions.
+
 ```hcl
 terraform {
   required_version = ">= 1.12.2"
@@ -54,11 +57,11 @@ terraform {
   required_providers {
     vault = {
       source  = "hashicorp/vault"
-      version = "5.6.0"
+      version = "~> 5.0"  # Exact version varies by module
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "2.38.0"
+      version = "~> 2.38"  # Exact version varies by module
     }
   }
 }

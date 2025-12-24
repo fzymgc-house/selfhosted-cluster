@@ -26,14 +26,14 @@ The k3s deployment follows a strict phase order:
 
 | Phase | Description | Tags |
 |-------|-------------|------|
-| 1 | First control plane node initializes cluster, fetches join token | `k3s-server`, `k3s-token` |
-| 2 | Additional control plane nodes join (serial: 1) | `k3s-server` |
+| 1 | First control plane node initializes cluster, fetches join token | `k3s-server`, `k3s-install`, `k3s-token`, `k3s-kubeconfig` |
+| 2 | Additional control plane nodes join (serial: 1) | `k3s-server`, `k3s-install` |
 | 3 | kube-vip deployed for API endpoint HA | `kube-vip` |
-| 4 | Worker nodes join cluster | `k3s-agent` |
+| 4 | Worker nodes join cluster | `k3s-agent`, `k3s-install` |
 | 5 | Calico CNI installed | `k3s-calico`, `calico` |
 | 6 | CSI snapshot controller installed | `k3s-csi-snapshot-controller` |
 | 7 | Additional Longhorn disks configured | `longhorn-disks` |
-| 8 | Longhorn disk configuration registered | `longhorn-register` |
+| 8 | Longhorn disk configuration registered | `longhorn-disks`, `longhorn-register` |
 
 **Run specific phases:**
 ```bash

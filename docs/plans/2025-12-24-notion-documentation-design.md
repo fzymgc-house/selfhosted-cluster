@@ -71,6 +71,8 @@ Root page with:
 | Shared Resources | Infrastructure | - | None | None |
 | System Dashboards | Platform | - | None | None |
 
+> **Note:** Services with `-` for hostname and `None` for ingress/auth are cluster-internal components without external endpoints. They're included for completeness and to track operational status.
+
 ### 3. Tech References Database
 
 **Purpose:** Official documentation links for all technologies used in the cluster

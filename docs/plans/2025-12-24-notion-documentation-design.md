@@ -30,32 +30,42 @@ Root page with:
 | Category | Select | Platform, Application, Infrastructure, External |
 | Hostname | Text | Primary DNS name |
 | Alt Hostnames | Multi-select | Alternative DNS entries |
-| Ingress Type | Select | Traefik IngressRoute, TCP Passthrough, Helm, External |
+| Ingress Type | Select | Traefik IngressRoute, TCP Passthrough, Helm Managed, kube-vip VIP, Cloudflare Tunnel, External |
 | Auth Method | Select | OIDC, Forward-Auth, Certificate, None |
 | Vault Path | Text | Secret location (if applicable) |
 | Namespace | Text | Kubernetes namespace |
 | Status | Status | Operational, Degraded, Maintenance |
 | Notes | Rich text | Additional context |
 
-**Initial Data:**
+**Initial Data (25 services):**
 
 | Name | Category | Hostname | Ingress | Auth |
 |------|----------|----------|---------|------|
 | Kubernetes API | Infrastructure | k8s-cluster.fzymgc.house | kube-vip VIP | Certificate |
 | Vault | Platform | vault.fzymgc.house | TCP Passthrough | OIDC |
-| Authentik | Platform | auth.fzymgc.house | Traefik | None |
-| Grafana | Platform | grafana.fzymgc.house | Ingress | OIDC |
-| ArgoCD | Platform | argocd.fzymgc.house | Helm | OIDC |
-| Windmill | Platform | windmill.fzymgc.house | Traefik | OIDC |
-| Prometheus | Platform | prometheus.fzymgc.house | Traefik | Forward-Auth |
-| Mealie | Application | mealie.fzymgc.house | Traefik | OIDC |
-| PostgreSQL | Infrastructure | pg-main.fzymgc.house | TCP Passthrough | Certificate |
-| Traefik Dashboard | Infrastructure | traefik.k8s.fzymgc.house | Traefik | None |
-| Longhorn Dashboard | Infrastructure | longhorn.fzymgc.house | Traefik | None |
-| Argo Workflows | Platform | argo-workflows.fzymgc.house | Helm | OIDC |
+| Authentik | Platform | auth.fzymgc.house | Traefik IngressRoute | None |
+| Grafana | Platform | grafana.fzymgc.house | Traefik IngressRoute | OIDC |
+| ArgoCD | Platform | argocd.fzymgc.house | Helm Managed | OIDC |
+| Windmill | Platform | windmill.fzymgc.house | Traefik IngressRoute | OIDC |
+| Prometheus | Platform | prometheus.fzymgc.house | Traefik IngressRoute | Forward-Auth |
+| Mealie | Application | mealie.fzymgc.house | Traefik IngressRoute | OIDC |
+| CloudNativePG | Infrastructure | pg-main.fzymgc.house | TCP Passthrough | Certificate |
+| Traefik Dashboard | Infrastructure | traefik.k8s.fzymgc.house | Traefik IngressRoute | None |
+| Longhorn Dashboard | Infrastructure | longhorn.fzymgc.house | Traefik IngressRoute | None |
+| Argo Workflows | Platform | argo-workflows.fzymgc.house | Helm Managed | OIDC |
 | NAS | External | nas.fzymgc.house | External | LDAP |
 | Teleport | External | teleport.fzymgc.house | External | None |
 | Windmill Webhooks | Platform | windmill-wh.fzymgc.net | Cloudflare Tunnel | None |
+| Loki | Platform | - | ClusterIP | None |
+| Alloy | Platform | - | ClusterIP | None |
+| Velero | Infrastructure | - | ClusterIP | None |
+| cert-manager | Infrastructure | - | ClusterIP | None |
+| MetalLB | Infrastructure | - | ClusterIP | None |
+| Valkey | Infrastructure | - | ClusterIP | None |
+| External Secrets | Infrastructure | - | ClusterIP | None |
+| ARC Runners | Platform | - | ClusterIP | None |
+| Grafana Operator | Platform | - | ClusterIP | None |
+| System Upgrade Controller | Infrastructure | - | ClusterIP | None |
 
 ### 3. Tech References Database
 
@@ -71,17 +81,17 @@ Root page with:
 | Version | Text | Current version in cluster |
 | Notes | Text | Additional context |
 
-**Categories and Technologies (24 total):**
+**Categories and Technologies (28 total):**
 
 | Category | Technologies |
 |----------|--------------|
-| Kubernetes | k3s, Helm |
+| Kubernetes | k3s, Helm, Gateway API |
 | Networking | Calico, MetalLB, Traefik, kube-vip, Cloudflare Tunnel |
 | Storage | Longhorn, CloudNativePG, Valkey |
-| Security | HashiCorp Vault, External Secrets Operator, cert-manager, Authentik |
-| Observability | Grafana, VictoriaMetrics, Prometheus |
+| Security | HashiCorp Vault, External Secrets Operator, cert-manager, Authentik, Teleport |
+| Observability | Grafana, Grafana Operator, VictoriaMetrics, Prometheus, Loki, Alloy |
 | GitOps | ArgoCD, Argo Workflows, Windmill |
-| Infrastructure | Terraform, Ansible, Armbian |
+| Infrastructure | Terraform, Ansible, Armbian, Velero, System Upgrade Controller |
 | Applications | Mealie |
 
 ### 4. Operations Guide Pages
@@ -106,7 +116,7 @@ Convert CLAUDE.md files into readable Notion pages:
 | Category | Select | Infrastructure, Application, Security, Documentation |
 | File Path | Text | Link to repo file |
 
-**Scope:** Only active plans (4); link to archive directory for historical reference.
+**Scope:** Only active plans (5); link to archive directory for historical reference.
 
 ### 6. Quick Reference Page
 
@@ -137,15 +147,15 @@ Home Lab (root)
 ├── Overview (embedded from this page)
 │   └── Architecture diagrams
 ├── Services Catalog (database)
-│   └── 15 service entries
+│   └── 25 service entries
 ├── Tech References (database)
-│   └── 24 technology entries
+│   └── 28 technology entries
 ├── Operations Guide
 │   ├── Ansible Operations
 │   ├── Terraform Modules
 │   └── ArgoCD/GitOps
 ├── Design Plans (database)
-│   └── 4 active plans
+│   └── 5 active plans
 └── Quick Reference
     ├── Network Configuration
     ├── Common Commands

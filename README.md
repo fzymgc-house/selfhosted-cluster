@@ -17,6 +17,123 @@ A production-ready Kubernetes cluster for home infrastructure using k3s on Turin
 | Monitoring | VictoriaMetrics + Grafana stack |
 | GitOps | ArgoCD for application deployment |
 
+### Bootstrap Sequence
+
+How the cluster is built from prepared nodes to operational state:
+
+```mermaid
+flowchart TD
+    N[Fresh Nodes<br/>tpi-alpha/beta] --> B1
+
+    subgraph Bootstrap["Ansible: bootstrap-nodes-playbook.yml"]
+        B1[tp2-bootstrap-node<br/>networking, packages, sysctl]
+    end
+
+    B1 --> A1
+
+    subgraph Ansible["Ansible: k3s-playbook.yml"]
+        A1[k3s-storage] --> A2[k3s-server first CP]
+        A2 --> A3[k3s-server join CP]
+        A3 --> A4[kube-vip API HA]
+        A4 --> A5[k3s-agent workers]
+        A5 --> A6[calico CNI]
+        A6 --> A7[CSI snapshots]
+        A7 --> A8[longhorn-disks]
+    end
+
+    A8 --> T1
+
+    subgraph Terraform["Terraform: cluster-bootstrap"]
+        T1[Prometheus CRDs] --> T2[cert-manager]
+        T2 --> T3[External Secrets]
+        T3 --> T4[Longhorn]
+        T4 --> T5[MetalLB]
+        T5 --> T6[ArgoCD]
+    end
+
+    T6 --> G1
+
+    subgraph GitOps["Handoff"]
+        G1[ArgoCD syncs app-configs] --> G2[✅ Operational]
+    end
+
+    style Bootstrap fill:#e0f7fa,stroke:#00838f
+    style Ansible fill:#e3f2fd,stroke:#1976d2
+    style Terraform fill:#f3e5f5,stroke:#7b1fa2
+    style GitOps fill:#e8f5e9,stroke:#388e3c
+```
+
+### Change Management
+
+How changes flow from Git to the cluster:
+
+```mermaid
+flowchart TD
+    subgraph GitHub["GitHub Repository"]
+        direction LR
+        GH1[ansible/]
+        GH2[tf/]
+        GH3[argocd/]
+    end
+
+    subgraph Ansible["Ansible Path"]
+        A1[PR Merged] --> A2[Manual Run]
+        A2 --> A3[Playbook]
+        A3 --> A4[✅ Complete]
+    end
+
+    subgraph Terraform["Terraform Path"]
+        T1[PR Merged] --> T2[GitHub Action]
+        T2 --> T3[Windmill Plan]
+        T3 --> T4[Discord Approval]
+        T4 --> T5[Apply]
+        T5 --> T6[✅ Complete]
+    end
+
+    subgraph ArgoCD["ArgoCD Path"]
+        C1[PR Merged] --> C2[Auto-detect]
+        C2 --> C3[Sync]
+        C3 --> C4[✅ Complete]
+    end
+
+    GH1 --> A1
+    GH2 --> T1
+    GH3 --> C1
+
+    style Ansible fill:#e3f2fd,stroke:#1976d2
+    style Terraform fill:#f3e5f5,stroke:#7b1fa2
+    style ArgoCD fill:#e8f5e9,stroke:#388e3c
+    style T4 fill:#fff3e0,stroke:#ff6f00
+```
+
+<details>
+<summary>Windmill Terraform Flow (detailed)</summary>
+
+```mermaid
+sequenceDiagram
+    participant GH as GitHub
+    participant GHA as GitHub Actions
+    participant WM as Windmill
+    participant DC as Discord
+    participant OP as Operator
+    participant K8s as Cluster
+
+    GH->>GHA: PR merged
+    GHA->>WM: Trigger flow (API)
+    WM->>WM: terraform plan
+    WM->>DC: Send notification + buttons
+    Note over DC: 🔍 Review & Approve<br/>⏩ Quick Approve<br/>❌ Reject<br/>📋 Run Details
+    DC->>OP: Sees notification
+    OP->>DC: Clicks Approve
+    DC->>WM: Resume URL
+    WM->>K8s: terraform apply
+    WM->>DC: Status update ✅
+```
+
+</details>
+
+> **Note:** `tf/cluster-bootstrap` requires manual deployment since it installs ArgoCD and Windmill itself.
+
 ## Repository Structure
 
 ```

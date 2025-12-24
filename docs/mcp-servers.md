@@ -6,13 +6,33 @@ Configuration and management of Model Context Protocol (MCP) servers for AI assi
 
 Enables AI assistants to query Grafana dashboards, data sources, and metrics.
 
-### Installation
+### In-Cluster Deployment (ArgoCD)
+
+Deployed via Helm chart managed by ArgoCD:
+
+| Component | Location |
+|-----------|----------|
+| ArgoCD Application | `argocd/cluster-app/templates/grafana-mcp.yaml` |
+| Helm Values | `argocd/app-configs/grafana-mcp/values.yaml` |
+| ExternalSecret | `argocd/app-configs/grafana-mcp/external-secret.yaml` |
+| Namespace | `grafana-mcp` |
+
+**Internal Service URL**: `http://grafana-mcp.grafana-mcp.svc.cluster.local:8000/sse`
+
+The in-cluster deployment:
+- Uses internal Kubernetes service for Grafana connection (no TLS required)
+- Runs in SSE transport mode for network access
+- Gets API token from Vault via ExternalSecrets
+
+### Local Installation
+
+For local Claude Code usage:
 
 ```bash
 go install github.com/grafana/mcp-grafana/cmd/mcp-grafana@latest
 ```
 
-### Configuration
+### Local Configuration
 
 Add to Claude Code settings (`~/.claude.json` or project `.mcp.json`):
 
@@ -21,6 +41,9 @@ Add to Claude Code settings (`~/.claude.json` or project `.mcp.json`):
   "mcpServers": {
     "grafana": {
       "command": "mcp-grafana",
+      "args": [
+        "--tls-ca-file", "/path/to/fzymgc-ca-chain.crt"
+      ],
       "env": {
         "GRAFANA_URL": "https://grafana.fzymgc.house",
         "GRAFANA_SERVICE_ACCOUNT_TOKEN": "<token-from-vault>"
@@ -29,6 +52,8 @@ Add to Claude Code settings (`~/.claude.json` or project `.mcp.json`):
   }
 }
 ```
+
+**Note**: External access requires the internal CA certificate for TLS verification.
 
 ### Vault Secrets
 

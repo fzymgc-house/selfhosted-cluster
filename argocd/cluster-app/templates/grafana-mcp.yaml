@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grafana-mcp
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  project: default
+  sources:
+    # Helm chart from Grafana
+    - repoURL: https://grafana.github.io/helm-charts
+      chart: grafana-mcp
+      targetRevision: 0.2.2
+      helm:
+        valueFiles:
+          - $values/argocd/app-configs/grafana-mcp/values.yaml
+    # Local values and resources
+    - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
+      targetRevision: HEAD
+      ref: values
+    # Kustomize resources (namespace, external-secret)
+    - repoURL: https://github.com/fzymgc-house/selfhosted-cluster
+      targetRevision: HEAD
+      path: argocd/app-configs/grafana-mcp
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: grafana-mcp
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - kind: ExternalSecret
+      group: external-secrets.io
+      jqPathExpressions:
+        - .spec.data[].remoteRef.conversionStrategy
+        - .spec.data[].remoteRef.decodingStrategy
+        - .spec.data[].remoteRef.metadataPolicy

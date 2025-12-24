@@ -30,14 +30,14 @@ Root page with:
 | Category | Select | Platform, Application, Infrastructure, External |
 | Hostname | Text | Primary DNS name |
 | Alt Hostnames | Multi-select | Alternative DNS entries |
-| Ingress Type | Select | Traefik IngressRoute, TCP Passthrough, Helm Managed, kube-vip VIP, Cloudflare Tunnel, External |
+| Ingress Type | Select | Traefik IngressRoute, TCP Passthrough, Helm Managed, kube-vip VIP, Cloudflare Tunnel, External, None |
 | Auth Method | Select | OIDC, Forward-Auth, Certificate, None |
 | Vault Path | Text | Secret location (if applicable) |
 | Namespace | Text | Kubernetes namespace |
 | Status | Status | Operational, Degraded, Maintenance |
 | Notes | Rich text | Additional context |
 
-**Initial Data (25 services):**
+**Initial Data (29 services):**
 
 | Name | Category | Hostname | Ingress | Auth |
 |------|----------|----------|---------|------|
@@ -56,16 +56,20 @@ Root page with:
 | NAS | External | nas.fzymgc.house | External | LDAP |
 | Teleport | External | teleport.fzymgc.house | External | None |
 | Windmill Webhooks | Platform | windmill-wh.fzymgc.net | Cloudflare Tunnel | None |
-| Loki | Platform | - | ClusterIP | None |
-| Alloy | Platform | - | ClusterIP | None |
-| Velero | Infrastructure | - | ClusterIP | None |
-| cert-manager | Infrastructure | - | ClusterIP | None |
-| MetalLB | Infrastructure | - | ClusterIP | None |
-| Valkey | Infrastructure | - | ClusterIP | None |
-| External Secrets | Infrastructure | - | ClusterIP | None |
-| ARC Runners | Platform | - | ClusterIP | None |
-| Grafana Operator | Platform | - | ClusterIP | None |
-| System Upgrade Controller | Infrastructure | - | ClusterIP | None |
+| Cloudflared | Infrastructure | - | None | None |
+| Loki | Platform | - | None | None |
+| Alloy | Platform | - | None | None |
+| Velero | Infrastructure | - | None | None |
+| cert-manager | Infrastructure | - | None | None |
+| MetalLB | Infrastructure | - | None | None |
+| Valkey | Infrastructure | - | None | None |
+| External Secrets | Infrastructure | - | None | None |
+| ARC Runners | Platform | - | None | None |
+| Grafana Operator | Platform | - | None | None |
+| System Upgrade Controller | Infrastructure | - | None | None |
+| Kubernetes Replicator | Infrastructure | - | None | None |
+| Shared Resources | Infrastructure | - | None | None |
+| System Dashboards | Platform | - | None | None |
 
 ### 3. Tech References Database
 
@@ -147,7 +151,7 @@ Home Lab (root)
 ├── Overview (embedded from this page)
 │   └── Architecture diagrams
 ├── Services Catalog (database)
-│   └── 25 service entries
+│   └── 29 service entries
 ├── Tech References (database)
 │   └── 28 technology entries
 ├── Operations Guide

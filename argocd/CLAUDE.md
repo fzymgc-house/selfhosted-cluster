@@ -72,11 +72,10 @@ kind: ServiceAccount
 metadata:
   name: app-sa
   namespace: app-namespace
-  annotations:
-    vault.hashicorp.com/agent-inject: "true"
-    vault.hashicorp.com/role: "app-role"
 automountServiceAccountToken: false  # Only mount when needed
 ```
+
+**Note:** Secrets are injected via ExternalSecrets Operator (not Vault agent). The service account name must match the Vault Kubernetes auth role configuration.
 
 ### RBAC Configuration
 ```yaml

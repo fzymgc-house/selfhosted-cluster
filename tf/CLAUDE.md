@@ -45,16 +45,16 @@ resource "vault_policy" "cm" { }  # Too abbreviated
 ### versions.tf Template
 ```hcl
 terraform {
-  required_version = ">= 1.0"
+  required_version = ">= 1.12.2"
 
   required_providers {
     vault = {
       source  = "hashicorp/vault"
-      version = "~> 4.0"
+      version = "5.6.0"
     }
-    onepassword = {
-      source  = "1Password/onepassword"
-      version = "~> 2.0"
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "2.38.0"
     }
   }
 }
@@ -64,11 +64,12 @@ terraform {
 ```hcl
 provider "vault" {
   address = "https://vault.fzymgc.house"
-  # Auth via environment variables or Kubernetes service account
+  # Auth via VAULT_TOKEN environment variable
 }
 
-provider "onepassword" {
-  # Configuration for external secrets
+provider "kubernetes" {
+  config_path    = "~/.kube/configs/fzymgc-house-admin.yml"
+  config_context = "fzymgc-house"
 }
 ```
 
@@ -236,18 +237,34 @@ resource "kubernetes_secret" "database" {
 
 ## Module-Specific Guidance
 
-### Vault Module (/tf/vault)
+### Cluster Bootstrap (`tf/cluster-bootstrap`)
+- Deploys core infrastructure: cert-manager, External Secrets, Longhorn, MetalLB, ArgoCD
+- Run after Ansible deploys k3s
+- Single apply for full infrastructure bootstrap
+
+### Vault Module (`tf/vault`)
 - Define all policies in separate `policy-*.tf` files
-- Group related Kubernetes auth roles
+- Group related Kubernetes auth roles in `k8s-*.tf` files
 - Use descriptive policy names matching their purpose
 - Document each policy's intended use
 
-### Authentik Module (/tf/authentik)
+### Authentik Module (`tf/authentik`)
 - Configure OIDC applications systematically
 - Use consistent naming for applications
 - Group related configurations
 
-### Grafana Module (/tf/grafana)
+### Grafana Module (`tf/grafana`)
 - Manage dashboards as code
 - Configure data sources programmatically
 - Set up proper folder structure
+
+### Cloudflare Module (`tf/cloudflare`)
+- DNS record management
+- Cloudflare Tunnel configuration
+
+### Teleport Module (`tf/teleport`)
+- Teleport cluster configuration
+- Access control policies
+
+### Core Services (`tf/core-services`)
+- Cross-cutting service configurations

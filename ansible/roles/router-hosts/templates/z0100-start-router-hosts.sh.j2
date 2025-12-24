@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Boot script to start router-hosts Docker Compose service
+# Placed in post_main.d to run after Firewalla main startup
+
+sudo systemctl enable --now docker-compose@router-hosts

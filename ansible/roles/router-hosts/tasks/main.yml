@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# tasks file for router-hosts
+# Deploys router-hosts server with Vault Agent mTLS on Firewalla
+
+- name: Include preflight checks
+  ansible.builtin.include_tasks: preflight.yml
+  tags:
+    - router-hosts
+    - router-hosts-preflight
+
+- name: Include Vault credentials setup
+  ansible.builtin.include_tasks: vault-credentials.yml
+  tags:
+    - router-hosts
+    - router-hosts-vault
+
+- name: Include directory setup
+  ansible.builtin.include_tasks: directories.yml
+  tags:
+    - router-hosts
+    - router-hosts-directories
+
+- name: Include configuration deployment
+  ansible.builtin.include_tasks: configure.yml
+  tags:
+    - router-hosts
+    - router-hosts-configure
+
+- name: Include Docker deployment
+  ansible.builtin.include_tasks: docker.yml
+  tags:
+    - router-hosts
+    - router-hosts-docker
+
+- name: Include verification
+  ansible.builtin.include_tasks: verify.yml
+  tags:
+    - router-hosts
+    - router-hosts-verify

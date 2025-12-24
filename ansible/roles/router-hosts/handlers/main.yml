@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# handlers file for router-hosts
+
+- name: Restart router-hosts
+  ansible.builtin.systemd:
+    name: docker-compose@router-hosts
+    state: restarted
+  listen: restart router-hosts

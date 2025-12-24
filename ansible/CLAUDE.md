@@ -19,6 +19,7 @@ Guidance for Claude Code when working with Ansible code in this directory.
 | `longhorn-disks` | Additional storage disk configuration | Nodes with `longhorn_additional_disks` defined |
 | `teleport-agent` | Teleport agent installation | All nodes |
 | `tp2-bootstrap-node` | OS configuration, networking, security | All TuringPi 2 nodes |
+| `router-hosts` | router-hosts gRPC server with Vault mTLS | `router` |
 
 ## k3s-playbook.yml Execution Phases
 

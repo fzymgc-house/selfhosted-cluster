@@ -1,0 +1,88 @@
+# SPDX-License-Identifier: MIT-0
+# code: language=ansible
+---
+# Deploy configuration files for router-hosts
+
+- name: Write AppRole role_id
+  ansible.builtin.copy:
+    content: "{{ router_hosts_role_id }}"
+    dest: "{{ router_hosts_base_dir }}/vault-approle/role_id"
+    owner: "{{ router_hosts_user }}"
+    group: "{{ router_hosts_user }}"
+    mode: "0600"
+  no_log: true
+  notify: restart router-hosts
+  tags:
+    - router-hosts
+    - router-hosts-configure
+
+- name: Write AppRole secret_id
+  ansible.builtin.copy:
+    content: "{{ router_hosts_secret_id }}"
+    dest: "{{ router_hosts_base_dir }}/vault-approle/secret_id"
+    owner: "{{ router_hosts_user }}"
+    group: "{{ router_hosts_user }}"
+    mode: "0600"
+  no_log: true
+  notify: restart router-hosts
+  tags:
+    - router-hosts
+    - router-hosts-configure
+
+- name: Deploy Vault Agent configuration
+  ansible.builtin.template:
+    src: vault-agent-config.hcl.j2
+    dest: "{{ router_hosts_base_dir }}/config/vault-agent.hcl"
+    owner: "{{ router_hosts_user }}"
+    group: "{{ router_hosts_user }}"
+    mode: "0644"
+  notify: restart router-hosts
+  tags:
+    - router-hosts
+    - router-hosts-configure
+
+- name: Deploy router-hosts server configuration
+  ansible.builtin.template:
+    src: server.toml.j2
+    dest: "{{ router_hosts_base_dir }}/config/server.toml"
+    owner: "{{ router_hosts_user }}"
+    group: "{{ router_hosts_user }}"
+    mode: "0644"
+  notify: restart router-hosts
+  tags:
+    - router-hosts
+    - router-hosts-configure
+
+- name: Deploy on-hosts-update hook script
+  ansible.builtin.template:
+    src: on-hosts-update.sh.j2
+    dest: "{{ router_hosts_base_dir }}/scripts/on-hosts-update.sh"
+    owner: "{{ router_hosts_user }}"
+    group: "{{ router_hosts_user }}"
+    mode: "0755"
+  tags:
+    - router-hosts
+    - router-hosts-configure
+
+- name: Deploy Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ router_hosts_docker_compose_dir }}/docker-compose.yml"
+    owner: "{{ router_hosts_user }}"
+    group: "{{ router_hosts_user }}"
+    mode: "0644"
+  notify: restart router-hosts
+  tags:
+    - router-hosts
+    - router-hosts-configure
+
+- name: Deploy boot script
+  ansible.builtin.template:
+    src: z0100-start-router-hosts.sh.j2
+    dest: "{{ router_hosts_post_main_dir }}/z0100-start-router-hosts.sh"
+    owner: "{{ router_hosts_user }}"
+    group: "{{ router_hosts_user }}"
+    mode: "0755"
+  tags:
+    - router-hosts
+    - router-hosts-configure

@@ -23,7 +23,13 @@ How the cluster is built from prepared nodes to operational state:
 
 ```mermaid
 flowchart TD
-    N[Prepared Nodes<br/>tpi-alpha/beta] --> A1
+    N[Fresh Nodes<br/>tpi-alpha/beta] --> B1
+
+    subgraph Bootstrap["Ansible: bootstrap-nodes-playbook.yml"]
+        B1[tp2-bootstrap-node<br/>networking, packages, mounts]
+    end
+
+    B1 --> A1
 
     subgraph Ansible["Ansible: k3s-playbook.yml"]
         A1[k3s-storage] --> A2[k3s-server first CP]
@@ -49,6 +55,7 @@ flowchart TD
         G1[ArgoCD syncs app-configs] --> G2[✅ Operational]
     end
 
+    style Bootstrap fill:#e0f7fa,stroke:#00838f
     style Ansible fill:#e3f2fd,stroke:#1976d2
     style Terraform fill:#f3e5f5,stroke:#7b1fa2
     style GitOps fill:#e8f5e9,stroke:#388e3c

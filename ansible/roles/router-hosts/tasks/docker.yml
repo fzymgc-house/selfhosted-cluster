@@ -8,6 +8,7 @@
     cmd: docker pull {{ router_hosts_vault_image }}
   register: router_hosts_vault_pull
   changed_when: "'Pull complete' in router_hosts_vault_pull.stdout or 'Downloaded newer' in router_hosts_vault_pull.stdout"
+  notify: restart router-hosts
   tags:
     - router-hosts
     - router-hosts-docker
@@ -17,6 +18,7 @@
     cmd: docker pull {{ router_hosts_image }}:{{ router_hosts_version }}
   register: router_hosts_pull
   changed_when: "'Pull complete' in router_hosts_pull.stdout or 'Downloaded newer' in router_hosts_pull.stdout"
+  notify: restart router-hosts
   tags:
     - router-hosts
     - router-hosts-docker

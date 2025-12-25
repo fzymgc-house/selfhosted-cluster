@@ -5,7 +5,7 @@ terraform {
   required_providers {
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "2.38.0"
+      version = "3.0.1"
     }
     helm = {
       source  = "hashicorp/helm"
@@ -13,7 +13,7 @@ terraform {
     }
     vault = {
       source  = "hashicorp/vault"
-      version = "~> 4.0"
+      version = "~> 5.0"
     }
     authentik = {
       source  = "goauthentik/authentik"

@@ -372,8 +372,66 @@ kubectl config get-contexts
 - Docker-in-Docker is enabled - be cautious with untrusted images
 - 1Password SSH agent provides secure SSH key access without exposing private keys
 
+## CI/CD Validation
+
+The devcontainer is validated on every PR via GitHub Actions (`.github/workflows/devcontainer-ci.yml`).
+
+### CI-Specific Configuration
+
+CI uses a separate config at `.devcontainer/ci/devcontainer.json` because:
+
+| Mount Type | Local Development | CI/GitHub Actions |
+|------------|-------------------|-------------------|
+| Host bind mounts (`~/.ssh`, `~/.kube`) | ✅ Works (host paths exist) | ❌ Fails (paths don't exist on runners) |
+| Docker volumes | ✅ Works | ✅ Works (auto-created) |
+
+The CI config removes host-specific bind mounts while keeping Docker volumes for caches.
+
+### What CI Validates
+
+The workflow builds the devcontainer and validates:
+- Core tools: Python, uv, Terraform, Ansible, kubectl, Helm, GitHub CLI
+- Development tools: ripgrep, ast-grep, jq, yq
+- Python virtual environment setup (when present)
+
+### Running CI Locally
+
+Test the CI build locally with the devcontainers CLI:
+
+```bash
+# Install CLI
+npm install -g @devcontainers/cli
+
+# Build using CI config
+devcontainer build --workspace-folder . --config .devcontainer/ci/devcontainer.json
+
+# Run with validation
+devcontainer up --workspace-folder . --config .devcontainer/ci/devcontainer.json
+devcontainer exec --workspace-folder . python --version
+```
+
+## Architecture Notes
+
+### Host Bind Mounts vs Docker Volumes
+
+| Type | Behavior | Use Case |
+|------|----------|----------|
+| **Bind mount** (`type=bind`) | Maps host path into container | Host secrets (SSH keys, kubeconfig) |
+| **Docker volume** (`type=volume`) | Container-only storage, persists across rebuilds | Caches, venv, Claude config |
+
+**Key insight:** Bind mounts require the host path to exist. This is why CI needs a separate config without host-specific mounts.
+
+### Volume Naming
+
+Docker volumes use a `selfhosted-cluster-` prefix for easy identification:
+- `selfhosted-cluster-claude-config` - Claude Code settings
+- `selfhosted-cluster-venv` - Python virtual environment
+- `selfhosted-cluster-cache` - XDG cache (pip, uv, etc.)
+- `selfhosted-cluster-tmp` - Temporary files
+
 ## Further Reading
 
 - [VS Code Dev Containers Documentation](https://code.visualstudio.com/docs/devcontainers/containers)
 - [Dev Container Specification](https://containers.dev/)
+- [devcontainers/ci GitHub Action](https://github.com/devcontainers/ci)
 - Repository-specific guides in `docs/`

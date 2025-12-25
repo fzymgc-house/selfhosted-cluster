@@ -1,12 +1,13 @@
 # SPDX-License-Identifier: MIT-0
 # Claude Code devcontainer policy
 #
-# Grants users access to their personal MCP server API keys stored in Vault:
+# Grants users access to their personal API keys/tokens stored in Vault:
+# - Terraform Cloud (infrastructure state)
 # - Firecrawl (web scraping/search)
 # - Exa (deep research)
 # - Notion (workspace integration)
 #
-# Note: Claude Code uses OAuth login (claude login), not API keys.
+# Note: Claude Code uses OAuth login (claude doctor), not API keys.
 # The Anthropic path is retained for backwards compatibility.
 #
 # Each user stores their keys at: secret/users/<entity-name>/<service>
@@ -25,6 +26,11 @@ resource "vault_policy" "claude_code" {
     # Claude Code now uses OAuth login, but this path may still be used
     # by other tools or scripts that need the API key directly
     path "secret/data/users/{{identity.entity.name}}/anthropic" {
+      capabilities = ["read"]
+    }
+
+    # Terraform Cloud token - used to create credentials.tfrc.json
+    path "secret/data/users/{{identity.entity.name}}/terraform-cloud" {
       capabilities = ["read"]
     }
 

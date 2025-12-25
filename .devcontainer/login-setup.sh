@@ -57,11 +57,11 @@ else
     needs_github=true
 fi
 
-# Terraform
+# Terraform (will be configured from Vault token later)
 if [[ -f "${HOME}/.terraform.d/credentials.tfrc.json" ]]; then
-    log_info "Terraform Cloud: Credentials found"
+    log_info "Terraform Cloud: Credentials file exists"
 else
-    log_warn "Terraform Cloud: Not authenticated"
+    log_warn "Terraform Cloud: No credentials file"
     needs_terraform=true
 fi
 
@@ -269,18 +269,76 @@ if $needs_github; then
     echo ""
 fi
 
-# Step 3: Terraform Cloud
-if $needs_terraform; then
-    log_step "Step 3: Terraform Cloud Authentication"
-    echo "    Terraform Cloud stores remote state for infrastructure."
-    echo ""
-    read -p "    Run 'terraform login'? [Y/n] " -n 1 -r
-    echo ""
-    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        terraform login || {
-            log_warn "Terraform login failed. You can retry later with: terraform login"
-        }
+# Step 3: Terraform Cloud (token stored in Vault, credentials file created locally)
+# This runs if Vault is authenticated, regardless of needs_terraform flag
+# (to allow updating an existing token)
+if vault token lookup &>/dev/null && [[ -n "${ENTITY_NAME:-}" ]]; then
+    TF_SECRET_PATH="secret/users/${ENTITY_NAME}/terraform-cloud"
+    TF_TOKEN=""
+
+    # Check if token exists in Vault
+    if tf_result=$(vault kv get -format=json "$TF_SECRET_PATH" 2>&1); then
+        TF_TOKEN=$(echo "$tf_result" | jq -r '.data.data.token // empty' 2>/dev/null)
+        if [[ -n "$TF_TOKEN" ]]; then
+            log_info "Terraform Cloud token found in Vault"
+        fi
     fi
+
+    # Prompt to store/update token if missing or user wants to update
+    if [[ -z "$TF_TOKEN" ]] || $needs_terraform; then
+        log_step "Step 3: Terraform Cloud Token"
+        echo "    Terraform Cloud stores remote state for infrastructure."
+        echo "    Token is stored in Vault at: ${TF_SECRET_PATH}"
+        echo ""
+        if [[ -n "$TF_TOKEN" ]]; then
+            read -p "    Token exists. Update it? [y/N] " -n 1 -r
+        else
+            read -p "    Do you have a Terraform Cloud token to store? [y/N] " -n 1 -r
+        fi
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo ""
+            echo "    Get a token from: https://app.terraform.io/app/settings/tokens"
+            echo "    Enter your Terraform Cloud token:"
+            read -rs TF_TOKEN_INPUT
+            echo ""
+            if [[ -n "$TF_TOKEN_INPUT" ]]; then
+                if tf_error=$(vault kv put "$TF_SECRET_PATH" token="$TF_TOKEN_INPUT" 2>&1); then
+                    log_info "Terraform Cloud token stored in Vault"
+                    TF_TOKEN="$TF_TOKEN_INPUT"
+                    # Reload direnv to pick up new token
+                    direnv allow . 2>/dev/null || true
+                else
+                    log_warn "Failed to store Terraform Cloud token:"
+                    echo "    ${tf_error}" | head -2
+                fi
+            fi
+        fi
+        echo ""
+    fi
+
+    # Create/update credentials file if we have a token
+    if [[ -n "$TF_TOKEN" ]]; then
+        TF_CREDS_DIR="${HOME}/.terraform.d"
+        TF_CREDS_FILE="${TF_CREDS_DIR}/credentials.tfrc.json"
+        mkdir -p "$TF_CREDS_DIR"
+        cat > "$TF_CREDS_FILE" <<EOF
+{
+  "credentials": {
+    "app.terraform.io": {
+      "token": "${TF_TOKEN}"
+    }
+  }
+}
+EOF
+        chmod 600 "$TF_CREDS_FILE"
+        log_info "Terraform credentials file created: ${TF_CREDS_FILE}"
+        needs_terraform=false
+    fi
+elif $needs_terraform; then
+    log_step "Step 3: Terraform Cloud Authentication"
+    echo "    Terraform Cloud requires Vault authentication to store token."
+    echo "    Complete Vault setup first, then re-run this script."
     echo ""
 fi
 

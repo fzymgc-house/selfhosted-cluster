@@ -166,7 +166,10 @@ The following host directories are mounted into the container:
 | `~/.1password` | `/home/vscode/.1password` | 1Password SSH agent socket |
 | Claude Code config | `/home/vscode/.claude` | Claude Code settings (Docker volume) |
 
-**Note:** Changes to these files inside the container affect your host system.
+**Notes:**
+- Changes to mounted directories inside the container affect your host system
+- Vault tokens are **not** mounted - you must authenticate inside the container with `vault login`
+- Claude Code config uses a Docker volume for persistence across rebuilds
 
 ## Environment Variables
 
@@ -260,6 +263,29 @@ The `dev.sh` script automatically creates a socket proxy when starting the conta
 ```
 
 **Note:** Only the 1Password SSH agent socket is available in the container. This provides SSH key access for Git and SSH operations, which is all that's needed for development workflows.
+
+### Claude Code API Key Setup
+
+The Anthropic API key is fetched from Vault during container startup. The script uses distinct exit codes:
+
+| Exit Code | Meaning |
+|-----------|---------|
+| 0 | Success - API key configured |
+| 2 | Vault auth skipped - not logged in |
+| 3 | API key not found in Vault |
+| 1 | Error (CLI missing, command failure) |
+
+**First-time setup:**
+```bash
+# Authenticate to Vault
+vault login -method=github
+
+# Store your Anthropic API key
+vault kv put secret/users/<your-github-username>/anthropic api_key=sk-ant-...
+
+# Re-run the setup script
+bash .devcontainer/setup-claude-secrets.sh
+```
 
 ### kubectl Context Not Found
 

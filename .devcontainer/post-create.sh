@@ -121,7 +121,7 @@ log_info "Installing ast-grep..."
 if command -v ast-grep &> /dev/null; then
     log_info "✓ ast-grep already installed: $(ast-grep --version 2>/dev/null || echo 'unknown version')"
 else
-    if npm install -g @ast-grep/cli 2>/dev/null; then
+    if npm install -g @ast-grep/cli; then
         log_info "✓ ast-grep installed successfully"
     else
         log_warn "Failed to install ast-grep (Serena MCP may have reduced functionality)"
@@ -173,7 +173,24 @@ setup_git_safeguards
 # Set up Claude Code with Vault-sourced API key
 log_info "Setting up Claude Code API key from Vault..."
 if [[ -f ".devcontainer/setup-claude-secrets.sh" ]]; then
+    set +e  # Temporarily allow non-zero exit
     bash .devcontainer/setup-claude-secrets.sh
+    secrets_exit_code=$?
+    set -e
+    case $secrets_exit_code in
+        0)
+            log_info "✓ Claude Code API key configured from Vault"
+            ;;
+        2)
+            log_info "Vault auth skipped - configure later with 'vault login'"
+            ;;
+        3)
+            log_warn "API key not found in Vault - store it and re-run script"
+            ;;
+        *)
+            log_warn "Unexpected error setting up Claude secrets (exit $secrets_exit_code)"
+            ;;
+    esac
 else
     log_warn "setup-claude-secrets.sh not found, skipping Anthropic API key setup"
 fi

@@ -43,8 +43,6 @@
         },
         // jq and similar JSON/YAML tools
         "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
-        // Neovim editor (replaces apt vim)
-        "ghcr.io/devcontainers-extra/features/neovim-homebrew:1": {},
         // direnv for automatic environment variable loading
         "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {}
     },

@@ -224,6 +224,16 @@
       "groupSlug": "python-deps",
       "automerge": true,
       "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Ignore Python runtime version updates (requires-python field)",
+      "matchManagers": [
+        "pep621"
+      ],
+      "matchDepNames": [
+        "python"
+      ],
+      "enabled": false
     }
   ],
   "vulnerabilityAlerts": {

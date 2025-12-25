@@ -30,7 +30,19 @@
         // Claude Code CLI - official Anthropic feature
         "ghcr.io/anthropics/devcontainer-features/claude-code:1": {},
         // uv for fast Python package management
-        "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {}
+        "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {},
+        // ripgrep for Serena MCP semantic code operations
+        "ghcr.io/jungaretti/features/ripgrep:1": {},
+        // Common utilities (zsh, oh-my-zsh, etc.)
+        "ghcr.io/devcontainers/features/common-utils:2": {},
+        // SSH server for remote access
+        "ghcr.io/devcontainers/features/sshd:1": {},
+        // Task runner (go-task)
+        "ghcr.io/eitsupi/devcontainer-features/go-task:1": {
+            "version": "latest"
+        },
+        // jq and similar JSON/YAML tools
+        "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {}
     },
 
     // Override default workspace mount to use /workspace instead of /workspaces

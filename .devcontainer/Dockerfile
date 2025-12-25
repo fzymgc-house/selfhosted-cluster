@@ -19,8 +19,6 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     iputils-ping \
     # Utilities
     bc \
-    jq \
-    yq \
     vim \
     less \
     tree \
@@ -36,8 +34,6 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     python3-dev \
     # For direnv
     direnv \
-    # For Serena MCP (semantic code operations)
-    ripgrep \
     && rm -rf /var/lib/apt/lists/*
 
 

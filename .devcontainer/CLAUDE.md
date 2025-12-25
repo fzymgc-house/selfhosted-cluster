@@ -10,8 +10,9 @@ AI assistant guidance for working with devcontainer configuration.
 | `ci/devcontainer.json` | CI-specific config (no host bind mounts) |
 | `Dockerfile` | Base image with system packages |
 | `post-create.sh` | Post-creation setup (venv, auth checks, git config) |
-| `login-setup.sh` | Interactive auth setup (Vault, GitHub, Terraform) |
-| `setup-claude-secrets.sh` | Configures Claude Code API key from Vault |
+| `login-setup.sh` | Interactive auth setup (Claude, Vault, GitHub, Terraform) |
+| `create-vault-token.sh` | Creates Vault token on host for container auth (run on HOST) |
+| `setup-claude-secrets.sh` | Verifies MCP server API keys from Vault |
 | `README.md` | Comprehensive user documentation |
 
 ## Key Concepts
@@ -67,10 +68,10 @@ Most tools are installed via devcontainer features (not Dockerfile):
 
 The `post-create.sh` runs after container creation:
 - Fixes Docker volume permissions
-- Checks auth status (Vault, GitHub, Terraform)
+- Checks auth status (Vault, GitHub, Terraform, Claude)
 - Runs `setup-venv.sh` for Python environment
 - Configures git defaults
-- Sets up Claude Code API key from Vault
+- Loads MCP server API keys from Vault (via direnv)
 
 **Pattern:** Non-blocking checks with warnings, not errors.
 

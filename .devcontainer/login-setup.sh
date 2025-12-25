@@ -33,11 +33,11 @@ needs_claude=false
 echo "Checking authentication status..."
 echo ""
 
-# Vault
+# Vault (note: OIDC login requires localhost:8250 callback, doesn't work in container)
 if vault token lookup &>/dev/null; then
     log_info "Vault: Authenticated"
 else
-    log_warn "Vault: Not authenticated"
+    log_warn "Vault: Not authenticated (required for MCP server keys)"
     needs_vault=true
 fi
 
@@ -57,15 +57,15 @@ else
     needs_terraform=true
 fi
 
-# Claude (check env var)
-if [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
-    log_info "Claude Code: API key configured"
+# Claude (check for config file from 'claude login')
+if [[ -f "${HOME}/.claude.json" ]]; then
+    log_info "Claude Code: Logged in"
 else
-    log_warn "Claude Code: API key not configured"
+    log_warn "Claude Code: Not logged in"
     needs_claude=true
 fi
 
-# MCP servers (optional)
+# MCP servers (optional, requires Vault auth)
 mcp_count=0
 [[ -n "${FIRECRAWL_API_KEY:-}" ]] && ((mcp_count++))
 [[ -n "${EXA_API_KEY:-}" ]] && ((mcp_count++))
@@ -73,7 +73,7 @@ mcp_count=0
 if [[ $mcp_count -gt 0 ]]; then
     log_info "MCP servers: ${mcp_count}/3 API keys configured"
 else
-    log_warn "MCP servers: No API keys configured (optional)"
+    log_warn "MCP servers: No API keys configured (optional, requires Vault)"
 fi
 
 echo ""
@@ -87,22 +87,63 @@ fi
 echo "────────────────────────────────────────────────────────────────"
 echo ""
 
-# Step 1: Vault (required for Claude secrets)
-if $needs_vault; then
-    log_step "Step 1: Vault Authentication"
-    echo "    Vault stores secrets including the Claude Code API key."
+# Step 1: Claude Code (interactive OAuth login)
+if $needs_claude; then
+    log_step "Step 1: Claude Code Authentication"
+    echo "    Claude Code uses interactive OAuth login (opens browser)."
     echo ""
-    read -p "    Run 'vault login -method=oidc'? [Y/n] " -n 1 -r
+    read -p "    Run 'claude login'? [Y/n] " -n 1 -r
     echo ""
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        vault login -method=oidc || {
-            log_warn "Vault login failed. You can retry later with: vault login -method=oidc"
+        claude login || {
+            log_warn "Claude login failed. You can retry later with: claude login"
         }
     fi
     echo ""
 fi
 
-# Step 2: API keys (after Vault is set up)
+# Step 2: Vault (for MCP server API keys)
+# Note: OIDC login requires localhost:8250 callback which doesn't work in container
+if $needs_vault; then
+    log_step "Step 2: Vault Authentication"
+    echo "    Vault stores MCP server API keys (Firecrawl, Exa, Notion)."
+    echo ""
+    echo "    NOTE: Vault OIDC login requires localhost:8250 callback,"
+    echo "    which doesn't work in devcontainers."
+    echo ""
+    echo "    Options:"
+    echo "      1. Create a token on your HOST machine first:"
+    echo "         ./create-vault-token.sh"
+    echo "         (run from .devcontainer/ directory on host)"
+    echo ""
+    echo "      2. Or paste an existing Vault token"
+    echo ""
+    read -p "    Do you have a Vault token to paste? [y/N] " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo ""
+        echo "    Paste your Vault token (it will be hidden):"
+        read -rs VAULT_TOKEN_INPUT
+        echo ""
+        if [[ -n "$VAULT_TOKEN_INPUT" ]]; then
+            if vault login token="$VAULT_TOKEN_INPUT" 2>/dev/null; then
+                log_info "Vault authentication successful"
+                needs_vault=false
+            else
+                log_warn "Vault token login failed. Check your token is valid."
+            fi
+        fi
+    else
+        echo ""
+        echo "    To create a token, run on your HOST machine:"
+        echo "      cd .devcontainer && ./create-vault-token.sh"
+        echo ""
+        echo "    Then re-run this script to continue setup."
+    fi
+    echo ""
+fi
+
+# Step 2b: MCP server API keys (if Vault is authenticated)
 if vault token lookup &>/dev/null; then
     # Get entity name for the secret path
     if ! TOKEN_LOOKUP=$(vault token lookup -format=json 2>&1); then
@@ -168,9 +209,6 @@ if vault token lookup &>/dev/null; then
                 echo ""
             fi
         }
-
-        # Claude Code API key (required)
-        prompt_api_key "Anthropic (Claude Code)" "secret/users/${ENTITY_NAME}/anthropic" "sk-ant-" "2a"
 
         # MCP server API keys (optional)
         echo ""

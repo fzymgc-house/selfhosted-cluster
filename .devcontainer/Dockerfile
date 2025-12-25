@@ -35,6 +35,10 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     libonig-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Add fzymgc PKI root CA to system trust store for Vault TLS verification
+COPY .devcontainer/fzymgc-ca-bundle.crt /usr/local/share/ca-certificates/fzymgc-ca-bundle.crt
+RUN update-ca-certificates
+
 
 # Install k3sup for cluster management
 RUN curl -sLS https://get.k3sup.dev | sh

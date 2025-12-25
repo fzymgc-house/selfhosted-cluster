@@ -36,7 +36,7 @@ jobs:
       image_tag: ${{ steps.vars.outputs.image_tag }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set image tag with short SHA
         id: vars
@@ -67,7 +67,7 @@ jobs:
       - spot=lowest-price
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set image tag with short SHA
         id: vars

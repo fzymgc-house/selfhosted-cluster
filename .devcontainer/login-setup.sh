@@ -4,6 +4,9 @@
 #
 # Run this script after opening a terminal in the devcontainer to complete
 # authentication setup for all services.
+#
+# Note: Vault OIDC login requires localhost:8250 callback, which doesn't work
+# in devcontainers. Use scripts/create-vault-token.sh on the host instead.
 
 set -euo pipefail
 
@@ -33,11 +36,11 @@ needs_claude=false
 echo "Checking authentication status..."
 echo ""
 
-# Vault
+# Vault (note: OIDC login requires localhost:8250 callback, doesn't work in container)
 if vault token lookup &>/dev/null; then
     log_info "Vault: Authenticated"
 else
-    log_warn "Vault: Not authenticated"
+    log_warn "Vault: Not authenticated (required for MCP server keys)"
     needs_vault=true
 fi
 
@@ -57,15 +60,15 @@ else
     needs_terraform=true
 fi
 
-# Claude (check env var)
-if [[ -n "${ANTHROPIC_API_KEY:-}" ]]; then
-    log_info "Claude Code: API key configured"
+# Claude (check for config file from 'claude login')
+if [[ -f "${HOME}/.claude.json" ]]; then
+    log_info "Claude Code: Logged in"
 else
-    log_warn "Claude Code: API key not configured"
+    log_warn "Claude Code: Not logged in"
     needs_claude=true
 fi
 
-# MCP servers (optional)
+# MCP servers (optional, requires Vault auth)
 mcp_count=0
 [[ -n "${FIRECRAWL_API_KEY:-}" ]] && ((mcp_count++))
 [[ -n "${EXA_API_KEY:-}" ]] && ((mcp_count++))
@@ -73,7 +76,7 @@ mcp_count=0
 if [[ $mcp_count -gt 0 ]]; then
     log_info "MCP servers: ${mcp_count}/3 API keys configured"
 else
-    log_warn "MCP servers: No API keys configured (optional)"
+    log_warn "MCP servers: No API keys configured (optional, requires Vault)"
 fi
 
 echo ""
@@ -87,22 +90,67 @@ fi
 echo "────────────────────────────────────────────────────────────────"
 echo ""
 
-# Step 1: Vault (required for Claude secrets)
-if $needs_vault; then
-    log_step "Step 1: Vault Authentication"
-    echo "    Vault stores secrets including the Claude Code API key."
+# Step 1: Claude Code (interactive OAuth login)
+if $needs_claude; then
+    log_step "Step 1: Claude Code Authentication"
+    echo "    Claude Code uses interactive OAuth login (opens browser)."
     echo ""
-    read -p "    Run 'vault login -method=oidc'? [Y/n] " -n 1 -r
+    read -p "    Run 'claude login'? [Y/n] " -n 1 -r
     echo ""
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        vault login -method=oidc || {
-            log_warn "Vault login failed. You can retry later with: vault login -method=oidc"
+        claude login || {
+            log_warn "Claude login failed. You can retry later with: claude login"
         }
     fi
     echo ""
 fi
 
-# Step 2: API keys (after Vault is set up)
+# Step 2: Vault (for MCP server API keys)
+# Note: OIDC login requires localhost:8250 callback which doesn't work in container
+if $needs_vault; then
+    log_step "Step 2: Vault Authentication"
+    echo "    Vault stores MCP server API keys (Firecrawl, Exa, Notion)."
+    echo ""
+    echo "    NOTE: Vault OIDC login requires localhost:8250 callback,"
+    echo "    which doesn't work in devcontainers."
+    echo ""
+    echo "    Options:"
+    echo "      1. Create a token on your HOST machine first:"
+    echo "         ./scripts/create-vault-token.sh"
+    echo "         (run from repository root on host)"
+    echo ""
+    echo "      2. Or paste an existing Vault token"
+    echo ""
+    read -p "    Do you have a Vault token to paste? [y/N] " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo ""
+        echo "    Paste your Vault token (it will be hidden):"
+        read -rs VAULT_TOKEN_INPUT
+        echo ""
+        if [[ -n "$VAULT_TOKEN_INPUT" ]]; then
+            # Capture stderr to show meaningful errors (token expired, invalid, etc.)
+            if VAULT_ERROR=$(vault login token="$VAULT_TOKEN_INPUT" 2>&1); then
+                log_info "Vault authentication successful"
+                needs_vault=false
+            else
+                log_warn "Vault token login failed:"
+                echo "    ${VAULT_ERROR}" | head -3
+                echo ""
+                echo "    Common causes: token expired, invalid token, wrong Vault address"
+            fi
+        fi
+    else
+        echo ""
+        echo "    To create a token, run on your HOST machine:"
+        echo "      ./scripts/create-vault-token.sh"
+        echo ""
+        echo "    Then re-run this script to continue setup."
+    fi
+    echo ""
+fi
+
+# Step 2b: MCP server API keys (if Vault is authenticated)
 if vault token lookup &>/dev/null; then
     # Get entity name for the secret path
     if ! TOKEN_LOOKUP=$(vault token lookup -format=json 2>&1); then
@@ -133,10 +181,20 @@ if vault token lookup &>/dev/null; then
             local secret_path="$2"
             local prefix="${3:-}"
             local step_num="$4"
+            local kv_result kv_error
 
-            if vault kv get -format=json "$secret_path" &>/dev/null; then
+            # Check if key already exists - capture output to distinguish errors
+            if kv_result=$(vault kv get -format=json "$secret_path" 2>&1); then
                 log_info "${service} API key found in Vault"
                 return 0
+            else
+                # Distinguish "not found" from actual errors
+                if echo "$kv_result" | grep -q "No value found"; then
+                    : # Key doesn't exist, continue to prompt
+                elif echo "$kv_result" | grep -q "permission denied"; then
+                    log_warn "${service}: Permission denied reading ${secret_path}"
+                    return 1
+                fi
             fi
 
             log_step "Step ${step_num}: ${service} API Key"
@@ -155,10 +213,12 @@ if vault token lookup &>/dev/null; then
                 read -rs API_KEY_INPUT
                 echo ""
                 if [[ -n "$API_KEY_INPUT" ]]; then
-                    if vault kv put "$secret_path" api_key="$API_KEY_INPUT" &>/dev/null; then
+                    # Capture error output to provide meaningful feedback
+                    if kv_error=$(vault kv put "$secret_path" api_key="$API_KEY_INPUT" 2>&1); then
                         log_info "${service} API key stored in Vault"
                     else
-                        log_warn "Failed to store ${service} API key. Check your Vault permissions."
+                        log_warn "Failed to store ${service} API key:"
+                        echo "    ${kv_error}" | head -2
                     fi
                 fi
             else
@@ -168,9 +228,6 @@ if vault token lookup &>/dev/null; then
                 echo ""
             fi
         }
-
-        # Claude Code API key (required)
-        prompt_api_key "Anthropic (Claude Code)" "secret/users/${ENTITY_NAME}/anthropic" "sk-ant-" "2a"
 
         # MCP server API keys (optional)
         echo ""
@@ -189,10 +246,18 @@ if vault token lookup &>/dev/null; then
         # Reload direnv to pick up the new secrets
         echo ""
         log_info "Reloading environment to pick up API keys..."
-        direnv allow . 2>/dev/null || true
-        # Source the .envrc manually since we're in a script
-        # shellcheck source=/dev/null
-        source <(direnv export bash 2>/dev/null) || true
+        if command -v direnv &>/dev/null; then
+            if ! direnv allow . 2>&1; then
+                log_warn "direnv allow failed - run 'direnv allow' manually"
+            fi
+            # Source the .envrc manually since we're in a script
+            # shellcheck source=/dev/null
+            if ! source <(direnv export bash 2>&1); then
+                log_warn "direnv export failed - environment may not be updated"
+            fi
+        else
+            log_warn "direnv not found - source .envrc manually"
+        fi
     fi
     echo ""
 fi

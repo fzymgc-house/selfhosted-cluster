@@ -316,41 +316,52 @@ The `dev.sh` script automatically creates a socket proxy when starting the conta
 
 **Note:** Only the 1Password SSH agent socket is available in the container. This provides SSH key access for Git and SSH operations, which is all that's needed for development workflows.
 
-### Claude Code and MCP API Keys
+### Claude Code Authentication
 
-API keys for Claude Code and MCP servers are stored in Vault and loaded automatically via direnv when you enter the workspace directory.
+Claude Code uses interactive OAuth login. Run inside the devcontainer:
+```bash
+claude login
+```
+This opens a browser for authentication. Your session is stored in `~/.claude.json`.
 
-**Recommended:** Run the interactive setup:
+**Recommended:** Run the interactive setup which handles all authentication:
 ```bash
 bash .devcontainer/login-setup.sh
 ```
 
-**Manual setup** (if needed):
+### MCP Server API Keys (Optional)
+
+MCP server API keys (Firecrawl, Exa, Notion) are stored in Vault and loaded automatically via direnv.
+
+**Important:** Vault OIDC login requires a localhost:8250 callback, which doesn't work in devcontainers. Use the helper script to create a token on your **host machine**:
+
 ```bash
-# Authenticate to Vault
-vault login -method=oidc
+# On your HOST (not in container), from repo root:
+./scripts/create-vault-token.sh
+# Token is copied to clipboard (or displayed if clipboard unavailable)
+```
 
-# Store API keys (your entity name is usually your username)
-# Required: Claude Code
-vault kv put secret/users/<your-entity-name>/anthropic api_key=sk-ant-...
+Then in the devcontainer:
+```bash
+# Paste the token when prompted
+vault login token=<paste-token-here>
 
-# Optional: MCP servers (for enhanced functionality)
+# Store MCP keys (optional)
 vault kv put secret/users/<your-entity-name>/firecrawl api_key=fc-...
 vault kv put secret/users/<your-entity-name>/exa api_key=...
 vault kv put secret/users/<your-entity-name>/notion api_key=secret_...
 
-# Reload environment to pick up changes
+# Reload environment
 direnv allow
 ```
 
-**How it works:** The `.envrc` file automatically fetches API keys from Vault when you enter the workspace directory. Keys are loaded into environment variables used by Claude Code and MCP servers.
+**How it works:** The `.envrc` file fetches API keys from Vault when you enter the workspace directory.
 
-| API Key | Environment Variable | Required | Purpose |
-|---------|---------------------|----------|---------|
-| Anthropic | `ANTHROPIC_API_KEY` | Yes | Claude Code API access |
-| Firecrawl | `FIRECRAWL_API_KEY` | No | Web scraping/search MCP |
-| Exa | `EXA_API_KEY` | No | Deep research MCP |
-| Notion | `NOTION_API_KEY` | No | Notion workspace MCP |
+| API Key | Environment Variable | Purpose |
+|---------|---------------------|---------|
+| Firecrawl | `FIRECRAWL_API_KEY` | Web scraping/search MCP |
+| Exa | `EXA_API_KEY` | Deep research MCP |
+| Notion | `NOTION_API_KEY` | Notion workspace MCP |
 
 ### kubectl Context Not Found
 

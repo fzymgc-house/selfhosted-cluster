@@ -59,6 +59,14 @@ if ! command -v vault &> /dev/null; then
     exit 1
 fi
 
+# Check jq CLI
+if ! command -v jq &> /dev/null; then
+    log_error "jq not found. Install it first:"
+    echo "  brew install jq  # macOS"
+    echo "  sudo apt install jq  # Linux"
+    exit 1
+fi
+
 # Check Vault authentication
 if ! vault token lookup &> /dev/null; then
     log_step "Not authenticated to Vault. Starting OIDC login..."
@@ -83,6 +91,13 @@ fi
 if [[ -z "${ENTITY_NAME:-}" ]]; then
     ENTITY_NAME="${DISPLAY_NAME#github-}"
     ENTITY_NAME="${ENTITY_NAME#oidc-}"
+fi
+
+if [[ -z "${ENTITY_NAME:-}" ]]; then
+    log_warn "Could not determine Vault entity name."
+    echo "    The token will be created, but API key paths may not resolve correctly."
+    echo "    Expected format: secret/users/<entity-name>/anthropic"
+    echo ""
 fi
 
 log_info "Vault entity: ${ENTITY_NAME:-unknown}"

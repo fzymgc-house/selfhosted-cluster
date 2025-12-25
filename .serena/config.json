@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oramasearch/serena-mcp/main/schema/config.schema.json",
+  "projects": [
+    {
+      "name": "selfhosted-cluster",
+      "path": "/workspaces/selfhosted-cluster",
+      "languages": ["python", "yaml", "hcl", "bash", "json"]
+    }
+  ],
+  "default_project": "selfhosted-cluster"
+}

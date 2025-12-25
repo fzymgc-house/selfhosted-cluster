@@ -118,6 +118,13 @@ terraform -chdir=tf/vault plan
 - Naming conventions (kebab-case), RBAC scoping
 - GitOps workflow (changes sync via ArgoCD after merge)
 
+### `.devcontainer/CLAUDE.md`
+**Read when:** Modifying devcontainer configuration or CI workflow
+- Two-config pattern: main (`devcontainer.json`) vs CI (`ci/devcontainer.json`)
+- Host bind mounts vs Docker volumes (CI can't use host paths)
+- Feature-based tool installation
+- `devcontainer-ci.yml` workflow validation
+
 ## Security
 
 - **MUST NOT** commit secrets to Git (use Vault or SOPS)

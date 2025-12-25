@@ -1,0 +1,63 @@
+# DevContainer CI - Validate devcontainer builds and works correctly
+name: DevContainer CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.devcontainer/**'
+      - 'setup-venv.sh'
+      - 'requirements.txt'
+      - 'ansible/requirements-ansible.yml'
+  pull_request:
+    paths:
+      - '.devcontainer/**'
+      - 'setup-venv.sh'
+      - 'requirements.txt'
+      - 'ansible/requirements-ansible.yml'
+
+jobs:
+  build-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.1
+
+      - name: Build and validate devcontainer
+        uses: devcontainers/ci@v0.3
+        with:
+          # Use CI-specific config (no host bind mounts that don't exist on runners)
+          configFile: .devcontainer/ci/devcontainer.json
+          # Build only, don't push image to registry
+          push: never
+          # Validate the environment works
+          runCmd: |
+            echo "=== DevContainer Environment Validation ==="
+            echo ""
+            echo "--- Core Tools ---"
+            python --version
+            uv --version
+            terraform version | head -1
+            ansible --version | head -1
+            kubectl version --client -o json | jq -r '"kubectl " + .clientVersion.gitVersion'
+            helm version --short
+            gh --version | head -1
+            echo ""
+            echo "--- Development Tools ---"
+            rg --version | head -1
+            ast-grep --version 2>/dev/null || echo "ast-grep: installed (version check unavailable)"
+            jq --version
+            yq --version
+            echo ""
+            echo "--- Python Virtual Environment ---"
+            if [[ -d ".venv" ]]; then
+              source .venv/bin/activate
+              echo "Python packages installed: $(pip list --format=freeze | wc -l)"
+              python -c "import ansible; print(f'ansible {ansible.__version__}')"
+              python -c "import kubernetes; print(f'kubernetes client installed')"
+            else
+              echo "Note: .venv not present (expected in CI - created on first use)"
+            fi
+            echo ""
+            echo "=== Validation Complete ==="

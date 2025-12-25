@@ -1,0 +1,47 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/workspaces"]
+    },
+    "kubernetes-mcp-server": {
+      "command": "npx",
+      "args": ["-y", "kubernetes-mcp-server@latest", "--read-only"],
+      "env": {
+        "KUBECONFIG": "/home/vscode/.kube/config"
+      }
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+    "firecrawl-mcp": {
+      "command": "npx",
+      "args": ["-y", "firecrawl-mcp"],
+      "env": {
+        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+      }
+    },
+    "exa": {
+      "command": "npx",
+      "args": ["-y", "exa-mcp-server"],
+      "env": {
+        "EXA_API_KEY": "${EXA_API_KEY}"
+      }
+    },
+    "notion": {
+      "command": "npx",
+      "args": ["-y", "@notionhq/notion-mcp-server"],
+      "env": {
+        "NOTION_API_KEY": "${NOTION_API_KEY}"
+      }
+    },
+    "serena": {
+      "command": "uvx",
+      "args": ["--from", "serena-mcp", "serena"],
+      "env": {
+        "SERENA_CONFIG": "/workspaces/selfhosted-cluster/.serena/config.json"
+      }
+    }
+  }
+}

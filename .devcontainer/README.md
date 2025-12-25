@@ -16,10 +16,18 @@ The devcontainer provides a complete, reproducible development environment with:
 - **1Password SSH Agent** for SSH key management (via socket proxy)
 - **k3sup** for k3s cluster management
 
+### AI Development
+- **Claude Code** - Anthropic's CLI for AI-assisted development
+- **MCP Servers** - filesystem, kubernetes, context7, firecrawl, exa, notion, serena
+- **ripgrep** - Fast code search (required by Serena MCP)
+- **ast-grep** - Structural code search for semantic analysis
+
 ### Utilities
-- `jq`, `yq` - JSON/YAML processing
-- `direnv` - Environment variable management
-- Git, SSH, and essential build tools
+- `jq`, `yq` - JSON/YAML processing (via jq-likes feature)
+- `direnv` - Automatic environment variable loading (via feature)
+- `go-task` - Task runner (via feature)
+- `neovim` - Modern vim editor (via devcontainer feature)
+- Git, SSH, SSHD, and essential build tools
 - Docker-in-Docker support
 - 1Password SSH Agent integration (via socket proxy)
 
@@ -50,24 +58,68 @@ All collections from `ansible/requirements-ansible.yml`:
 5. **Host prerequisites** (automatically mounted):
    - `~/.ssh` - SSH keys for Git and cluster access
    - `~/.kube/config` - Kubernetes cluster configuration
-   - `~/.vault-token` - Vault authentication token
+   - `~/.1password/agent.sock` - 1Password SSH agent socket
+
+### Pre-Setup: Store Your Anthropic API Key (Optional)
+
+For Claude Code to work immediately, store your API key in Vault **before** starting the container:
+
+```bash
+# On your host machine (not in the container)
+export VAULT_ADDR=https://vault.fzymgc.house
+vault login -method=oidc
+
+# Store your Anthropic API key (replace <your-username> with your Vault entity name)
+vault kv put secret/users/<your-username>/anthropic api_key=sk-ant-...
+```
+
+If you skip this step, the `login-setup.sh` script inside the container will prompt you to store the key interactively.
 
 ### Opening the Repository in a Container
 
-1. Open this repository in VS Code
+**Recommended: Clone in Container Volume**
+
+This approach clones the repository into a Docker volume, avoiding host filesystem issues:
+
+1. Open VS Code (without opening a folder)
+2. Press `F1` or `Cmd/Ctrl+Shift+P`
+3. Select **"Dev Containers: Clone Repository in Container Volume..."**
+4. Enter the repository URL: `https://github.com/fzymgc-house/selfhosted-cluster`
+5. Wait for the container to build and initialize (first time takes 5-10 minutes)
+
+**Alternative: Open Existing Clone**
+
+If you have the repository cloned locally:
+
+1. Open the repository folder in VS Code
 2. Press `F1` or `Cmd/Ctrl+Shift+P`
 3. Select **"Dev Containers: Reopen in Container"**
-4. Wait for the container to build and initialize (first time takes 5-10 minutes)
 
 The container will automatically:
 - Build the Docker image with all tools
+- Clone (or mount) the repository into `/workspaces/selfhosted-cluster`
 - Mount your SSH keys, kubeconfig, and 1Password socket
 - Run the `post-create.sh` script to set up Python venv
 - Install all Python and Ansible dependencies
 
+### First-Time Setup
+
+Once the container is running, open a terminal and run the interactive login setup:
+
+```bash
+# Complete authentication for Vault, GitHub, Terraform, and Claude Code
+bash .devcontainer/login-setup.sh
+```
+
+This script will:
+- Authenticate to Vault (OIDC)
+- Store or retrieve your Anthropic API key
+- Authenticate to GitHub CLI
+- Authenticate to Terraform Cloud
+
 ### Verifying the Setup
 
-Once the container is running, open a terminal and check:
+After running login-setup.sh, verify your environment:
 
 ```bash
 # Check Python environment
@@ -82,7 +134,7 @@ terraform version
 kubectl --context fzymgc-house get nodes
 
 # Check Vault connectivity
-curl -s https://vault.fzymgc.house/v1/sys/health | jq
+vault token lookup
 
 # Check SSH agent (1Password keys)
 ssh-add -L
@@ -149,16 +201,27 @@ The container includes these pre-configured aliases:
 
 ## Mounted Volumes
 
-The following host directories are mounted into the container:
-
+### Host Bind Mounts
 | Host Path | Container Path | Purpose |
 |-----------|----------------|---------|
 | `~/.ssh` | `/home/vscode/.ssh` | SSH keys (read-only) |
 | `~/.kube` | `/home/vscode/.kube` | Kubernetes config |
-| `~/.vault-token` | `/home/vscode/.vault-token` | Vault authentication |
-| 1Password socket | `/home/vscode/.1password/agent.sock` | SSH agent for Git/SSH operations |
+| `~/.1password` | `/home/vscode/.1password` | 1Password SSH agent socket |
 
-**Note:** Changes to these files inside the container affect your host system.
+### Docker Volumes (Persist Across Rebuilds)
+| Volume Name | Container Path | Purpose |
+|-------------|----------------|---------|
+| `selfhosted-cluster-claude-config` | `/home/vscode/.claude` | Claude Code settings |
+| `selfhosted-cluster-venv` | `/workspaces/<folder>/.venv` | Python virtual environment |
+| `selfhosted-cluster-cache` | `/home/vscode/.cache` | XDG cache (pip, uv, etc.) |
+| `selfhosted-cluster-tmp` | `/tmp` | Temporary files |
+
+**Note:** The venv path uses `${localWorkspaceFolderBasename}`, so it adapts to the workspace folder name (e.g., `selfhosted-cluster` for volume clone, or `devcontainer-claude-code` for worktree).
+
+**Notes:**
+- Host bind mounts: Changes inside the container affect your host system
+- Vault tokens are **not** mounted - you must authenticate inside the container with `vault login`
+- Claude Code config uses a Docker volume for persistence across rebuilds
 
 ## Environment Variables
 
@@ -253,6 +316,42 @@ The `dev.sh` script automatically creates a socket proxy when starting the conta
 
 **Note:** Only the 1Password SSH agent socket is available in the container. This provides SSH key access for Git and SSH operations, which is all that's needed for development workflows.
 
+### Claude Code and MCP API Keys
+
+API keys for Claude Code and MCP servers are stored in Vault and loaded automatically via direnv when you enter the workspace directory.
+
+**Recommended:** Run the interactive setup:
+```bash
+bash .devcontainer/login-setup.sh
+```
+
+**Manual setup** (if needed):
+```bash
+# Authenticate to Vault
+vault login -method=oidc
+
+# Store API keys (your entity name is usually your username)
+# Required: Claude Code
+vault kv put secret/users/<your-entity-name>/anthropic api_key=sk-ant-...
+
+# Optional: MCP servers (for enhanced functionality)
+vault kv put secret/users/<your-entity-name>/firecrawl api_key=fc-...
+vault kv put secret/users/<your-entity-name>/exa api_key=...
+vault kv put secret/users/<your-entity-name>/notion api_key=secret_...
+
+# Reload environment to pick up changes
+direnv allow
+```
+
+**How it works:** The `.envrc` file automatically fetches API keys from Vault when you enter the workspace directory. Keys are loaded into environment variables used by Claude Code and MCP servers.
+
+| API Key | Environment Variable | Required | Purpose |
+|---------|---------------------|----------|---------|
+| Anthropic | `ANTHROPIC_API_KEY` | Yes | Claude Code API access |
+| Firecrawl | `FIRECRAWL_API_KEY` | No | Web scraping/search MCP |
+| Exa | `EXA_API_KEY` | No | Deep research MCP |
+| Notion | `NOTION_API_KEY` | No | Notion workspace MCP |
+
 ### kubectl Context Not Found
 
 ```bash
@@ -279,8 +378,66 @@ kubectl config get-contexts
 - Docker-in-Docker is enabled - be cautious with untrusted images
 - 1Password SSH agent provides secure SSH key access without exposing private keys
 
+## CI/CD Validation
+
+The devcontainer is validated on every PR via GitHub Actions (`.github/workflows/devcontainer-ci.yml`).
+
+### CI-Specific Configuration
+
+CI uses a separate config at `.devcontainer/ci/devcontainer.json` because:
+
+| Mount Type | Local Development | CI/GitHub Actions |
+|------------|-------------------|-------------------|
+| Host bind mounts (`~/.ssh`, `~/.kube`) | ✅ Works (host paths exist) | ❌ Fails (paths don't exist on runners) |
+| Docker volumes | ✅ Works | ✅ Works (auto-created) |
+
+The CI config removes host-specific bind mounts while keeping Docker volumes for caches.
+
+### What CI Validates
+
+The workflow builds the devcontainer and validates:
+- Core tools: Python, uv, Terraform, Ansible, kubectl, Helm, GitHub CLI
+- Development tools: ripgrep, ast-grep, jq, yq
+- Python virtual environment setup (when present)
+
+### Running CI Locally
+
+Test the CI build locally with the devcontainers CLI:
+
+```bash
+# Install CLI
+npm install -g @devcontainers/cli
+
+# Build using CI config
+devcontainer build --workspace-folder . --config .devcontainer/ci/devcontainer.json
+
+# Run with validation
+devcontainer up --workspace-folder . --config .devcontainer/ci/devcontainer.json
+devcontainer exec --workspace-folder . python --version
+```
+
+## Architecture Notes
+
+### Host Bind Mounts vs Docker Volumes
+
+| Type | Behavior | Use Case |
+|------|----------|----------|
+| **Bind mount** (`type=bind`) | Maps host path into container | Host secrets (SSH keys, kubeconfig) |
+| **Docker volume** (`type=volume`) | Container-only storage, persists across rebuilds | Caches, venv, Claude config |
+
+**Key insight:** Bind mounts require the host path to exist. This is why CI needs a separate config without host-specific mounts.
+
+### Volume Naming
+
+Docker volumes use a `selfhosted-cluster-` prefix for easy identification:
+- `selfhosted-cluster-claude-config` - Claude Code settings
+- `selfhosted-cluster-venv` - Python virtual environment
+- `selfhosted-cluster-cache` - XDG cache (pip, uv, etc.)
+- `selfhosted-cluster-tmp` - Temporary files
+
 ## Further Reading
 
 - [VS Code Dev Containers Documentation](https://code.visualstudio.com/docs/devcontainers/containers)
 - [Dev Container Specification](https://containers.dev/)
+- [devcontainers/ci GitHub Action](https://github.com/devcontainers/ci)
 - Repository-specific guides in `docs/`

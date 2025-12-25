@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(.devcontainer/**)",
+      "Edit(ansible/**)",
+      "Edit(tf/**)",
+      "Edit(argocd/**)",
+      "Edit(docs/**)",
+      "Edit(.claude/**)",
+      "Bash(git:*)",
+      "Bash(terraform:*)",
+      "Bash(kubectl:*)",
+      "Bash(ansible:*)",
+      "Bash(vault:*)",
+      "Bash(gh:*)"
+    ]
+  }
+}

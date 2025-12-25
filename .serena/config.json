@@ -3,7 +3,7 @@
   "projects": [
     {
       "name": "selfhosted-cluster",
-      "path": "/workspace",
+      "path": "/workspaces/selfhosted-cluster",
       "languages": ["python", "yaml", "hcl", "bash", "json"]
     }
   ],

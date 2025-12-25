@@ -136,6 +136,8 @@ update_bashrc() {
     # Write to a temp file and move atomically to avoid corruption
     local temp_file
     temp_file=$(mktemp)
+    # Ensure temp file is cleaned up on exit or error
+    trap 'rm -f "$temp_file"' RETURN
 
     if grep -q "^export ANTHROPIC_API_KEY=" "$bashrc" 2>/dev/null; then
         # Remove old entry and add new one

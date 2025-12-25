@@ -26,7 +26,7 @@ The devcontainer provides a complete, reproducible development environment with:
 - `jq`, `yq` - JSON/YAML processing (via jq-likes feature)
 - `direnv` - Automatic environment variable loading (via feature)
 - `go-task` - Task runner (via feature)
-- `neovim` - Modern vim editor (via homebrew feature)
+- `neovim` - Modern vim editor (via devcontainer feature)
 - Git, SSH, SSHD, and essential build tools
 - Docker-in-Docker support
 - 1Password SSH Agent integration (via socket proxy)

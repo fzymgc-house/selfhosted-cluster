@@ -25,7 +25,9 @@ log_warn() {
 log_info "Fixing Docker volume permissions..."
 for dir in "/home/vscode/.claude" "/home/vscode/.cache" "${PWD}/.venv" "/tmp"; do
     if [[ -d "$dir" ]]; then
-        sudo chown -R "$(id -u):$(id -g)" "$dir" 2>/dev/null || true
+        if ! sudo chown -R "$(id -u):$(id -g)" "$dir" 2>&1; then
+            log_warn "Failed to fix permissions on $dir (may affect functionality)"
+        fi
     fi
 done
 

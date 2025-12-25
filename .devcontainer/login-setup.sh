@@ -94,17 +94,23 @@ fi
 # Step 2: Claude API key (after Vault is set up)
 if vault token lookup &>/dev/null; then
     # Get entity name for the secret path
-    TOKEN_LOOKUP=$(vault token lookup -format=json 2>/dev/null) || true
-    ENTITY_ID=$(echo "$TOKEN_LOOKUP" | jq -r '.data.entity_id // empty' 2>/dev/null) || true
+    if ! TOKEN_LOOKUP=$(vault token lookup -format=json 2>&1); then
+        log_warn "Failed to look up Vault token: ${TOKEN_LOOKUP}"
+        TOKEN_LOOKUP=""
+    fi
+    ENTITY_ID=$(echo "$TOKEN_LOOKUP" | jq -r '.data.entity_id // empty' 2>/dev/null)
 
     if [[ -n "$ENTITY_ID" ]]; then
-        ENTITY_READ=$(vault read -format=json "identity/entity/id/${ENTITY_ID}" 2>/dev/null) || true
-        ENTITY_NAME=$(echo "$ENTITY_READ" | jq -r '.data.name // empty' 2>/dev/null) || true
+        if ! ENTITY_READ=$(vault read -format=json "identity/entity/id/${ENTITY_ID}" 2>&1); then
+            log_warn "Could not read entity details: ${ENTITY_READ}"
+            ENTITY_READ=""
+        fi
+        ENTITY_NAME=$(echo "$ENTITY_READ" | jq -r '.data.name // empty' 2>/dev/null)
     fi
 
     # Fallback to display_name
     if [[ -z "${ENTITY_NAME:-}" ]]; then
-        DISPLAY_NAME=$(echo "$TOKEN_LOOKUP" | jq -r '.data.display_name // empty' 2>/dev/null) || true
+        DISPLAY_NAME=$(echo "$TOKEN_LOOKUP" | jq -r '.data.display_name // empty' 2>/dev/null)
         ENTITY_NAME="${DISPLAY_NAME#github-}"
         ENTITY_NAME="${ENTITY_NAME#oidc-}"
     fi
@@ -116,7 +122,9 @@ if vault token lookup &>/dev/null; then
         if vault kv get -format=json "$SECRET_PATH" &>/dev/null; then
             log_info "Claude API key found in Vault at ${SECRET_PATH}"
             # Run the setup script to configure it
-            bash .devcontainer/setup-claude-secrets.sh 2>/dev/null || true
+            if ! bash .devcontainer/setup-claude-secrets.sh; then
+                log_warn "Failed to configure Claude API key (exit code: $?)"
+            fi
         else
             log_step "Step 2: Claude Code API Key"
             echo "    Your Anthropic API key needs to be stored in Vault."
@@ -133,7 +141,9 @@ if vault token lookup &>/dev/null; then
                     if vault kv put "$SECRET_PATH" api_key="$ANTHROPIC_KEY" &>/dev/null; then
                         log_info "API key stored in Vault"
                         # Configure it for the current session
-                        bash .devcontainer/setup-claude-secrets.sh 2>/dev/null || true
+                        if ! bash .devcontainer/setup-claude-secrets.sh; then
+                            log_warn "Failed to configure Claude API key for session"
+                        fi
                     else
                         log_warn "Failed to store API key. Check your Vault permissions."
                     fi

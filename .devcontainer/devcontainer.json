@@ -44,7 +44,9 @@
         // jq and similar JSON/YAML tools
         "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
         // direnv for automatic environment variable loading
-        "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {}
+        "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {},
+        // neovim editor
+        "ghcr.io/devcontainers-contrib/features/neovim-apt-get:1": {}
     },
 
     // Mount host's SSH, kubeconfig, and 1Password agent for authentication

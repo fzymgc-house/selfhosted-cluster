@@ -2,7 +2,7 @@
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/workspace"]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/workspaces"]
     },
     "kubernetes-mcp-server": {
       "command": "npx",
@@ -40,7 +40,7 @@
       "command": "uvx",
       "args": ["--from", "serena-mcp", "serena"],
       "env": {
-        "SERENA_CONFIG": "/workspace/.serena/config.json"
+        "SERENA_CONFIG": "/workspaces/selfhosted-cluster/.serena/config.json"
       }
     }
   }

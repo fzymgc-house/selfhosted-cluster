@@ -1,7 +1,9 @@
 # Router-Hosts Ansible Role Design
 
-**Status:** Approved
+**Status:** Completed
 **Date:** 2025-12-24
+**Completed:** 2025-12-25
+**PRs:** #344, #353
 **Author:** Claude (with Sean)
 
 ## Overview

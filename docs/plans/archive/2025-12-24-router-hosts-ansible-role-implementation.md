@@ -1,5 +1,9 @@
 # Router-Hosts Ansible Role Implementation Plan
 
+**Status:** Completed
+**Completed:** 2025-12-25
+**PRs:** #344, #353
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Create an Ansible role to deploy router-hosts server on Firewalla using Docker Compose with Vault Agent for automated mTLS certificate management.

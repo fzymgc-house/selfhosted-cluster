@@ -4,6 +4,9 @@
 #
 # Run this script after opening a terminal in the devcontainer to complete
 # authentication setup for all services.
+#
+# Note: Vault OIDC login requires localhost:8250 callback, which doesn't work
+# in devcontainers. Use scripts/create-vault-token.sh on the host instead.
 
 set -euo pipefail
 
@@ -126,11 +129,15 @@ if $needs_vault; then
         read -rs VAULT_TOKEN_INPUT
         echo ""
         if [[ -n "$VAULT_TOKEN_INPUT" ]]; then
-            if vault login token="$VAULT_TOKEN_INPUT" 2>/dev/null; then
+            # Capture stderr to show meaningful errors (token expired, invalid, etc.)
+            if VAULT_ERROR=$(vault login token="$VAULT_TOKEN_INPUT" 2>&1); then
                 log_info "Vault authentication successful"
                 needs_vault=false
             else
-                log_warn "Vault token login failed. Check your token is valid."
+                log_warn "Vault token login failed:"
+                echo "    ${VAULT_ERROR}" | head -3
+                echo ""
+                echo "    Common causes: token expired, invalid token, wrong Vault address"
             fi
         fi
     else
@@ -174,10 +181,20 @@ if vault token lookup &>/dev/null; then
             local secret_path="$2"
             local prefix="${3:-}"
             local step_num="$4"
+            local kv_result kv_error
 
-            if vault kv get -format=json "$secret_path" &>/dev/null; then
+            # Check if key already exists - capture output to distinguish errors
+            if kv_result=$(vault kv get -format=json "$secret_path" 2>&1); then
                 log_info "${service} API key found in Vault"
                 return 0
+            else
+                # Distinguish "not found" from actual errors
+                if echo "$kv_result" | grep -q "No value found"; then
+                    : # Key doesn't exist, continue to prompt
+                elif echo "$kv_result" | grep -q "permission denied"; then
+                    log_warn "${service}: Permission denied reading ${secret_path}"
+                    return 1
+                fi
             fi
 
             log_step "Step ${step_num}: ${service} API Key"
@@ -196,10 +213,12 @@ if vault token lookup &>/dev/null; then
                 read -rs API_KEY_INPUT
                 echo ""
                 if [[ -n "$API_KEY_INPUT" ]]; then
-                    if vault kv put "$secret_path" api_key="$API_KEY_INPUT" &>/dev/null; then
+                    # Capture error output to provide meaningful feedback
+                    if kv_error=$(vault kv put "$secret_path" api_key="$API_KEY_INPUT" 2>&1); then
                         log_info "${service} API key stored in Vault"
                     else
-                        log_warn "Failed to store ${service} API key. Check your Vault permissions."
+                        log_warn "Failed to store ${service} API key:"
+                        echo "    ${kv_error}" | head -2
                     fi
                 fi
             else
@@ -227,10 +246,18 @@ if vault token lookup &>/dev/null; then
         # Reload direnv to pick up the new secrets
         echo ""
         log_info "Reloading environment to pick up API keys..."
-        direnv allow . 2>/dev/null || true
-        # Source the .envrc manually since we're in a script
-        # shellcheck source=/dev/null
-        source <(direnv export bash 2>/dev/null) || true
+        if command -v direnv &>/dev/null; then
+            if ! direnv allow . 2>&1; then
+                log_warn "direnv allow failed - run 'direnv allow' manually"
+            fi
+            # Source the .envrc manually since we're in a script
+            # shellcheck source=/dev/null
+            if ! source <(direnv export bash 2>&1); then
+                log_warn "direnv export failed - environment may not be updated"
+            fi
+        else
+            log_warn "direnv not found - source .envrc manually"
+        fi
     fi
     echo ""
 fi

@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: MIT
-# Verify MCP server API keys are available from Vault via direnv
+# Verify MCP server API keys are loaded from Vault via direnv
 #
-# This script checks that the .envrc has loaded API keys from Vault.
-# Secrets are fetched automatically by direnv when entering the directory.
-#
+# This script checks that direnv has loaded MCP server API keys from Vault.
 # Claude Code uses interactive OAuth login (claude login), not API keys.
 #
 # Prerequisites:
-#   1. Create Vault token on host: .devcontainer/create-vault-token.sh
+#   1. Create Vault token on host: scripts/create-vault-token.sh
 #   2. Authenticate in container: vault login token=<token>
 #   3. Run: direnv allow
 #
 # Exit codes:
 #   0 - Success (MCP keys checked)
-#   2 - Vault authentication skipped (not logged in)
-#   1 - Error (direnv not working, etc.)
+#   2 - Vault not authenticated
 
 set -euo pipefail
 
@@ -44,16 +41,18 @@ if ! vault token lookup &> /dev/null; then
     log_warn "Not authenticated to Vault. Skipping MCP key setup."
     echo ""
     echo "To set up MCP server API keys:"
-    echo "  1. On HOST: .devcontainer/create-vault-token.sh"
+    echo "  1. On HOST: scripts/create-vault-token.sh"
     echo "  2. In container: vault login token=<token>"
     echo "  3. Run: direnv allow"
     echo ""
     exit 2
 fi
 
-# Ensure direnv is allowed
+# Ensure direnv is allowed (warn on failure, don't suppress)
 if command -v direnv &> /dev/null; then
-    direnv allow . 2>/dev/null || true
+    if ! direnv allow . 2>&1; then
+        log_warn "direnv allow failed - environment may not be updated"
+    fi
 fi
 
 # Check Claude Code login status

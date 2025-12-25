@@ -125,21 +125,49 @@ TTL=$(echo "$TOKEN_OUTPUT" | jq -r '.auth.lease_duration')
 echo ""
 log_info "Token created successfully!"
 echo ""
-echo "────────────────────────────────────────────────────────────────"
-echo ""
-echo "Copy this token and paste it in the devcontainer when prompted:"
-echo ""
-echo -e "${GREEN}${TOKEN}${NC}"
-echo ""
-echo "────────────────────────────────────────────────────────────────"
-echo ""
-echo "Token details:"
-echo "  - TTL: ${TTL} seconds (~8 hours)"
-echo "  - Policy: claude-code"
-echo "  - Type: Orphan (won't expire with parent)"
-echo ""
+
+# Try to copy to clipboard if available (macOS pbcopy, Linux xclip/xsel)
+COPIED_TO_CLIPBOARD=false
+if command -v pbcopy &>/dev/null; then
+    echo -n "$TOKEN" | pbcopy
+    COPIED_TO_CLIPBOARD=true
+elif command -v xclip &>/dev/null; then
+    echo -n "$TOKEN" | xclip -selection clipboard
+    COPIED_TO_CLIPBOARD=true
+elif command -v xsel &>/dev/null; then
+    echo -n "$TOKEN" | xsel --clipboard
+    COPIED_TO_CLIPBOARD=true
+fi
+
+if $COPIED_TO_CLIPBOARD; then
+    echo "────────────────────────────────────────────────────────────────"
+    echo ""
+    log_info "Token copied to clipboard!"
+    echo ""
+    echo "Token details:"
+    echo "  - TTL: ${TTL} seconds (~8 hours)"
+    echo "  - Policy: claude-code"
+    echo "  - Type: Orphan (won't expire with parent)"
+    echo ""
+else
+    echo "────────────────────────────────────────────────────────────────"
+    echo ""
+    log_warn "Could not copy to clipboard. Token displayed below."
+    echo -e "    ${YELLOW}(Clear terminal after copying if on shared screen)${NC}"
+    echo ""
+    echo "$TOKEN"
+    echo ""
+    echo "────────────────────────────────────────────────────────────────"
+    echo ""
+    echo "Token details:"
+    echo "  - TTL: ${TTL} seconds (~8 hours)"
+    echo "  - Policy: claude-code"
+    echo "  - Type: Orphan (won't expire with parent)"
+    echo ""
+fi
+
 echo "In the devcontainer, run:"
 echo "  bash .devcontainer/login-setup.sh"
 echo ""
-echo "When prompted for Vault login, choose 'token' and paste this token."
+echo "When prompted for Vault login, paste the token."
 echo ""

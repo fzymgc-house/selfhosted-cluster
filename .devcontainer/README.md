@@ -338,7 +338,7 @@ MCP server API keys (Firecrawl, Exa, Notion) are stored in Vault and loaded auto
 ```bash
 # On your HOST (not in container), from repo root:
 ./scripts/create-vault-token.sh
-# Copy the displayed token
+# Token is copied to clipboard (or displayed if clipboard unavailable)
 ```
 
 Then in the devcontainer:

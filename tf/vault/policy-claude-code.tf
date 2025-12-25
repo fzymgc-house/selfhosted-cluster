@@ -1,9 +1,13 @@
 # SPDX-License-Identifier: MIT-0
 # Claude Code devcontainer policy
 #
-# Grants users access to their personal API keys stored in Vault:
-# - Anthropic API key for Claude Code
-# - MCP server API keys (Firecrawl, Exa, Notion)
+# Grants users access to their personal MCP server API keys stored in Vault:
+# - Firecrawl (web scraping/search)
+# - Exa (deep research)
+# - Notion (workspace integration)
+#
+# Note: Claude Code uses OAuth login (claude login), not API keys.
+# The Anthropic path is retained for backwards compatibility.
 #
 # Each user stores their keys at: secret/users/<entity-name>/<service>
 #
@@ -17,9 +21,9 @@ resource "vault_policy" "claude_code" {
     # Claude Code - Per-User API Key Access
     # =============================================================================
 
-    # Allow reading personal Anthropic API key
-    # Path: secret/data/users/<entity-name>/anthropic
-    # Key expected: api_key
+    # Anthropic API key path (retained for backwards compatibility)
+    # Claude Code now uses OAuth login, but this path may still be used
+    # by other tools or scripts that need the API key directly
     path "secret/data/users/{{identity.entity.name}}/anthropic" {
       capabilities = ["read"]
     }

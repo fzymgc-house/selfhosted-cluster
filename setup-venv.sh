@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 # shellcheck shell=bash
 #
-# Setup Python virtual environment for Ansible automation
+# Setup Python virtual environment for Ansible automation using uv
 # Usage: ./setup-venv.sh
 
 set -euo pipefail
@@ -15,7 +15,6 @@ NC='\033[0m' # No Color
 
 # Configuration
 VENV_DIR=".venv"
-PYTHON_VERSION_FILE=".python-version"
 REQUIRED_PYTHON_VERSION="3.13"
 
 log_info() {
@@ -30,95 +29,42 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-check_python_version() {
-    local python_cmd="$1"
-    local version
-    version=$($python_cmd --version 2>&1 | awk '{print $2}')
-    local major_minor
-    major_minor=$(echo "$version" | cut -d. -f1,2)
-
-    if [[ $(echo "$major_minor >= $REQUIRED_PYTHON_VERSION" | bc -l) -eq 1 ]]; then
-        echo "$version"
-        return 0
-    else
-        return 1
-    fi
-}
-
-find_python() {
-    # Check for python3 command first
-    if command -v python3 &> /dev/null; then
-        if check_python_version python3 &> /dev/null; then
-            echo "python3"
-            return 0
-        fi
-    fi
-
-    # Check for python command
-    if command -v python &> /dev/null; then
-        if check_python_version python &> /dev/null; then
-            echo "python"
-            return 0
-        fi
-    fi
-
-    # Try version-specific commands
-    for ver in 3.13 3.12 3.11; do
-        if command -v "python${ver}" &> /dev/null; then
-            if check_python_version "python${ver}" &> /dev/null; then
-                echo "python${ver}"
-                return 0
-            fi
-        fi
-    done
-
-    return 1
-}
-
 main() {
     log_info "Setting up Python virtual environment for Ansible..."
 
-    # Find suitable Python
-    log_info "Checking for Python ${REQUIRED_PYTHON_VERSION}+..."
-    if ! PYTHON_CMD=$(find_python); then
-        log_error "Python ${REQUIRED_PYTHON_VERSION}+ not found."
-        log_error "Please install Python ${REQUIRED_PYTHON_VERSION} or newer."
+    # Check for uv
+    if ! command -v uv &> /dev/null; then
+        log_error "uv not found. Please install uv: https://docs.astral.sh/uv/"
         exit 1
     fi
-
-    PYTHON_VERSION=$(check_python_version "$PYTHON_CMD")
-    log_info "Found Python ${PYTHON_VERSION} at $(command -v "$PYTHON_CMD")"
+    log_info "Using uv $(uv --version | awk '{print $2}')"
 
     # Create virtual environment if it doesn't exist
-    if [[ ! -d "$VENV_DIR" ]]; then
-        log_info "Creating virtual environment in ${VENV_DIR}..."
-        "$PYTHON_CMD" -m venv "$VENV_DIR"
-    else
+    # Note: In devcontainer, .venv is a Docker volume (Linux-native, persists across rebuilds)
+    if [[ -x "${VENV_DIR}/bin/python" ]] && "${VENV_DIR}/bin/python" --version &> /dev/null; then
         log_info "Virtual environment already exists at ${VENV_DIR}"
+    else
+        log_info "Creating virtual environment with Python ${REQUIRED_PYTHON_VERSION}..."
+        uv venv "${VENV_DIR}" --python "${REQUIRED_PYTHON_VERSION}"
     fi
 
-    # Activate virtual environment
-    log_info "Activating virtual environment..."
-    # shellcheck disable=SC1091
-    source "${VENV_DIR}/bin/activate"
-
-    # Upgrade pip, setuptools, and wheel
-    log_info "Upgrading pip, setuptools, and wheel..."
-    pip install --upgrade pip setuptools wheel
-
-    # Install Python requirements
+    # Install Python requirements using uv (much faster than pip)
     if [[ -f "requirements.txt" ]]; then
         log_info "Installing Python packages from requirements.txt..."
-        pip install -r requirements.txt
+        uv pip install --python "${VENV_DIR}/bin/python" -r requirements.txt
     else
         log_warn "requirements.txt not found, skipping Python packages"
     fi
 
+    # Activate for ansible-galaxy (needs VIRTUAL_ENV set)
+    log_info "Activating virtual environment..."
+    # shellcheck disable=SC1091
+    source "${VENV_DIR}/bin/activate"
+
     # Install Ansible Galaxy collections
-    # Note: Invoke ansible-galaxy with python to avoid shebang issues in containers
     if [[ -f "ansible/requirements-ansible.yml" ]]; then
         log_info "Installing Ansible Galaxy collections..."
-        python "${VENV_DIR}/bin/ansible-galaxy" collection install -r ansible/requirements-ansible.yml
+        ansible-galaxy collection install -r ansible/requirements-ansible.yml
     else
         log_warn "ansible/requirements-ansible.yml not found, skipping collections"
     fi
@@ -126,19 +72,17 @@ main() {
     # Verify installation
     log_info "Verifying installation..."
     echo ""
-    echo "Ansible version: $(python -c 'import ansible; print(ansible.__version__)' 2>/dev/null || echo 'not installed')"
+    echo "Python: $("${VENV_DIR}/bin/python" --version)"
+    echo "Ansible: $(python -c 'import ansible; print(ansible.__version__)' 2>/dev/null || echo 'not installed')"
     echo ""
 
-    log_info "✓ Setup complete!"
+    log_info "Setup complete!"
     echo ""
     echo "To activate the virtual environment, run:"
     echo "  source ${VENV_DIR}/bin/activate"
     echo ""
-    echo "To deactivate, run:"
-    echo "  deactivate"
-    echo ""
     echo "Installed Ansible collections:"
-    python "${VENV_DIR}/bin/ansible-galaxy" collection list 2>&1 | grep -E "kubernetes.core|community.general|community.hashi_vault" || echo "  (run 'ansible-galaxy collection list' to see installed collections)"
+    ansible-galaxy collection list 2>&1 | grep -E "kubernetes.core|community.general|community.hashi_vault" || echo "  (run 'ansible-galaxy collection list' to see installed collections)"
 }
 
 main "$@"

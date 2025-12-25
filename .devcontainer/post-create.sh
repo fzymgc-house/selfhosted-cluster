@@ -19,6 +19,18 @@ log_warn() {
     echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
+# Fix ownership of Docker volumes (created as root by default)
+# These are mounted as named volumes and need proper vscode user ownership
+# Note: PWD is the workspace directory, set by devcontainer before running postCreateCommand
+log_info "Fixing Docker volume permissions..."
+for dir in "/home/vscode/.claude" "/home/vscode/.cache" "${PWD}/.venv" "/tmp"; do
+    if [[ -d "$dir" ]]; then
+        if ! sudo chown -R "$(id -u):$(id -g)" "$dir" 2>&1; then
+            log_warn "Failed to fix permissions on $dir (may affect functionality)"
+        fi
+    fi
+done
+
 # Vault authentication setup
 if command -v vault &> /dev/null; then
     log_info "Setting up Vault authentication..."
@@ -28,16 +40,7 @@ if command -v vault &> /dev/null; then
     if vault token lookup &> /dev/null; then
         log_info "✓ Already authenticated to Vault"
     else
-        log_warn "Not authenticated to Vault"
-        echo ""
-        echo "Please authenticate to Vault to access infrastructure secrets:"
-        echo "  vault login -method=github"
-        echo ""
-        echo "Then create an orphan token with infrastructure access:"
-        echo "  vault token create -policy=infrastructure-developer -orphan"
-        echo ""
-        echo "Use the generated token for Terraform/Ansible operations."
-        echo ""
+        log_warn "Not authenticated to Vault (run login-setup.sh to configure)"
     fi
 fi
 
@@ -47,11 +50,7 @@ if command -v gh &> /dev/null; then
     if gh auth status &> /dev/null; then
         log_info "✓ Already authenticated to GitHub"
     else
-        log_warn "Not authenticated to GitHub CLI"
-        echo ""
-        echo "Please authenticate to GitHub (use HTTPS for best compatibility):"
-        echo "  gh auth login -p https -w"
-        echo ""
+        log_warn "Not authenticated to GitHub CLI (run login-setup.sh to configure)"
     fi
 fi
 
@@ -61,11 +60,7 @@ if command -v terraform &> /dev/null; then
     if [[ -f "${HOME}/.terraform.d/credentials.tfrc.json" ]]; then
         log_info "✓ Terraform Cloud credentials found"
     else
-        log_warn "Not authenticated to Terraform Cloud"
-        echo ""
-        echo "Please authenticate to Terraform Cloud:"
-        echo "  terraform login"
-        echo ""
+        log_warn "Not authenticated to Terraform Cloud (run login-setup.sh to configure)"
     fi
 fi
 
@@ -78,11 +73,16 @@ else
 fi
 
 # Configure git if not already configured
-if [[ -z "$(git config --global user.name 2>/dev/null)" ]]; then
+# Note: Run from /tmp to avoid git worktree path issues in container
+# (worktree .git file references host path that doesn't exist inside container)
+if [[ -z "$(cd /tmp && git config --global user.name 2>/dev/null)" ]]; then
     log_info "Configuring git..."
-    git config --global init.defaultBranch main
-    git config --global pull.rebase true
-    git config --global fetch.prune true
+    (
+        cd /tmp
+        git config --global init.defaultBranch main
+        git config --global pull.rebase true
+        git config --global fetch.prune true
+    )
     echo "Please configure git user.name and user.email:"
     echo "  git config --global user.name 'Your Name'"
     echo "  git config --global user.email 'your.email@example.com'"
@@ -116,30 +116,90 @@ if [[ -f ".envrc" ]]; then
     direnv allow .
 fi
 
-# Install Claude Code CLI using native binary installer
-log_info "Installing Claude Code CLI..."
-# Ensure ~/.local/bin is in PATH (installer puts binary there)
-if ! grep -q '\.local/bin' /home/vscode/.bashrc; then
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> /home/vscode/.bashrc
-fi
-export PATH="$HOME/.local/bin:$PATH"
-
-if command -v claude &> /dev/null; then
-    log_info "✓ Claude Code CLI already installed: $(claude --version 2>/dev/null || echo 'unknown version')"
+# Install ast-grep for Serena MCP semantic code operations
+log_info "Installing ast-grep..."
+if command -v ast-grep &> /dev/null; then
+    log_info "✓ ast-grep already installed: $(ast-grep --version 2>/dev/null || echo 'unknown version')"
 else
-    # Use native binary installer (recommended by Anthropic)
-    # Download first, then execute for better security practice
-    INSTALL_SCRIPT="/tmp/claude-install.sh"
-    if curl -fsSL https://claude.ai/install.sh -o "$INSTALL_SCRIPT"; then
-        if bash "$INSTALL_SCRIPT"; then
-            log_info "✓ Claude Code CLI installed successfully"
-        else
-            log_warn "Failed to install Claude Code CLI"
-        fi
-        rm -f "$INSTALL_SCRIPT"
+    if npm install -g @ast-grep/cli; then
+        log_info "✓ ast-grep installed successfully"
     else
-        log_warn "Failed to download Claude Code CLI installer"
+        log_warn "Failed to install ast-grep (Serena MCP may have reduced functionality)"
     fi
+fi
+
+# Set up git safeguards to warn on --no-verify usage
+log_info "Setting up git safeguards..."
+setup_git_safeguards() {
+    local bashrc="/home/vscode/.bashrc"
+    local safeguard_marker="# Git safeguards for Claude Code"
+
+    if ! grep -q "$safeguard_marker" "$bashrc" 2>/dev/null; then
+        cat >> "$bashrc" << 'SAFEGUARDS'
+
+# Git safeguards for Claude Code
+# Warn when using --no-verify to prevent accidental pre-commit bypass
+git() {
+    local args=("$@")
+    local has_no_verify=false
+
+    for arg in "${args[@]}"; do
+        if [[ "$arg" == "--no-verify" || "$arg" == "-n" ]]; then
+            has_no_verify=true
+            break
+        fi
+    done
+
+    if $has_no_verify; then
+        echo -e "\033[1;33m[WARNING]\033[0m You are using --no-verify which skips pre-commit hooks."
+        echo "This may allow code that doesn't meet project standards to be committed."
+        read -r -p "Continue anyway? [y/N] " response
+        if [[ ! "$response" =~ ^[Yy]$ ]]; then
+            echo "Commit aborted."
+            return 1
+        fi
+    fi
+
+    command git "${args[@]}"
+}
+SAFEGUARDS
+        log_info "✓ Git safeguards added to ~/.bashrc"
+    else
+        log_info "✓ Git safeguards already configured"
+    fi
+}
+setup_git_safeguards
+
+# Set up Claude Code with Vault-sourced API key
+log_info "Setting up Claude Code API key from Vault..."
+if [[ -f ".devcontainer/setup-claude-secrets.sh" ]]; then
+    set +e  # Temporarily allow non-zero exit
+    bash .devcontainer/setup-claude-secrets.sh
+    secrets_exit_code=$?
+    set -e
+    case $secrets_exit_code in
+        0)
+            log_info "✓ Claude Code API key configured from Vault"
+            ;;
+        2)
+            log_info "Vault auth skipped - configure later with 'vault login'"
+            ;;
+        3)
+            log_warn "API key not found in Vault - store it and re-run script"
+            ;;
+        *)
+            log_warn "Unexpected error setting up Claude secrets (exit $secrets_exit_code)"
+            ;;
+    esac
+else
+    log_warn "setup-claude-secrets.sh not found, skipping Anthropic API key setup"
+fi
+
+# Verify Claude Code is available (installed by devcontainer feature)
+if command -v claude &> /dev/null; then
+    log_info "✓ Claude Code CLI available: $(claude --version 2>/dev/null || echo 'unknown version')"
+else
+    log_warn "Claude Code CLI not found (should be installed by devcontainer feature)"
 fi
 
 echo ""
@@ -152,13 +212,14 @@ echo "  - Ansible: $(ansible --version 2>/dev/null | head -1 || echo 'not availa
 echo "  - kubectl: $(kubectl version --client -o json 2>/dev/null | jq -r .clientVersion.gitVersion || echo 'not available')"
 echo "  - helm: $(helm version --short 2>/dev/null || echo 'not available')"
 echo "  - Python: $(python --version 2>&1)"
+echo "  - ast-grep: $(ast-grep --version 2>/dev/null || echo 'not available')"
+echo "  - uv: $(uv --version 2>/dev/null || echo 'not available')"
+echo ""
+echo "First-time setup:"
+echo "  bash .devcontainer/login-setup.sh    # Interactive login for all services"
 echo ""
 echo "Useful commands:"
 echo "  - Activate Python venv: source .venv/bin/activate"
-echo "  - Vault login:          vault login -method=github"
-echo "  - Vault infra token:    vault token create -policy=infrastructure-developer -orphan"
-echo "  - GitHub login:         gh auth login -p https -w"
-echo "  - Terraform login:      terraform login"
 echo "  - kubectl (alias 'k'):  k get nodes"
 echo "  - Terraform (alias):    tf plan"
 echo ""

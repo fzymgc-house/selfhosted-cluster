@@ -19,9 +19,6 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     iputils-ping \
     # Utilities
     bc \
-    jq \
-    yq \
-    vim \
     less \
     tree \
     ca-certificates \
@@ -34,8 +31,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     libffi-dev \
     libssl-dev \
     python3-dev \
-    # For direnv
-    direnv \
+    # For onigurumacffi (ansible-navigator dependency)
+    libonig-dev \
     && rm -rf /var/lib/apt/lists/*
 
 
@@ -54,9 +51,6 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Switch to vscode user
 USER vscode
-
-# Configure direnv for the vscode user
-RUN echo 'eval "$(direnv hook bash)"' >> /home/vscode/.bashrc
 
 # Add helpful aliases
 RUN echo 'alias k=kubectl' >> /home/vscode/.bashrc \

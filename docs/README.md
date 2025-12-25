@@ -10,6 +10,7 @@ This directory contains AI/LLM-consumable reference documentation. For comprehen
 | [vault.md](vault.md) | HashiCorp Vault secrets management |
 | [mcp-servers.md](mcp-servers.md) | MCP server configuration for AI assistants |
 | [github-token-setup.md](github-token-setup.md) | GitHub PAT for Actions Runner Controller |
+| [../.devcontainer/README.md](../.devcontainer/README.md) | Development container setup and usage |
 
 ## Notion Resources
 

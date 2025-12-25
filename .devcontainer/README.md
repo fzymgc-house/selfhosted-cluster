@@ -316,9 +316,9 @@ The `dev.sh` script automatically creates a socket proxy when starting the conta
 
 **Note:** Only the 1Password SSH agent socket is available in the container. This provides SSH key access for Git and SSH operations, which is all that's needed for development workflows.
 
-### Claude Code API Key Setup
+### Claude Code and MCP API Keys
 
-The Anthropic API key is stored in Vault and configured automatically when you run `login-setup.sh`.
+API keys for Claude Code and MCP servers are stored in Vault and loaded automatically via direnv when you enter the workspace directory.
 
 **Recommended:** Run the interactive setup:
 ```bash
@@ -330,21 +330,27 @@ bash .devcontainer/login-setup.sh
 # Authenticate to Vault
 vault login -method=oidc
 
-# Store your Anthropic API key (your entity name is usually your username)
+# Store API keys (your entity name is usually your username)
+# Required: Claude Code
 vault kv put secret/users/<your-entity-name>/anthropic api_key=sk-ant-...
 
-# Configure the API key for Claude Code
-bash .devcontainer/setup-claude-secrets.sh
+# Optional: MCP servers (for enhanced functionality)
+vault kv put secret/users/<your-entity-name>/firecrawl api_key=fc-...
+vault kv put secret/users/<your-entity-name>/exa api_key=...
+vault kv put secret/users/<your-entity-name>/notion api_key=secret_...
+
+# Reload environment to pick up changes
+direnv allow
 ```
 
-The setup script exit codes:
+**How it works:** The `.envrc` file automatically fetches API keys from Vault when you enter the workspace directory. Keys are loaded into environment variables used by Claude Code and MCP servers.
 
-| Exit Code | Meaning |
-|-----------|---------|
-| 0 | Success - API key configured |
-| 2 | Vault auth skipped - not logged in |
-| 3 | API key not found in Vault |
-| 1 | Error (CLI missing, command failure) |
+| API Key | Environment Variable | Required | Purpose |
+|---------|---------------------|----------|---------|
+| Anthropic | `ANTHROPIC_API_KEY` | Yes | Claude Code API access |
+| Firecrawl | `FIRECRAWL_API_KEY` | No | Web scraping/search MCP |
+| Exa | `EXA_API_KEY` | No | Deep research MCP |
+| Notion | `NOTION_API_KEY` | No | Notion workspace MCP |
 
 ### kubectl Context Not Found
 

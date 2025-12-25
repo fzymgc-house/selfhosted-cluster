@@ -65,6 +65,17 @@ else
     needs_claude=true
 fi
 
+# MCP servers (optional)
+mcp_count=0
+[[ -n "${FIRECRAWL_API_KEY:-}" ]] && ((mcp_count++))
+[[ -n "${EXA_API_KEY:-}" ]] && ((mcp_count++))
+[[ -n "${NOTION_API_KEY:-}" ]] && ((mcp_count++))
+if [[ $mcp_count -gt 0 ]]; then
+    log_info "MCP servers: ${mcp_count}/3 API keys configured"
+else
+    log_warn "MCP servers: No API keys configured (optional)"
+fi
+
 echo ""
 
 # If everything is set up, exit early
@@ -91,7 +102,7 @@ if $needs_vault; then
     echo ""
 fi
 
-# Step 2: Claude API key (after Vault is set up)
+# Step 2: API keys (after Vault is set up)
 if vault token lookup &>/dev/null; then
     # Get entity name for the secret path
     if ! TOKEN_LOOKUP=$(vault token lookup -format=json 2>&1); then
@@ -116,45 +127,72 @@ if vault token lookup &>/dev/null; then
     fi
 
     if [[ -n "${ENTITY_NAME:-}" ]]; then
-        SECRET_PATH="secret/users/${ENTITY_NAME}/anthropic"
+        # Helper function to prompt for API key storage
+        prompt_api_key() {
+            local service="$1"
+            local secret_path="$2"
+            local prefix="${3:-}"
+            local step_num="$4"
 
-        # Check if API key already exists
-        if vault kv get -format=json "$SECRET_PATH" &>/dev/null; then
-            log_info "Claude API key found in Vault at ${SECRET_PATH}"
-            # Run the setup script to configure it
-            if ! bash .devcontainer/setup-claude-secrets.sh; then
-                log_warn "Failed to configure Claude API key (exit code: $?)"
+            if vault kv get -format=json "$secret_path" &>/dev/null; then
+                log_info "${service} API key found in Vault"
+                return 0
             fi
-        else
-            log_step "Step 2: Claude Code API Key"
-            echo "    Your Anthropic API key needs to be stored in Vault."
-            echo "    Path: ${SECRET_PATH}"
+
+            log_step "Step ${step_num}: ${service} API Key"
+            echo "    Store your ${service} API key in Vault."
+            echo "    Path: ${secret_path}"
             echo ""
-            read -p "    Do you have an Anthropic API key to store? [y/N] " -n 1 -r
+            read -p "    Do you have a ${service} API key to store? [y/N] " -n 1 -r
             echo ""
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 echo ""
-                echo "    Enter your Anthropic API key (starts with sk-ant-):"
-                read -rs ANTHROPIC_KEY
+                if [[ -n "$prefix" ]]; then
+                    echo "    Enter your ${service} API key (starts with ${prefix}):"
+                else
+                    echo "    Enter your ${service} API key:"
+                fi
+                read -rs API_KEY_INPUT
                 echo ""
-                if [[ -n "$ANTHROPIC_KEY" ]]; then
-                    if vault kv put "$SECRET_PATH" api_key="$ANTHROPIC_KEY" &>/dev/null; then
-                        log_info "API key stored in Vault"
-                        # Configure it for the current session
-                        if ! bash .devcontainer/setup-claude-secrets.sh; then
-                            log_warn "Failed to configure Claude API key for session"
-                        fi
+                if [[ -n "$API_KEY_INPUT" ]]; then
+                    if vault kv put "$secret_path" api_key="$API_KEY_INPUT" &>/dev/null; then
+                        log_info "${service} API key stored in Vault"
                     else
-                        log_warn "Failed to store API key. Check your Vault permissions."
+                        log_warn "Failed to store ${service} API key. Check your Vault permissions."
                     fi
                 fi
             else
                 echo ""
-                echo "    You can store your API key later with:"
-                echo "      vault kv put ${SECRET_PATH} api_key=sk-ant-..."
+                echo "    You can store it later with:"
+                echo "      vault kv put ${secret_path} api_key=..."
                 echo ""
             fi
+        }
+
+        # Claude Code API key (required)
+        prompt_api_key "Anthropic (Claude Code)" "secret/users/${ENTITY_NAME}/anthropic" "sk-ant-" "2a"
+
+        # MCP server API keys (optional)
+        echo ""
+        log_step "Step 2b: MCP Server API Keys (Optional)"
+        echo "    These keys enable additional MCP server functionality."
+        echo ""
+        read -p "    Would you like to configure MCP server API keys? [y/N] " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo ""
+            prompt_api_key "Firecrawl" "secret/users/${ENTITY_NAME}/firecrawl" "fc-" "2b.1"
+            prompt_api_key "Exa" "secret/users/${ENTITY_NAME}/exa" "" "2b.2"
+            prompt_api_key "Notion" "secret/users/${ENTITY_NAME}/notion" "secret_" "2b.3"
         fi
+
+        # Reload direnv to pick up the new secrets
+        echo ""
+        log_info "Reloading environment to pick up API keys..."
+        direnv allow . 2>/dev/null || true
+        # Source the .envrc manually since we're in a script
+        # shellcheck source=/dev/null
+        source <(direnv export bash 2>/dev/null) || true
     fi
     echo ""
 fi

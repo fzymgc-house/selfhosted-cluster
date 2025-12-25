@@ -237,7 +237,6 @@ kubectl --context fzymgc-house get pods -A
 | HashiCorp Vault | Secrets and certificate management |
 | Authentik | Identity provider with SSO/OIDC |
 | CloudNativePG | PostgreSQL database clusters |
-| Valkey | Redis-compatible in-memory database |
 | VictoriaMetrics | Metrics collection and storage |
 | Grafana | Observability and dashboards |
 | ArgoCD | GitOps continuous deployment |

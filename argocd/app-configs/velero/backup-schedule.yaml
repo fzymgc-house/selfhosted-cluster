@@ -10,7 +10,6 @@ spec:
       - authentik
       - grafana
       - vault
-      - valkey
       - postgres
       - metrics
     excludedNamespaces:
@@ -43,7 +42,6 @@ spec:
       - authentik
       - grafana
       - vault
-      - valkey
       - postgres
       - metrics
     excludedNamespaces:

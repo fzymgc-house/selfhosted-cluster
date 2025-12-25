@@ -186,7 +186,6 @@
         "/^postgres/",
         "/^postgresql/",
         "/^cnpg/",
-        "/^valkey$/",
         "/^redis$/"
       ]
     },

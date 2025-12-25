@@ -3,7 +3,7 @@
 # Verify MCP server API keys are loaded from Vault via direnv
 #
 # This script checks that direnv has loaded MCP server API keys from Vault.
-# Claude Code uses interactive OAuth login (claude login), not API keys.
+# Claude Code uses interactive OAuth login (claude doctor), not API keys.
 #
 # Prerequisites:
 #   1. Create Vault token on host: scripts/create-vault-token.sh
@@ -59,7 +59,7 @@ fi
 if [[ -f "${HOME}/.claude.json" ]]; then
     log_info "Claude Code: Logged in"
 else
-    log_warn "Claude Code: Not logged in (run: claude login)"
+    log_warn "Claude Code: Not logged in (run: claude doctor)"
 fi
 
 # Check MCP keys (loaded via direnv from .envrc)

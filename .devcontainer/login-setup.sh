@@ -26,6 +26,11 @@ echo "║           Development Environment Login Setup              ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
 
+# Ensure direnv is allowed (loads .envrc which fetches secrets from Vault)
+if command -v direnv &>/dev/null; then
+    direnv allow . 2>/dev/null || true
+fi
+
 # Track what needs setup
 needs_vault=false
 needs_github=false
@@ -60,7 +65,7 @@ else
     needs_terraform=true
 fi
 
-# Claude (check for config file from 'claude login')
+# Claude (check for config file from 'claude doctor')
 if [[ -f "${HOME}/.claude.json" ]]; then
     log_info "Claude Code: Logged in"
 else
@@ -118,6 +123,8 @@ if $needs_vault; then
             if VAULT_ERROR=$(vault login token="$VAULT_TOKEN_INPUT" 2>&1); then
                 log_info "Vault authentication successful"
                 needs_vault=false
+                # Reload direnv to pick up Vault-based secrets
+                direnv allow . 2>/dev/null || true
             else
                 log_warn "Vault token login failed:"
                 echo "    ${VAULT_ERROR}" | head -3
@@ -277,17 +284,17 @@ if $needs_terraform; then
     echo ""
 fi
 
-# Step 4: Claude Code (interactive OAuth login - MUST BE LAST, takes over terminal)
+# Step 4: Claude Code (interactive - MUST BE LAST, takes over terminal)
 if $needs_claude; then
     log_step "Step 4: Claude Code Authentication"
-    echo "    Claude Code uses interactive OAuth login (opens browser)."
+    echo "    Claude doctor checks environment and prompts for login if needed."
     echo "    NOTE: This takes over the terminal until complete."
     echo ""
-    read -p "    Run 'claude login'? [Y/n] " -n 1 -r
+    read -p "    Run 'claude doctor'? [Y/n] " -n 1 -r
     echo ""
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        claude login || {
-            log_warn "Claude login failed. You can retry later with: claude login"
+        claude doctor || {
+            log_warn "Claude doctor failed. You can retry later with: claude doctor"
         }
     fi
     echo ""

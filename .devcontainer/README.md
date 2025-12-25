@@ -320,9 +320,9 @@ The `dev.sh` script automatically creates a socket proxy when starting the conta
 
 Claude Code uses interactive OAuth login. Run inside the devcontainer:
 ```bash
-claude login
+claude doctor
 ```
-This opens a browser for authentication. Your session is stored in `~/.claude.json`.
+This checks your environment and prompts for login if needed. Your session is stored in `~/.claude.json`.
 
 **Recommended:** Run the interactive setup which handles all authentication:
 ```bash

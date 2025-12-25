@@ -17,11 +17,14 @@
   "timezone": "America/New_York",
   "packageRules": [
     {
-      "description": "Disable major version updates by default for stability",
+      "description": "Major version updates require manual review (no automerge)",
       "matchUpdateTypes": [
         "major"
       ],
-      "enabled": false
+      "enabled": true,
+      "automerge": false,
+      "minimumReleaseAge": "7 days",
+      "prPriority": -1
     },
     {
       "description": "Auto-merge minor and patch updates for all dependencies",
@@ -200,6 +203,27 @@
         "/^argo-events$/",
         "/^renovate$/"
       ]
+    },
+    {
+      "description": "Ansible Galaxy collections",
+      "matchManagers": [
+        "ansible-galaxy"
+      ],
+      "groupName": "ansible collections",
+      "groupSlug": "ansible-collections",
+      "automerge": true,
+      "minimumReleaseAge": "5 days"
+    },
+    {
+      "description": "Python dependencies",
+      "matchManagers": [
+        "pip_requirements",
+        "pep621"
+      ],
+      "groupName": "python dependencies",
+      "groupSlug": "python-deps",
+      "automerge": true,
+      "minimumReleaseAge": "3 days"
     }
   ],
   "vulnerabilityAlerts": {
@@ -257,12 +281,12 @@
   ],
   "argocd": {
     "managerFilePatterns": [
-      "argocd/.+\\.ya?ml$"
+      "argocd/**/*.ya?ml$"
     ]
   },
   "helm-values": {
     "managerFilePatterns": [
-      "argocd/.+/values\\.ya?ml$"
+      "argocd/**/values\\.ya?ml$"
     ]
   },
   "kustomize": {
@@ -280,8 +304,22 @@
       "\\.(yaml|yml)$"
     ],
     "ignorePaths": [
-      "**/templates/**",
       "**/*.gotmpl"
+    ]
+  },
+  "ansible-galaxy": {
+    "managerFilePatterns": [
+      "ansible/**/requirements\\.ya?ml$"
+    ]
+  },
+  "pip_requirements": {
+    "managerFilePatterns": [
+      "requirements.*\\.txt$"
+    ]
+  },
+  "pep621": {
+    "managerFilePatterns": [
+      "pyproject\\.toml$"
     ]
   },
   "ignoreDeps": [

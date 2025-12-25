@@ -16,10 +16,18 @@ The devcontainer provides a complete, reproducible development environment with:
 - **1Password SSH Agent** for SSH key management (via socket proxy)
 - **k3sup** for k3s cluster management
 
+### AI Development
+- **Claude Code** - Anthropic's CLI for AI-assisted development
+- **MCP Servers** - filesystem, kubernetes, context7, firecrawl, exa, notion, serena
+- **ripgrep** - Fast code search (required by Serena MCP)
+- **ast-grep** - Structural code search for semantic analysis
+
 ### Utilities
-- `jq`, `yq` - JSON/YAML processing
-- `direnv` - Environment variable management
-- Git, SSH, and essential build tools
+- `jq`, `yq` - JSON/YAML processing (via jq-likes feature)
+- `direnv` - Automatic environment variable loading (via feature)
+- `go-task` - Task runner (via feature)
+- `neovim` - Modern vim editor (via homebrew feature)
+- Git, SSH, SSHD, and essential build tools
 - Docker-in-Docker support
 - 1Password SSH Agent integration (via socket proxy)
 
@@ -50,7 +58,7 @@ All collections from `ansible/requirements-ansible.yml`:
 5. **Host prerequisites** (automatically mounted):
    - `~/.ssh` - SSH keys for Git and cluster access
    - `~/.kube/config` - Kubernetes cluster configuration
-   - `~/.vault-token` - Vault authentication token
+   - `~/.1password/agent.sock` - 1Password SSH agent socket
 
 ### Opening the Repository in a Container
 
@@ -155,8 +163,8 @@ The following host directories are mounted into the container:
 |-----------|----------------|---------|
 | `~/.ssh` | `/home/vscode/.ssh` | SSH keys (read-only) |
 | `~/.kube` | `/home/vscode/.kube` | Kubernetes config |
-| `~/.vault-token` | `/home/vscode/.vault-token` | Vault authentication |
-| 1Password socket | `/home/vscode/.1password/agent.sock` | SSH agent for Git/SSH operations |
+| `~/.1password` | `/home/vscode/.1password` | 1Password SSH agent socket |
+| Claude Code config | `/home/vscode/.claude` | Claude Code settings (Docker volume) |
 
 **Note:** Changes to these files inside the container affect your host system.
 

@@ -90,25 +90,10 @@ fi
 echo "────────────────────────────────────────────────────────────────"
 echo ""
 
-# Step 1: Claude Code (interactive OAuth login)
-if $needs_claude; then
-    log_step "Step 1: Claude Code Authentication"
-    echo "    Claude Code uses interactive OAuth login (opens browser)."
-    echo ""
-    read -p "    Run 'claude login'? [Y/n] " -n 1 -r
-    echo ""
-    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        claude login || {
-            log_warn "Claude login failed. You can retry later with: claude login"
-        }
-    fi
-    echo ""
-fi
-
-# Step 2: Vault (for MCP server API keys)
+# Step 1: Vault (for MCP server API keys)
 # Note: OIDC login requires localhost:8250 callback which doesn't work in container
 if $needs_vault; then
-    log_step "Step 2: Vault Authentication"
+    log_step "Step 1: Vault Authentication"
     echo "    Vault stores MCP server API keys (Firecrawl, Exa, Notion)."
     echo ""
     echo "    NOTE: Vault OIDC login requires localhost:8250 callback,"
@@ -231,7 +216,7 @@ if vault token lookup &>/dev/null; then
 
         # MCP server API keys (optional)
         echo ""
-        log_step "Step 2b: MCP Server API Keys (Optional)"
+        log_step "Step 1b: MCP Server API Keys (Optional)"
         echo "    These keys enable additional MCP server functionality."
         echo ""
         read -p "    Would you like to configure MCP server API keys? [y/N] " -n 1 -r
@@ -262,9 +247,9 @@ if vault token lookup &>/dev/null; then
     echo ""
 fi
 
-# Step 3: GitHub CLI
+# Step 2: GitHub CLI
 if $needs_github; then
-    log_step "Step 3: GitHub CLI Authentication"
+    log_step "Step 2: GitHub CLI Authentication"
     echo "    GitHub CLI is used for PR management and repository access."
     echo ""
     read -p "    Run 'gh auth login -p https -w'? [Y/n] " -n 1 -r
@@ -277,9 +262,9 @@ if $needs_github; then
     echo ""
 fi
 
-# Step 4: Terraform Cloud
+# Step 3: Terraform Cloud
 if $needs_terraform; then
-    log_step "Step 4: Terraform Cloud Authentication"
+    log_step "Step 3: Terraform Cloud Authentication"
     echo "    Terraform Cloud stores remote state for infrastructure."
     echo ""
     read -p "    Run 'terraform login'? [Y/n] " -n 1 -r
@@ -287,6 +272,22 @@ if $needs_terraform; then
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
         terraform login || {
             log_warn "Terraform login failed. You can retry later with: terraform login"
+        }
+    fi
+    echo ""
+fi
+
+# Step 4: Claude Code (interactive OAuth login - MUST BE LAST, takes over terminal)
+if $needs_claude; then
+    log_step "Step 4: Claude Code Authentication"
+    echo "    Claude Code uses interactive OAuth login (opens browser)."
+    echo "    NOTE: This takes over the terminal until complete."
+    echo ""
+    read -p "    Run 'claude login'? [Y/n] " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+        claude login || {
+            log_warn "Claude login failed. You can retry later with: claude login"
         }
     fi
     echo ""

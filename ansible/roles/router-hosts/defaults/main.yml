@@ -16,16 +16,19 @@ router_hosts_base_dir: "/extdata/router-hosts"
 # Container images
 router_hosts_image: "ghcr.io/fzymgc-house/router-hosts"
 router_hosts_version: "v0.6.0"
-router_hosts_vault_image: "hashicorp/vault:1.18"
+router_hosts_vault_image: "hashicorp/vault:1.19.0"
 
 # Vault configuration
 router_hosts_vault_addr: "https://vault.fzymgc.house"
+# CA bundle for Vault TLS verification (path relative to role's files/ directory)
+router_hosts_vault_ca_cert: "{{ role_path }}/files/fzymgc-ca-bundle.pem"
 router_hosts_vault_pki_path: "fzymgc-house/v1/ica1/v1"
+router_hosts_vault_pki_role: "router-hosts-server"
 router_hosts_vault_approle_name: "router-hosts-agent"
 
 # Certificate configuration
-# Common name for the server certificate
-router_hosts_cert_cn: "router-hosts"
+# Common name for the server certificate (must be in PKI role's allowed_domains)
+router_hosts_cert_cn: "router.fzymgc.house"
 
 # DNS SANs for the server certificate
 router_hosts_cert_dns_sans:
@@ -46,6 +49,7 @@ router_hosts_cert_ttl: "720h"
 
 # gRPC server configuration
 router_hosts_grpc_port: 50051
+router_hosts_bind_address: "192.168.20.1"
 
 # Container user (pi user on Firewalla)
 router_hosts_user: "pi"

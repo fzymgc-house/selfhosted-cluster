@@ -116,30 +116,73 @@ if [[ -f ".envrc" ]]; then
     direnv allow .
 fi
 
-# Install Claude Code CLI using native binary installer
-log_info "Installing Claude Code CLI..."
-# Ensure ~/.local/bin is in PATH (installer puts binary there)
-if ! grep -q '\.local/bin' /home/vscode/.bashrc; then
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> /home/vscode/.bashrc
-fi
-export PATH="$HOME/.local/bin:$PATH"
-
-if command -v claude &> /dev/null; then
-    log_info "✓ Claude Code CLI already installed: $(claude --version 2>/dev/null || echo 'unknown version')"
+# Install ast-grep for Serena MCP semantic code operations
+log_info "Installing ast-grep..."
+if command -v ast-grep &> /dev/null; then
+    log_info "✓ ast-grep already installed: $(ast-grep --version 2>/dev/null || echo 'unknown version')"
 else
-    # Use native binary installer (recommended by Anthropic)
-    # Download first, then execute for better security practice
-    INSTALL_SCRIPT="/tmp/claude-install.sh"
-    if curl -fsSL https://claude.ai/install.sh -o "$INSTALL_SCRIPT"; then
-        if bash "$INSTALL_SCRIPT"; then
-            log_info "✓ Claude Code CLI installed successfully"
-        else
-            log_warn "Failed to install Claude Code CLI"
-        fi
-        rm -f "$INSTALL_SCRIPT"
+    if npm install -g @ast-grep/cli 2>/dev/null; then
+        log_info "✓ ast-grep installed successfully"
     else
-        log_warn "Failed to download Claude Code CLI installer"
+        log_warn "Failed to install ast-grep (Serena MCP may have reduced functionality)"
     fi
+fi
+
+# Set up git safeguards to warn on --no-verify usage
+log_info "Setting up git safeguards..."
+setup_git_safeguards() {
+    local bashrc="/home/vscode/.bashrc"
+    local safeguard_marker="# Git safeguards for Claude Code"
+
+    if ! grep -q "$safeguard_marker" "$bashrc" 2>/dev/null; then
+        cat >> "$bashrc" << 'SAFEGUARDS'
+
+# Git safeguards for Claude Code
+# Warn when using --no-verify to prevent accidental pre-commit bypass
+git() {
+    local args=("$@")
+    local has_no_verify=false
+
+    for arg in "${args[@]}"; do
+        if [[ "$arg" == "--no-verify" || "$arg" == "-n" ]]; then
+            has_no_verify=true
+            break
+        fi
+    done
+
+    if $has_no_verify; then
+        echo -e "\033[1;33m[WARNING]\033[0m You are using --no-verify which skips pre-commit hooks."
+        echo "This may allow code that doesn't meet project standards to be committed."
+        read -r -p "Continue anyway? [y/N] " response
+        if [[ ! "$response" =~ ^[Yy]$ ]]; then
+            echo "Commit aborted."
+            return 1
+        fi
+    fi
+
+    command git "${args[@]}"
+}
+SAFEGUARDS
+        log_info "✓ Git safeguards added to ~/.bashrc"
+    else
+        log_info "✓ Git safeguards already configured"
+    fi
+}
+setup_git_safeguards
+
+# Set up Claude Code with Vault-sourced API key
+log_info "Setting up Claude Code API key from Vault..."
+if [[ -f ".devcontainer/setup-claude-secrets.sh" ]]; then
+    bash .devcontainer/setup-claude-secrets.sh
+else
+    log_warn "setup-claude-secrets.sh not found, skipping Anthropic API key setup"
+fi
+
+# Verify Claude Code is available (installed by devcontainer feature)
+if command -v claude &> /dev/null; then
+    log_info "✓ Claude Code CLI available: $(claude --version 2>/dev/null || echo 'unknown version')"
+else
+    log_warn "Claude Code CLI not found (should be installed by devcontainer feature)"
 fi
 
 echo ""
@@ -152,6 +195,8 @@ echo "  - Ansible: $(ansible --version 2>/dev/null | head -1 || echo 'not availa
 echo "  - kubectl: $(kubectl version --client -o json 2>/dev/null | jq -r .clientVersion.gitVersion || echo 'not available')"
 echo "  - helm: $(helm version --short 2>/dev/null || echo 'not available')"
 echo "  - Python: $(python --version 2>&1)"
+echo "  - ast-grep: $(ast-grep --version 2>/dev/null || echo 'not available')"
+echo "  - uv: $(uv --version 2>/dev/null || echo 'not available')"
 echo ""
 echo "Useful commands:"
 echo "  - Activate Python venv: source .venv/bin/activate"

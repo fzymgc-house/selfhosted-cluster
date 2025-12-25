@@ -26,7 +26,7 @@
 
 - name: Wait for gRPC port to be available
   ansible.builtin.wait_for:
-    host: 127.0.0.1
+    host: "{{ router_hosts_bind_address }}"
     port: "{{ router_hosts_grpc_port }}"
     state: started
     timeout: 60
@@ -47,7 +47,7 @@
   ansible.builtin.debug:
     msg: |
       router-hosts deployed successfully on {{ inventory_hostname }}
-      gRPC: 0.0.0.0:{{ router_hosts_grpc_port }}
+      gRPC: {{ router_hosts_bind_address }}:{{ router_hosts_grpc_port }}
       Certificates: {{ router_hosts_base_dir }}/certs/
       {{ router_hosts_cert_dates.stdout }}
   tags:

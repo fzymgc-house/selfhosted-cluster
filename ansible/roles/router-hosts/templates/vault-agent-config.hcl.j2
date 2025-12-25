@@ -33,34 +33,21 @@ template_config {
   static_secret_render_interval = "5m"
 }
 
+# Write all certificate components from a single pkiCert call to ensure
+# the cert, key, and CA all come from the same issuance.
 template {
   contents = <<-EOF
-  {{ '{{' }}- with pkiCert "{{ router_hosts_vault_pki_path }}/issue/server" "common_name={{ router_hosts_cert_cn }}" "ttl={{ router_hosts_cert_ttl }}" "alt_names={{ router_hosts_cert_dns_sans | join(',') }}" "ip_sans={{ router_hosts_cert_ip_sans | join(',') }}" -{{ '}}' }}
+  {{ '{{' }}- with pkiCert "{{ router_hosts_vault_pki_path }}/issue/{{ router_hosts_vault_pki_role }}" "common_name={{ router_hosts_cert_cn }}" "ttl={{ router_hosts_cert_ttl }}" "alt_names={{ router_hosts_cert_dns_sans | join(',') }}" "ip_sans={{ router_hosts_cert_ip_sans | join(',') }}" -{{ '}}' }}
+  ===CERT===
   {{ '{{' }} .Cert {{ '}}' }}
-  {{ '{{' }}- end {{ '}}' }}
-  EOF
-  destination = "/vault/certs/server.crt"
-  perms = 0644
-}
-
-template {
-  contents = <<-EOF
-  {{ '{{' }}- with pkiCert "{{ router_hosts_vault_pki_path }}/issue/server" "common_name={{ router_hosts_cert_cn }}" "ttl={{ router_hosts_cert_ttl }}" "alt_names={{ router_hosts_cert_dns_sans | join(',') }}" "ip_sans={{ router_hosts_cert_ip_sans | join(',') }}" -{{ '}}' }}
+  ===KEY===
   {{ '{{' }} .Key {{ '}}' }}
-  {{ '{{' }}- end {{ '}}' }}
-  EOF
-  destination = "/vault/certs/server.key"
-  perms = 0600
-}
-
-template {
-  contents = <<-EOF
-  {{ '{{' }}- with pkiCert "{{ router_hosts_vault_pki_path }}/issue/server" "common_name={{ router_hosts_cert_cn }}" "ttl={{ router_hosts_cert_ttl }}" "alt_names={{ router_hosts_cert_dns_sans | join(',') }}" "ip_sans={{ router_hosts_cert_ip_sans | join(',') }}" -{{ '}}' }}
+  ===CA===
   {{ '{{' }} .CA {{ '}}' }}
+  ===END===
   {{ '{{' }}- end {{ '}}' }}
   EOF
-  destination = "/vault/certs/ca.crt"
-  perms = 0644
-  # All three templates use identical pkiCert calls, so Vault Agent
-  # deduplicates the API request and writes all files atomically.
+  destination = "/vault/certs/bundle.pem"
+  perms = 0600
+  command = "/scripts/split-certs.sh"
 }

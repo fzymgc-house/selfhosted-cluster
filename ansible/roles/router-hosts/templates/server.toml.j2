@@ -2,17 +2,21 @@
 # router-hosts server configuration
 
 [server]
-listen_addr = "0.0.0.0:{{ router_hosts_grpc_port }}"
+bind_address = "{{ router_hosts_bind_address }}:{{ router_hosts_grpc_port }}"
+hosts_file_path = "/data/hosts"
+
+[database]
+path = "/data/router-hosts.db"
 
 [tls]
 cert_path = "/certs/server.crt"
 key_path = "/certs/server.key"
-ca_path = "/certs/ca.crt"
-require_client_cert = true
+ca_cert_path = "/certs/ca.crt"
 
-[storage]
-db_path = "/data/router-hosts.db"
-hosts_file_path = "/data/hosts"
+[retention]
+max_snapshots = 50
+max_age_days = 30
 
 [hooks]
-on_update = "/scripts/on-hosts-update.sh"
+on_success = ["/scripts/on-hosts-update.sh"]
+on_failure = []

@@ -1,0 +1,23 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# Split the combined certificate bundle into individual files
+# Called by Vault Agent after template rendering
+
+BUNDLE="/vault/certs/bundle.pem"
+CERT="/vault/certs/server.crt"
+KEY="/vault/certs/server.key"
+CA="/vault/certs/ca.crt"
+
+# Extract cert (between ===CERT=== and ===KEY===)
+sed -n '/===CERT===/,/===KEY===/p' "$BUNDLE" | grep -v '===' > "$CERT"
+chmod 644 "$CERT"
+
+# Extract key (between ===KEY=== and ===CA===)
+sed -n '/===KEY===/,/===CA===/p' "$BUNDLE" | grep -v '===' > "$KEY"
+chmod 600 "$KEY"
+
+# Extract CA (between ===CA=== and ===END===)
+sed -n '/===CA===/,/===END===/p' "$BUNDLE" | grep -v '===' > "$CA"
+chmod 644 "$CA"
+
+echo "Certificates split successfully"

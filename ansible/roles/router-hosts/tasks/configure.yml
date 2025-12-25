@@ -29,6 +29,18 @@
     - router-hosts
     - router-hosts-configure
 
+- name: Deploy Vault CA bundle
+  ansible.builtin.copy:
+    src: fzymgc-ca-bundle.pem
+    dest: "{{ router_hosts_base_dir }}/config/ca-bundle.pem"
+    owner: "{{ router_hosts_user }}"
+    group: "{{ router_hosts_user }}"
+    mode: "0644"
+  notify: restart router-hosts
+  tags:
+    - router-hosts
+    - router-hosts-configure
+
 - name: Deploy Vault Agent configuration
   ansible.builtin.template:
     src: vault-agent-config.hcl.j2
@@ -48,6 +60,18 @@
     owner: "{{ router_hosts_user }}"
     group: "{{ router_hosts_user }}"
     mode: "0644"
+  notify: restart router-hosts
+  tags:
+    - router-hosts
+    - router-hosts-configure
+
+- name: Deploy certificate split script
+  ansible.builtin.template:
+    src: split-certs.sh.j2
+    dest: "{{ router_hosts_base_dir }}/scripts/split-certs.sh"
+    owner: "{{ router_hosts_user }}"
+    group: "{{ router_hosts_user }}"
+    mode: "0755"
   notify: restart router-hosts
   tags:
     - router-hosts

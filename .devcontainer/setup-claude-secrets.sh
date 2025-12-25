@@ -51,7 +51,7 @@ if ! vault token lookup &> /dev/null; then
     log_warn "Not authenticated to Vault. Skipping Anthropic API key setup."
     echo ""
     echo "To set up your Anthropic API key:"
-    echo "  1. Authenticate to Vault: vault login -method=github"
+    echo "  1. Authenticate to Vault: vault login -method=oidc"
     echo "  2. Store your API key:    vault kv put secret/users/<entity-name>/anthropic api_key=sk-ant-..."
     echo "  3. Re-run this script:    bash .devcontainer/setup-claude-secrets.sh"
     echo ""

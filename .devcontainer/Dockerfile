@@ -31,6 +31,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     libffi-dev \
     libssl-dev \
     python3-dev \
+    # For onigurumacffi (ansible-navigator dependency)
+    libonig-dev \
     && rm -rf /var/lib/apt/lists/*
 
 

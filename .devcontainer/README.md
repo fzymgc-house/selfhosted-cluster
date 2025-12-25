@@ -60,22 +60,66 @@ All collections from `ansible/requirements-ansible.yml`:
    - `~/.kube/config` - Kubernetes cluster configuration
    - `~/.1password/agent.sock` - 1Password SSH agent socket
 
+### Pre-Setup: Store Your Anthropic API Key (Optional)
+
+For Claude Code to work immediately, store your API key in Vault **before** starting the container:
+
+```bash
+# On your host machine (not in the container)
+export VAULT_ADDR=https://vault.fzymgc.house
+vault login -method=oidc
+
+# Store your Anthropic API key (replace <your-username> with your Vault entity name)
+vault kv put secret/users/<your-username>/anthropic api_key=sk-ant-...
+```
+
+If you skip this step, the `login-setup.sh` script inside the container will prompt you to store the key interactively.
+
 ### Opening the Repository in a Container
 
-1. Open this repository in VS Code
+**Recommended: Clone in Container Volume**
+
+This approach clones the repository into a Docker volume, avoiding host filesystem issues:
+
+1. Open VS Code (without opening a folder)
+2. Press `F1` or `Cmd/Ctrl+Shift+P`
+3. Select **"Dev Containers: Clone Repository in Container Volume..."**
+4. Enter the repository URL: `https://github.com/fzymgc-house/selfhosted-cluster`
+5. Wait for the container to build and initialize (first time takes 5-10 minutes)
+
+**Alternative: Open Existing Clone**
+
+If you have the repository cloned locally:
+
+1. Open the repository folder in VS Code
 2. Press `F1` or `Cmd/Ctrl+Shift+P`
 3. Select **"Dev Containers: Reopen in Container"**
-4. Wait for the container to build and initialize (first time takes 5-10 minutes)
 
 The container will automatically:
 - Build the Docker image with all tools
+- Clone (or mount) the repository into `/workspaces/selfhosted-cluster`
 - Mount your SSH keys, kubeconfig, and 1Password socket
 - Run the `post-create.sh` script to set up Python venv
 - Install all Python and Ansible dependencies
 
+### First-Time Setup
+
+Once the container is running, open a terminal and run the interactive login setup:
+
+```bash
+# Complete authentication for Vault, GitHub, Terraform, and Claude Code
+bash .devcontainer/login-setup.sh
+```
+
+This script will:
+- Authenticate to Vault (OIDC)
+- Store or retrieve your Anthropic API key
+- Authenticate to GitHub CLI
+- Authenticate to Terraform Cloud
+
 ### Verifying the Setup
 
-Once the container is running, open a terminal and check:
+After running login-setup.sh, verify your environment:
 
 ```bash
 # Check Python environment
@@ -90,7 +134,7 @@ terraform version
 kubectl --context fzymgc-house get nodes
 
 # Check Vault connectivity
-curl -s https://vault.fzymgc.house/v1/sys/health | jq
+vault token lookup
 
 # Check SSH agent (1Password keys)
 ssh-add -L
@@ -157,17 +201,25 @@ The container includes these pre-configured aliases:
 
 ## Mounted Volumes
 
-The following host directories are mounted into the container:
-
+### Host Bind Mounts
 | Host Path | Container Path | Purpose |
 |-----------|----------------|---------|
 | `~/.ssh` | `/home/vscode/.ssh` | SSH keys (read-only) |
 | `~/.kube` | `/home/vscode/.kube` | Kubernetes config |
 | `~/.1password` | `/home/vscode/.1password` | 1Password SSH agent socket |
-| Claude Code config | `/home/vscode/.claude` | Claude Code settings (Docker volume) |
+
+### Docker Volumes (Persist Across Rebuilds)
+| Volume Name | Container Path | Purpose |
+|-------------|----------------|---------|
+| `selfhosted-cluster-claude-config` | `/home/vscode/.claude` | Claude Code settings |
+| `selfhosted-cluster-venv` | `/workspaces/<folder>/.venv` | Python virtual environment |
+| `selfhosted-cluster-cache` | `/home/vscode/.cache` | XDG cache (pip, uv, etc.) |
+| `selfhosted-cluster-tmp` | `/tmp` | Temporary files |
+
+**Note:** The venv path uses `${localWorkspaceFolderBasename}`, so it adapts to the workspace folder name (e.g., `selfhosted-cluster` for volume clone, or `devcontainer-claude-code` for worktree).
 
 **Notes:**
-- Changes to mounted directories inside the container affect your host system
+- Host bind mounts: Changes inside the container affect your host system
 - Vault tokens are **not** mounted - you must authenticate inside the container with `vault login`
 - Claude Code config uses a Docker volume for persistence across rebuilds
 
@@ -266,7 +318,26 @@ The `dev.sh` script automatically creates a socket proxy when starting the conta
 
 ### Claude Code API Key Setup
 
-The Anthropic API key is fetched from Vault during container startup. The script uses distinct exit codes:
+The Anthropic API key is stored in Vault and configured automatically when you run `login-setup.sh`.
+
+**Recommended:** Run the interactive setup:
+```bash
+bash .devcontainer/login-setup.sh
+```
+
+**Manual setup** (if needed):
+```bash
+# Authenticate to Vault
+vault login -method=oidc
+
+# Store your Anthropic API key (your entity name is usually your username)
+vault kv put secret/users/<your-entity-name>/anthropic api_key=sk-ant-...
+
+# Configure the API key for Claude Code
+bash .devcontainer/setup-claude-secrets.sh
+```
+
+The setup script exit codes:
 
 | Exit Code | Meaning |
 |-----------|---------|
@@ -274,18 +345,6 @@ The Anthropic API key is fetched from Vault during container startup. The script
 | 2 | Vault auth skipped - not logged in |
 | 3 | API key not found in Vault |
 | 1 | Error (CLI missing, command failure) |
-
-**First-time setup:**
-```bash
-# Authenticate to Vault
-vault login -method=github
-
-# Store your Anthropic API key
-vault kv put secret/users/<your-github-username>/anthropic api_key=sk-ant-...
-
-# Re-run the setup script
-bash .devcontainer/setup-claude-secrets.sh
-```
 
 ### kubectl Context Not Found
 

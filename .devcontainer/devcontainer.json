@@ -47,10 +47,6 @@
         "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {}
     },
 
-    // Override default workspace mount to use /workspace instead of /workspaces
-    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-    "workspaceFolder": "/workspace",
-
     // Mount host's SSH, kubeconfig, and 1Password agent for authentication
     // Note: Vault token is NOT mounted - users should run 'vault login' inside the container
     // Note: 1Password must be configured to use ~/.1password/agent.sock (Settings > Developer > SSH Agent)
@@ -58,21 +54,26 @@
         "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readonly",
         "source=${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached",
         "source=${localEnv:HOME}/.1password,target=/home/vscode/.1password,type=bind",
-        // Docker volume for Claude Code config - persists across rebuilds, isolates from host
-        "source=claude-code-config-${devcontainerId},target=/home/vscode/.claude,type=volume"
+        // Docker volumes for isolation and performance (persist across rebuilds)
+        // Note: venv uses folder basename so it works with local folders and volume clones
+        "source=selfhosted-cluster-claude-config,target=/home/vscode/.claude,type=volume",
+        "source=selfhosted-cluster-venv,target=/workspaces/${localWorkspaceFolderBasename}/.venv,type=volume",
+        "source=selfhosted-cluster-cache,target=/home/vscode/.cache,type=volume",
+        "source=selfhosted-cluster-tmp,target=/tmp,type=volume"
     ],
 
-    // Capture GH_TOKEN from host before container starts (runs on host)
-    "initializeCommand": "echo \"GH_TOKEN=$(gh auth token 2>/dev/null || echo '')\" > .devcontainer/.env.devcontainer",
-
-    // Pass environment file to container
-    "runArgs": ["--env-file", ".devcontainer/.env.devcontainer"],
-
     // Set environment variables
+    // remoteEnv passes host environment variables into the container
     "containerEnv": {
         "KUBECONFIG": "/home/vscode/.kube/config",
         "VAULT_ADDR": "https://vault.fzymgc.house",
-        "SSH_AUTH_SOCK": "/home/vscode/.1password/agent.sock"
+        "SSH_AUTH_SOCK": "/home/vscode/.1password/agent.sock",
+        "XDG_CACHE_HOME": "/home/vscode/.cache"
+    },
+
+    // Pass through GH_TOKEN from host for GitHub CLI authentication
+    "remoteEnv": {
+        "GH_TOKEN": "${localEnv:GH_TOKEN}"
     },
 
     // Forward ports for development

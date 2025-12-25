@@ -19,6 +19,16 @@ log_warn() {
     echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
+# Fix ownership of Docker volumes (created as root by default)
+# These are mounted as named volumes and need proper vscode user ownership
+# Note: PWD is the workspace directory, set by devcontainer before running postCreateCommand
+log_info "Fixing Docker volume permissions..."
+for dir in "/home/vscode/.claude" "/home/vscode/.cache" "${PWD}/.venv" "/tmp"; do
+    if [[ -d "$dir" ]]; then
+        sudo chown -R "$(id -u):$(id -g)" "$dir" 2>/dev/null || true
+    fi
+done
+
 # Vault authentication setup
 if command -v vault &> /dev/null; then
     log_info "Setting up Vault authentication..."
@@ -28,16 +38,7 @@ if command -v vault &> /dev/null; then
     if vault token lookup &> /dev/null; then
         log_info "✓ Already authenticated to Vault"
     else
-        log_warn "Not authenticated to Vault"
-        echo ""
-        echo "Please authenticate to Vault to access infrastructure secrets:"
-        echo "  vault login -method=github"
-        echo ""
-        echo "Then create an orphan token with infrastructure access:"
-        echo "  vault token create -policy=infrastructure-developer -orphan"
-        echo ""
-        echo "Use the generated token for Terraform/Ansible operations."
-        echo ""
+        log_warn "Not authenticated to Vault (run login-setup.sh to configure)"
     fi
 fi
 
@@ -47,11 +48,7 @@ if command -v gh &> /dev/null; then
     if gh auth status &> /dev/null; then
         log_info "✓ Already authenticated to GitHub"
     else
-        log_warn "Not authenticated to GitHub CLI"
-        echo ""
-        echo "Please authenticate to GitHub (use HTTPS for best compatibility):"
-        echo "  gh auth login -p https -w"
-        echo ""
+        log_warn "Not authenticated to GitHub CLI (run login-setup.sh to configure)"
     fi
 fi
 
@@ -61,11 +58,7 @@ if command -v terraform &> /dev/null; then
     if [[ -f "${HOME}/.terraform.d/credentials.tfrc.json" ]]; then
         log_info "✓ Terraform Cloud credentials found"
     else
-        log_warn "Not authenticated to Terraform Cloud"
-        echo ""
-        echo "Please authenticate to Terraform Cloud:"
-        echo "  terraform login"
-        echo ""
+        log_warn "Not authenticated to Terraform Cloud (run login-setup.sh to configure)"
     fi
 fi
 
@@ -78,11 +71,16 @@ else
 fi
 
 # Configure git if not already configured
-if [[ -z "$(git config --global user.name 2>/dev/null)" ]]; then
+# Note: Run from /tmp to avoid git worktree path issues in container
+# (worktree .git file references host path that doesn't exist inside container)
+if [[ -z "$(cd /tmp && git config --global user.name 2>/dev/null)" ]]; then
     log_info "Configuring git..."
-    git config --global init.defaultBranch main
-    git config --global pull.rebase true
-    git config --global fetch.prune true
+    (
+        cd /tmp
+        git config --global init.defaultBranch main
+        git config --global pull.rebase true
+        git config --global fetch.prune true
+    )
     echo "Please configure git user.name and user.email:"
     echo "  git config --global user.name 'Your Name'"
     echo "  git config --global user.email 'your.email@example.com'"
@@ -215,12 +213,11 @@ echo "  - Python: $(python --version 2>&1)"
 echo "  - ast-grep: $(ast-grep --version 2>/dev/null || echo 'not available')"
 echo "  - uv: $(uv --version 2>/dev/null || echo 'not available')"
 echo ""
+echo "First-time setup:"
+echo "  bash .devcontainer/login-setup.sh    # Interactive login for all services"
+echo ""
 echo "Useful commands:"
 echo "  - Activate Python venv: source .venv/bin/activate"
-echo "  - Vault login:          vault login -method=github"
-echo "  - Vault infra token:    vault token create -policy=infrastructure-developer -orphan"
-echo "  - GitHub login:         gh auth login -p https -w"
-echo "  - Terraform login:      terraform login"
 echo "  - kubectl (alias 'k'):  k get nodes"
 echo "  - Terraform (alias):    tf plan"
 echo ""

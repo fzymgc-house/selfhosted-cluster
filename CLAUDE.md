@@ -38,7 +38,7 @@ Self-hosted Kubernetes cluster on TuringPi 2 hardware (RK1 compute modules). Thr
 | `superpowers:using-git-worktrees` | Feature work needing isolation |
 | `pr-review-toolkit:review-pr` | When asked to "request a review" (NOT `gh pr edit --add-reviewer`) |
 | `commit-commands:commit` | Creating git commits |
-| `fzymgc-house-skills:grafana` | Grafana dashboard operations (search, get, list, query, generate) |
+| `grafana` | Grafana dashboard operations (search, get, list, query, generate), Loki log operations, and Prometheus metric queries |
 
 ### Workflow Directives
 

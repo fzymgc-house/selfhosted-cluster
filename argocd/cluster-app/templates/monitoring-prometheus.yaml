@@ -31,7 +31,8 @@ spec:
               minAvailable: 1
             prometheusSpec:
               replicas: 2
-              retention: 15d
+              retention: 61d
+              retentionSize: 240GB
               serviceMonitorSelectorNilUsesHelmValues: false
               podMonitorSelectorNilUsesHelmValues: false
               probeSelectorNilUsesHelmValues: false
@@ -42,7 +43,7 @@ spec:
                     accessModes: ["ReadWriteOnce"]
                     resources:
                       requests:
-                        storage: 50Gi
+                        storage: 250Gi
               enableAdminAPI: true
               walCompression: true
               resources:

@@ -1,0 +1,102 @@
+{
+    "name": "Self-Hosted Cluster Development (CI)",
+    "build": {
+        "dockerfile": "../Dockerfile",
+        "context": "../..",
+        "args": {
+            "PYTHON_VERSION": "3.13"
+        }
+    },
+
+    // Features to install - same as main config
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "moby": false
+        },
+        "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+            "version": "latest",
+            "helm": "latest",
+            "minikube": "none"
+        },
+        "ghcr.io/devcontainers/features/terraform:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "22"
+        },
+        "ghcr.io/anthropics/devcontainer-features/claude-code:1": {},
+        "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {},
+        "ghcr.io/jungaretti/features/ripgrep:1": {},
+        "ghcr.io/devcontainers/features/common-utils:2": {},
+        "ghcr.io/devcontainers/features/sshd:1": {},
+        "ghcr.io/eitsupi/devcontainer-features/go-task:1": {
+            "version": "latest"
+        },
+        "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
+        "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {}
+    },
+
+    // CI-specific mounts: Docker volumes only (no host bind mounts)
+    // Host paths like ~/.ssh, ~/.kube, ~/.1password don't exist on CI runners
+    "mounts": [
+        "source=selfhosted-cluster-claude-config,target=/home/vscode/.claude,type=volume",
+        "source=selfhosted-cluster-venv,target=/workspaces/${localWorkspaceFolderBasename}/.venv,type=volume",
+        "source=selfhosted-cluster-cache,target=/home/vscode/.cache,type=volume",
+        "source=selfhosted-cluster-tmp,target=/tmp,type=volume"
+    ],
+
+    // CI-specific environment (no host-dependent paths)
+    "containerEnv": {
+        "VAULT_ADDR": "https://vault.fzymgc.house",
+        "XDG_CACHE_HOME": "/home/vscode/.cache"
+    },
+
+    // Post-create command to set up the environment
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+    // VS Code customizations (same as main config)
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "hashicorp.terraform",
+                "redhat.ansible",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-kubernetes-tools.vscode-kubernetes-tools",
+                "redhat.vscode-yaml",
+                "esbenp.prettier-vscode",
+                "GitHub.copilot"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+                "python.formatting.provider": "black",
+                "python.linting.enabled": true,
+                "python.linting.pylintEnabled": false,
+                "python.linting.flake8Enabled": true,
+                "terraform.languageServer.enable": true,
+                "ansible.python.interpreterPath": "${workspaceFolder}/.venv/bin/python",
+                "[yaml]": {
+                    "editor.insertSpaces": true,
+                    "editor.tabSize": 2,
+                    "editor.autoIndent": "advanced"
+                },
+                "[terraform]": {
+                    "editor.formatOnSave": true
+                },
+                "[python]": {
+                    "editor.formatOnSave": true
+                },
+                "files.associations": {
+                    "*.tf": "terraform",
+                    "*.tfvars": "terraform",
+                    "*.yml": "ansible",
+                    "*.yaml": "ansible"
+                }
+            }
+        }
+    },
+
+    "remoteUser": "vscode"
+}

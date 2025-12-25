@@ -27,6 +27,8 @@ jobs:
       - name: Build and validate devcontainer
         uses: devcontainers/ci@v0.3
         with:
+          # Use CI-specific config (no host bind mounts that don't exist on runners)
+          configFile: .devcontainer/ci/devcontainer.json
           # Build only, don't push image to registry
           push: never
           # Validate the environment works

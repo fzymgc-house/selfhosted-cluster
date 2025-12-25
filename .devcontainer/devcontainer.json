@@ -25,7 +25,7 @@
         },
         // Node.js for ast-grep and other npm-based tools
         "ghcr.io/devcontainers/features/node:1": {
-            "version": "22"
+            "version": "24"
         },
         // Claude Code CLI - official Anthropic feature
         "ghcr.io/anthropics/devcontainer-features/claude-code:1": {},

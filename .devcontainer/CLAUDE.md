@@ -11,9 +11,10 @@ AI assistant guidance for working with devcontainer configuration.
 | `Dockerfile` | Base image with system packages |
 | `post-create.sh` | Post-creation setup (venv, auth checks, git config) |
 | `login-setup.sh` | Interactive auth setup (Claude, Vault, GitHub, Terraform) |
-| `create-vault-token.sh` | Creates Vault token on host for container auth (run on HOST) |
 | `setup-claude-secrets.sh` | Verifies MCP server API keys from Vault |
 | `README.md` | Comprehensive user documentation |
+
+**Related:** `scripts/create-vault-token.sh` - Creates Vault token on host for container auth (run on HOST, not in container)
 
 ## Key Concepts
 

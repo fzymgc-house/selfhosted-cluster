@@ -336,9 +336,8 @@ MCP server API keys (Firecrawl, Exa, Notion) are stored in Vault and loaded auto
 **Important:** Vault OIDC login requires a localhost:8250 callback, which doesn't work in devcontainers. Use the helper script to create a token on your **host machine**:
 
 ```bash
-# On your HOST (not in container):
-cd .devcontainer
-./create-vault-token.sh
+# On your HOST (not in container), from repo root:
+./scripts/create-vault-token.sh
 # Copy the displayed token
 ```
 

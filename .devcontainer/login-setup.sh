@@ -113,8 +113,8 @@ if $needs_vault; then
     echo ""
     echo "    Options:"
     echo "      1. Create a token on your HOST machine first:"
-    echo "         ./create-vault-token.sh"
-    echo "         (run from .devcontainer/ directory on host)"
+    echo "         ./scripts/create-vault-token.sh"
+    echo "         (run from repository root on host)"
     echo ""
     echo "      2. Or paste an existing Vault token"
     echo ""
@@ -136,7 +136,7 @@ if $needs_vault; then
     else
         echo ""
         echo "    To create a token, run on your HOST machine:"
-        echo "      cd .devcontainer && ./create-vault-token.sh"
+        echo "      ./scripts/create-vault-token.sh"
         echo ""
         echo "    Then re-run this script to continue setup."
     fi

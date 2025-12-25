@@ -234,6 +234,13 @@
         "python"
       ],
       "enabled": false
+    },
+    {
+      "description": "Node.js: Only allow LTS versions (even major versions that have reached LTS status)",
+      "matchDepNames": [
+        "node"
+      ],
+      "allowedVersions": "/^(18|20|22)\\./"
     }
   ],
   "vulnerabilityAlerts": {

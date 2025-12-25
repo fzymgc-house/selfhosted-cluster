@@ -6,19 +6,26 @@ services:
     image: {{ router_hosts_vault_image }}
     container_name: router-hosts-vault-agent
     restart: unless-stopped
+    network_mode: host
     user: "{{ router_hosts_uid }}:{{ router_hosts_gid }}"
+    # Use Firewalla's DNS to resolve internal hostnames
+    dns:
+      - 192.168.20.1
     command:
       - agent
       - -config=/vault/config/vault-agent.hcl
     environment:
       VAULT_ADDR: "{{ router_hosts_vault_addr }}"
-      VAULT_CACERT: /etc/ssl/certs/ca-certificates.crt
+      VAULT_CACERT: /vault/config/ca-bundle.pem
+      # Skip setcap - not needed for Vault Agent and requires CAP_SETFCAP
+      SKIP_SETCAP: "1"
     volumes:
       - {{ router_hosts_base_dir }}/vault-approle:/vault/approle:ro
       - {{ router_hosts_base_dir }}/vault-token:/vault/token:rw
       - {{ router_hosts_base_dir }}/config/vault-agent.hcl:/vault/config/vault-agent.hcl:ro
+      - {{ router_hosts_base_dir }}/config/ca-bundle.pem:/vault/config/ca-bundle.pem:ro
       - {{ router_hosts_base_dir }}/certs:/vault/certs:rw
-      - /etc/ssl/certs:/etc/ssl/certs:ro
+      - {{ router_hosts_base_dir }}/scripts:/scripts:ro
     healthcheck:
       test: ["CMD", "test", "-f", "/vault/certs/server.crt"]
       interval: 30s
@@ -30,12 +37,11 @@ services:
     image: {{ router_hosts_image }}:{{ router_hosts_version }}
     container_name: router-hosts-server
     restart: unless-stopped
+    network_mode: host
     user: "{{ router_hosts_uid }}:{{ router_hosts_gid }}"
     depends_on:
       vault-agent:
         condition: service_healthy
-    ports:
-      - "{{ router_hosts_grpc_port }}:{{ router_hosts_grpc_port }}"
     environment:
       RUST_LOG: info
     volumes:

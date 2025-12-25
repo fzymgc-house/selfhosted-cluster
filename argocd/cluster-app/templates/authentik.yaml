@@ -10,19 +10,17 @@ spec:
   sources:
     - chart: authentik
       repoURL: https://charts.goauthentik.io
-      targetRevision: "2025.6.1"
+      targetRevision: "2025.10.3"
       helm:
         releaseName: authentik
         valuesObject:
           global:
             image:
-              tag: "2025.6.2"
+              tag: "2025.10.3"
           authentik:
             log_level: debug
             postgresql:
               host: main-rw.postgres.svc.cluster.local
-            redis:
-              host: valkey-primary.valkey.svc.cluster.local
           server:
             envFrom:
               - secretRef:

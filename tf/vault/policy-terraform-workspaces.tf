@@ -31,7 +31,7 @@ path "secret/data/fzymgc-house/*" {
 EOT
 }
 
-# Authentik workspace - manages Authentik secrets
+# Authentik workspace - manages Authentik secrets and writes OIDC configs
 resource "vault_policy" "terraform_authentik_admin" {
   name   = "terraform-authentik-admin"
   policy = <<EOT
@@ -40,14 +40,46 @@ path "secret/data/fzymgc-house/cluster/authentik" {
   capabilities = ["read", "list"]
 }
 
-# Read Authentik secret metadata
+# Write OIDC credentials for applications managed by Authentik
+path "secret/data/fzymgc-house/cluster/argocd/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+path "secret/data/fzymgc-house/cluster/grafana" {
+  capabilities = ["create", "read", "update", "delete"]
+}
+path "secret/data/fzymgc-house/cluster/vault/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+path "secret/data/fzymgc-house/cluster/argo-workflows/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+path "secret/data/fzymgc-house/cluster/mealie" {
+  capabilities = ["create", "read", "update", "delete"]
+}
+
+# Metadata access
 path "secret/metadata/fzymgc-house/cluster/authentik" {
   capabilities = ["read", "list"]
+}
+path "secret/metadata/fzymgc-house/cluster/argocd/*" {
+  capabilities = ["read", "list", "delete"]
+}
+path "secret/metadata/fzymgc-house/cluster/grafana" {
+  capabilities = ["read", "list", "delete"]
+}
+path "secret/metadata/fzymgc-house/cluster/vault/*" {
+  capabilities = ["read", "list", "delete"]
+}
+path "secret/metadata/fzymgc-house/cluster/argo-workflows/*" {
+  capabilities = ["read", "list", "delete"]
+}
+path "secret/metadata/fzymgc-house/cluster/mealie" {
+  capabilities = ["read", "list", "delete"]
 }
 EOT
 }
 
-# Grafana workspace - manages Grafana secrets
+# Grafana workspace - manages Grafana secrets and MCP service account tokens
 resource "vault_policy" "terraform_grafana_admin" {
   name   = "terraform-grafana-admin"
   policy = <<EOT
@@ -56,14 +88,27 @@ path "secret/data/fzymgc-house/cluster/grafana" {
   capabilities = ["read", "list"]
 }
 
-# Read Grafana secret metadata
+# Write MCP service account tokens
+path "secret/data/fzymgc-house/cluster/grafana/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+# Read PKI issuer for CA chain (required by Grafana provider)
+path "fzymgc-house/v1/ica1/v1/issuer/+" {
+  capabilities = ["read"]
+}
+
+# Metadata access
 path "secret/metadata/fzymgc-house/cluster/grafana" {
   capabilities = ["read", "list"]
+}
+path "secret/metadata/fzymgc-house/cluster/grafana/*" {
+  capabilities = ["read", "list", "delete"]
 }
 EOT
 }
 
-# Cloudflare workspace - manages Cloudflare secrets
+# Cloudflare workspace - manages Cloudflare secrets and tunnel credentials
 resource "vault_policy" "terraform_cloudflare_admin" {
   name   = "terraform-cloudflare-admin"
   policy = <<EOT
@@ -72,9 +117,17 @@ path "secret/data/fzymgc-house/infrastructure/cloudflare/*" {
   capabilities = ["read", "list"]
 }
 
-# Read Cloudflare secret metadata
+# Write tunnel credentials
+path "secret/data/fzymgc-house/cluster/cloudflared/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+# Metadata access
 path "secret/metadata/fzymgc-house/infrastructure/cloudflare/*" {
   capabilities = ["read", "list"]
+}
+path "secret/metadata/fzymgc-house/cluster/cloudflared/*" {
+  capabilities = ["read", "list", "delete"]
 }
 EOT
 }

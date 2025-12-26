@@ -44,6 +44,8 @@ Workspaces authenticate to Vault via OIDC workload identity:
 - Per-workspace roles: `tfc-vault`, `tfc-authentik`, `tfc-grafana`, `tfc-cloudflare`, `tfc-core-services`
 - Policies grant least-privilege access per workspace
 
+**Note:** `cluster-bootstrap` runs locally with `VAULT_TOKEN` (not via HCP TF agent) because it deploys the operator itself.
+
 ## Agent Deployment
 
 The HCP Terraform Operator manages agent pods:

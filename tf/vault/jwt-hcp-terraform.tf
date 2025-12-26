@@ -92,3 +92,7 @@ resource "vault_jwt_auth_backend_role" "tfc_core_services" {
   token_ttl      = 1200
   token_policies = ["terraform-core-services-admin"]
 }
+
+# Note: cluster-bootstrap workspace intentionally excluded from OIDC authentication.
+# It deploys the HCP Terraform Operator itself (circular dependency), so must be
+# run locally with VAULT_TOKEN environment variable.

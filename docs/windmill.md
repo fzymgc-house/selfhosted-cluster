@@ -79,6 +79,51 @@ npx wmill sync pull
 npx wmill sync diff
 ```
 
+## Deploy Flow
+
+The `deploy_terraform` flow executes these steps:
+
+1. Clone repository at specified ref
+2. Initialize Terraform for specified module
+3. Run plan and upload plan artifact to S3
+4. If changes: send Discord notification, wait for approval, download plan from S3, apply
+5. If no changes: complete silently
+
+### Plan Staleness Protection
+
+To prevent "Saved plan is stale" errors:
+
+| Mechanism | Purpose |
+|-----------|---------|
+| **Concurrency control** | `concurrent_limit: 1` per module prevents parallel runs |
+| **S3 plan storage** | Plan files stored in S3 with Windmill's `WM_JOB_ID`, not shared workspace |
+| **Plan cleanup** | Plans deleted from S3 after successful apply |
+
+Plan S3 key format: `terraform-plans/{module--path}/{WM_JOB_ID}/tfplan`
+
+Example: `tf/vault` → `terraform-plans/tf--vault/abc123-def456/tfplan`
+
+Note: Path separators are replaced with `--` to prevent collisions (e.g., `tf/vault` vs `tf-vault`).
+
+### S3 Lifecycle Policy (Recommended)
+
+Configure a lifecycle rule on the S3 bucket to auto-expire orphaned plans as a safety net:
+
+```json
+{
+  "Rules": [
+    {
+      "ID": "expire-terraform-plans",
+      "Filter": { "Prefix": "terraform-plans/" },
+      "Status": "Enabled",
+      "Expiration": { "Days": 7 }
+    }
+  ]
+}
+```
+
+This catches plans from failed flows, timeouts, or cleanup failures.
+
 ## Terraform Modules
 
 Supported modules for automated deployment:

@@ -25,6 +25,9 @@ schema:
       description: Git ref to checkout (commit SHA or branch name)
 value:
   same_worker: true
+  # Concurrency control: only one flow per module at a time
+  concurrent_limit: 1
+  concurrency_key: 'tf-deploy-${flow_input.module}'
   modules:
     - id: git_clone
       value:
@@ -79,6 +82,9 @@ value:
           vault_token:
             type: javascript
             expr: variable('g/all/vault_terraform_token')
+          s3_resource:
+            type: javascript
+            expr: resource('f/resources/s3')
         path: f/terraform/terraform_plan
     - id: check_changes
       value:
@@ -126,6 +132,12 @@ value:
                     vault_token:
                       type: javascript
                       expr: variable('g/all/vault_terraform_token')
+                    s3_resource:
+                      type: javascript
+                      expr: resource('f/resources/s3')
+                    plan_s3_key:
+                      type: javascript
+                      expr: results.terraform_plan.plan_s3_key
                   path: f/terraform/terraform_apply
               - id: notify_success
                 value:

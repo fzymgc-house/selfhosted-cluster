@@ -72,7 +72,16 @@ fi
 # Run the existing setup script
 log_info "Running Python virtual environment setup..."
 if [[ -f "setup-venv.sh" ]]; then
+    set +e  # Temporarily allow non-zero exit
     bash setup-venv.sh
+    venv_exit_code=$?
+    set -e
+    if [[ $venv_exit_code -ne 0 ]]; then
+        log_warn "Python venv setup failed (exit $venv_exit_code)"
+        log_warn "You may need to run 'bash setup-venv.sh' manually"
+    else
+        log_info "✓ Python venv setup completed"
+    fi
 else
     log_warn "setup-venv.sh not found, skipping Python setup"
 fi
@@ -349,12 +358,19 @@ SAFEGUARDS
                 continue
             fi
         fi
+        # Check if file is readable before grep
+        if [[ ! -r "$rcfile" ]]; then
+            log_warn "$(basename "$rcfile") is not readable, skipping"
+            continue
+        fi
         if ! grep -q "$safeguard_marker" "$rcfile" 2>/dev/null; then
             if echo "$safeguard_content" >> "$rcfile" 2>/dev/null; then
                 log_info "✓ Git safeguards added to $(basename "$rcfile")"
             else
                 log_warn "Failed to write git safeguards to $(basename "$rcfile")"
             fi
+        else
+            log_info "✓ Git safeguards already configured in $(basename "$rcfile")"
         fi
     done
 }

@@ -122,7 +122,7 @@ The `post-create.sh` runs after container creation:
 - Runs `setup-venv.sh` for Python environment
 - Configures git (identity from env vars, delta pager, gh credential helper, aliases)
 - Initializes git-lfs
-- Installs Homebrew CLI tools (bat, bottom, gping, procs, broot, tokei, xh)
+- Installs Homebrew CLI tools (bat, bottom, git-delta, gping, procs, broot, tokei, xh)
 - Sets up git safeguards in both `.zshrc` and `.bashrc`
 - Loads MCP server API keys from Vault (via direnv)
 

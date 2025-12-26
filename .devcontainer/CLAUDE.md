@@ -10,6 +10,7 @@ AI assistant guidance for working with devcontainer configuration.
 | `ci/devcontainer.json` | CI-specific config (no host bind mounts) |
 | `Dockerfile` | Base image, shell aliases, default shell (zsh) |
 | `post-create.sh` | Post-creation setup (venv, git config, brew tools, safeguards) |
+| `gitconfig.template` | Static git settings (aliases, colors, branch behavior) |
 | `login-setup.sh` | Interactive auth setup (Claude, Vault, GitHub, Terraform) |
 | `setup-claude-secrets.sh` | Verifies MCP server API keys from Vault |
 | `README.md` | Comprehensive user documentation |
@@ -73,14 +74,18 @@ RUN for rc in /home/vscode/.zshrc /home/vscode/.bashrc; do \
 
 ### Git Configuration
 
-Git is configured **programmatically** in `post-create.sh`, NOT via mounted `~/.gitconfig`.
+Git uses a **hybrid template + dynamic** approach:
 
-**Why:** Host gitconfig contains paths (credential helpers, GPG programs) that don't exist in container.
+1. **Static settings** copied from `gitconfig.template` (aliases, colors, branch behavior)
+2. **Dynamic settings** applied by `post-create.sh` (user identity, delta pager, credentials)
+
+**Why not mount host `~/.gitconfig`:** Host gitconfig contains paths (credential helpers, GPG programs) that don't exist in container.
 
 | Setting | Source |
 |---------|--------|
+| Aliases, colors, branch behavior | `gitconfig.template` (static) |
 | User name/email | `GIT_AUTHOR_NAME`/`GIT_AUTHOR_EMAIL` env vars (via `remoteEnv`) |
-| Pager | delta (installed via Homebrew in post-create.sh) |
+| Pager | delta (conditional - only if installed via Homebrew) |
 | Credential helper | GitHub CLI (`gh auth setup-git`) |
 | GPG signing | Disabled locally (`git config --local commit.gpgsign false`) |
 

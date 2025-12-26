@@ -92,113 +92,52 @@ fi
 log_info "Configuring git..."
 
 setup_git_config() {
-    # User identity - from environment variables passed from host
-    # Set GIT_AUTHOR_NAME and GIT_AUTHOR_EMAIL on host to auto-configure
+    local template_file=".devcontainer/gitconfig.template"
+    local gitconfig_dest="${HOME}/.gitconfig"
+
+    # Copy static settings from template
+    if [[ -f "$template_file" ]]; then
+        if cp "$template_file" "$gitconfig_dest" 2>/dev/null; then
+            log_info "✓ Git config template applied"
+        else
+            log_warn "Failed to copy git config template"
+            return 1
+        fi
+    else
+        log_warn "Git config template not found: $template_file"
+        return 1
+    fi
+
+    # Dynamic: User identity from environment variables
     local user_name="${GIT_AUTHOR_NAME:-}"
     local user_email="${GIT_AUTHOR_EMAIL:-}"
-    local config_errors=()
-
-    # Helper to run git config with error tracking
-    git_config() {
-        local err=""
-        if ! err=$(git config "$@" 2>&1); then
-            config_errors+=("$2: ${err:-unknown error}")
-        fi
-    }
 
     if [[ -n "$user_name" && -n "$user_email" ]]; then
-        git_config --global user.name "$user_name"
-        git_config --global user.email "$user_email"
+        git config --global user.name "$user_name"
+        git config --global user.email "$user_email"
         log_info "✓ Git author: $user_name <$user_email>"
     else
         log_warn "Git author not configured"
         echo "    Set on host before container start:"
         echo "      export GIT_AUTHOR_NAME='Your Name'"
         echo "      export GIT_AUTHOR_EMAIL='your@email.com'"
-        echo "    Or configure manually: git config --global user.name 'Your Name'"
     fi
 
-    # Core settings
-    git_config --global init.defaultBranch main
-    git_config --global core.autocrlf input
-    git_config --global core.whitespace trailing-space,space-before-tab
-    git_config --global core.precomposeunicode true
-    git_config --global apply.whitespace nowarn
-
-    # Delta pager (installed via Homebrew)
+    # Dynamic: Delta pager (only if installed via Homebrew)
     if command -v delta &> /dev/null; then
-        git_config --global core.pager delta
-        git_config --global interactive.diffFilter "delta --color-only"
-        git_config --global merge.conflictStyle diff3
-        git_config --global diff.colorMoved default
-        # Delta options
-        git_config --global delta.navigate true
-        git_config --global delta.light false
-        git_config --global delta.line-numbers true
-        git_config --global delta.syntax-theme Dracula
-        git_config --global delta.hyperlinks true
+        git config --global core.pager delta
+        git config --global interactive.diffFilter "delta --color-only"
+        git config --global merge.conflictStyle diff3
+        git config --global diff.colorMoved default
+        git config --global delta.navigate true
+        git config --global delta.light false
+        git config --global delta.line-numbers true
+        git config --global delta.syntax-theme Dracula
+        git config --global delta.hyperlinks true
         log_info "✓ Delta configured as git pager"
     fi
 
-    # Branch and push behavior
-    git_config --global branch.autosetupmerge true
-    git_config --global branch.autosetuprebase always
-    git_config --global pull.rebase true
-    git_config --global fetch.prune true
-    git_config --global push.default simple
-    git_config --global push.autosetupremote true
-    git_config --global submodule.fetchjobs 4
-
-    # Helpful defaults
-    git_config --global help.autocorrect 1
-    git_config --global log.decorate true
-    git_config --global status.submodulesummary true
-    git_config --global grep.extendRegexp true
-    git_config --global grep.lineNumber true
-
-    # Color settings
-    git_config --global color.ui true
-    git_config --global color.diff auto
-    git_config --global color.status auto
-    git_config --global color.branch auto
-    git_config --global color.branch.current "yellow reverse"
-    git_config --global color.branch.local yellow
-    git_config --global color.branch.remote green
-    git_config --global color.diff.meta "yellow bold"
-    git_config --global color.diff.frag "magenta bold"
-    git_config --global color.diff.old "red bold"
-    git_config --global color.diff.new "green bold"
-    git_config --global color.status.added yellow
-    git_config --global color.status.changed green
-    git_config --global color.status.untracked cyan
-
-    # Useful aliases
-    git_config --global alias.br branch
-    git_config --global alias.ci commit
-    git_config --global alias.co checkout
-    git_config --global alias.st "status -sb"
-    git_config --global alias.fa "fetch --all -p --tags"
-    git_config --global alias.please "push --force-with-lease"
-    git_config --global alias.commend "commit --amend --no-edit"
-    git_config --global alias.ls "log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate"
-    git_config --global alias.ll "log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate --numstat"
-    git_config --global alias.lt "log --tags --decorate --simplify-by-decoration --oneline"
-    git_config --global alias.unpushed "log @{u}.."
-    git_config --global alias.roots "log --all --oneline --decorate --max-parents=0"
-    git_config --global alias.changed "show --pretty=format: --name-only"
-    git_config --global alias.whatadded "log --diff-filter=A"
-
-    # Report any errors that occurred
-    if (( ${#config_errors[@]} > 0 )); then
-        log_warn "Some git config commands failed:"
-        for err in "${config_errors[@]}"; do
-            echo "    - $err"
-        done
-    else
-        log_info "✓ Git aliases configured"
-    fi
-
-    # Credential helper using GitHub CLI (if authenticated)
+    # Dynamic: Credential helper via GitHub CLI
     if command -v gh &> /dev/null; then
         gh_err=""
         if gh_err=$(gh auth setup-git 2>&1); then

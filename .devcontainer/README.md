@@ -402,7 +402,9 @@ git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
 ```
 
-**Note:** The devcontainer configures git with comprehensive settings including:
+**Note:** The devcontainer configures git using a hybrid approach:
+- **Static settings** from `gitconfig.template` (aliases, colors, branch behavior)
+- **Dynamic settings** applied by script (user identity, delta pager, credentials)
 - Delta for improved diffs (syntax highlighting, line numbers)
 - GitHub CLI as credential helper
 - Useful aliases (br, ci, co, st, fa, please, commend, ls, ll, etc.)

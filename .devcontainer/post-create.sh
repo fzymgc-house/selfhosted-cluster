@@ -77,20 +77,27 @@ else
     log_warn "setup-venv.sh not found, skipping Python setup"
 fi
 
-# Configure git if not already configured
+# Configure git defaults and verify author info
 # Note: Run from /tmp to avoid git worktree path issues in container
 # (worktree .git file references host path that doesn't exist inside container)
-if [[ -z "$(cd /tmp && git config --global user.name 2>/dev/null)" ]]; then
-    log_info "Configuring git..."
-    (
-        cd /tmp
-        git config --global init.defaultBranch main
-        git config --global pull.rebase true
-        git config --global fetch.prune true
-    )
-    echo "Please configure git user.name and user.email:"
-    echo "  git config --global user.name 'Your Name'"
-    echo "  git config --global user.email 'your.email@example.com'"
+log_info "Configuring git..."
+(
+    cd /tmp
+    git config --global init.defaultBranch main
+    git config --global pull.rebase true
+    git config --global fetch.prune true
+)
+
+# Check if git author info is available (from mounted ~/.gitconfig or prior config)
+GIT_USER_NAME="$(cd /tmp && git config --global user.name 2>/dev/null || echo '')"
+GIT_USER_EMAIL="$(cd /tmp && git config --global user.email 2>/dev/null || echo '')"
+if [[ -n "$GIT_USER_NAME" && -n "$GIT_USER_EMAIL" ]]; then
+    log_info "✓ Git author: $GIT_USER_NAME <$GIT_USER_EMAIL>"
+else
+    log_warn "Git author not configured (host ~/.gitconfig may not be mounted)"
+    echo "    Configure manually:"
+    echo "      git config --global user.name 'Your Name'"
+    echo "      git config --global user.email 'your.email@example.com'"
 fi
 
 # Set up kubectl default context if available

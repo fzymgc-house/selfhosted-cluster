@@ -49,12 +49,13 @@
         "ghcr.io/devcontainers-contrib/features/neovim-apt-get:1": {}
     },
 
-    // Mount host's SSH, kubeconfig, and 1Password agent for authentication
+    // Mount host's SSH, kubeconfig, git config, and 1Password agent for authentication
     // Note: Vault token is NOT mounted - users should run 'vault login' inside the container
     // Note: 1Password must be configured to use ~/.1password/agent.sock (Settings > Developer > SSH Agent)
     "mounts": [
         "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached,readonly",
         "source=${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached,readonly",
         "source=${localEnv:HOME}/.1password,target=/home/vscode/.1password,type=bind",
         // Docker volumes for isolation and performance (persist across rebuilds)
         // Note: venv uses folder basename so it works with local folders and volume clones

@@ -57,6 +57,7 @@ All collections from `ansible/requirements.yml`:
 4. **1Password** with SSH agent enabled (for SSH key management)
 5. **Host prerequisites** (automatically mounted):
    - `~/.ssh` - SSH keys for Git and cluster access
+   - `~/.gitconfig` - Git author name and email (read-only)
    - `~/.kube/configs/fzymgc-house-admin.yml` - Kubernetes cluster configuration
    - `~/.1password/agent.sock` - 1Password SSH agent socket
 
@@ -211,6 +212,7 @@ The container includes these pre-configured aliases:
 | Host Path | Container Path | Purpose |
 |-----------|----------------|---------|
 | `~/.ssh` | `/home/vscode/.ssh` | SSH keys (read-only) |
+| `~/.gitconfig` | `/home/vscode/.gitconfig` | Git author config (read-only) |
 | `~/.kube` | `/home/vscode/.kube` | Kubernetes config |
 | `~/.1password` | `/home/vscode/.1password` | 1Password SSH agent socket |
 

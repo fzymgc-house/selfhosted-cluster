@@ -268,7 +268,7 @@ git() {
     local has_no_verify=false
 
     for arg in "${args[@]}"; do
-        if [[ "$arg" == "--no-verify" || "$arg" == "-n" ]]; then
+        if [[ "$arg" == "--no-verify" ]]; then
             has_no_verify=true
             break
         fi

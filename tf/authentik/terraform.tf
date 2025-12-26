@@ -1,5 +1,14 @@
 provider "vault" {
-  address = "https://vault.fzymgc.house"
+  address = var.vault_addr
+
+  # Use OIDC when running in HCP TF, fallback to token for local dev
+  dynamic "auth_login_jwt" {
+    for_each = var.tfc_workload_identity_token_path != "" ? [1] : []
+    content {
+      role = "tfc-authentik"
+      jwt  = file(var.tfc_workload_identity_token_path)
+    }
+  }
 }
 
 provider "authentik" {

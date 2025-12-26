@@ -87,10 +87,19 @@ setup_git_config() {
     # Set GIT_AUTHOR_NAME and GIT_AUTHOR_EMAIL on host to auto-configure
     local user_name="${GIT_AUTHOR_NAME:-}"
     local user_email="${GIT_AUTHOR_EMAIL:-}"
+    local config_errors=()
+
+    # Helper to run git config with error tracking
+    git_config() {
+        local err=""
+        if ! err=$(git config "$@" 2>&1); then
+            config_errors+=("$2: ${err:-unknown error}")
+        fi
+    }
 
     if [[ -n "$user_name" && -n "$user_email" ]]; then
-        git config --global user.name "$user_name"
-        git config --global user.email "$user_email"
+        git_config --global user.name "$user_name"
+        git_config --global user.email "$user_email"
         log_info "✓ Git author: $user_name <$user_email>"
     else
         log_warn "Git author not configured"
@@ -101,75 +110,84 @@ setup_git_config() {
     fi
 
     # Core settings
-    git config --global init.defaultBranch main
-    git config --global core.autocrlf input
-    git config --global core.whitespace trailing-space,space-before-tab
-    git config --global core.precomposeunicode true
-    git config --global apply.whitespace nowarn
+    git_config --global init.defaultBranch main
+    git_config --global core.autocrlf input
+    git_config --global core.whitespace trailing-space,space-before-tab
+    git_config --global core.precomposeunicode true
+    git_config --global apply.whitespace nowarn
 
-    # Delta pager (installed in Dockerfile)
+    # Delta pager (installed via Homebrew)
     if command -v delta &> /dev/null; then
-        git config --global core.pager delta
-        git config --global interactive.diffFilter "delta --color-only"
-        git config --global merge.conflictStyle diff3
-        git config --global diff.colorMoved default
+        git_config --global core.pager delta
+        git_config --global interactive.diffFilter "delta --color-only"
+        git_config --global merge.conflictStyle diff3
+        git_config --global diff.colorMoved default
         # Delta options
-        git config --global delta.navigate true
-        git config --global delta.light false
-        git config --global delta.line-numbers true
-        git config --global delta.syntax-theme Dracula
-        git config --global delta.hyperlinks true
+        git_config --global delta.navigate true
+        git_config --global delta.light false
+        git_config --global delta.line-numbers true
+        git_config --global delta.syntax-theme Dracula
+        git_config --global delta.hyperlinks true
         log_info "✓ Delta configured as git pager"
     fi
 
     # Branch and push behavior
-    git config --global branch.autosetupmerge true
-    git config --global branch.autosetuprebase always
-    git config --global pull.rebase true
-    git config --global fetch.prune true
-    git config --global push.default simple
-    git config --global push.autosetupremote true
-    git config --global submodule.fetchjobs 4
+    git_config --global branch.autosetupmerge true
+    git_config --global branch.autosetuprebase always
+    git_config --global pull.rebase true
+    git_config --global fetch.prune true
+    git_config --global push.default simple
+    git_config --global push.autosetupremote true
+    git_config --global submodule.fetchjobs 4
 
     # Helpful defaults
-    git config --global help.autocorrect 1
-    git config --global log.decorate true
-    git config --global status.submodulesummary true
-    git config --global grep.extendRegexp true
-    git config --global grep.lineNumber true
+    git_config --global help.autocorrect 1
+    git_config --global log.decorate true
+    git_config --global status.submodulesummary true
+    git_config --global grep.extendRegexp true
+    git_config --global grep.lineNumber true
 
     # Color settings
-    git config --global color.ui true
-    git config --global color.diff auto
-    git config --global color.status auto
-    git config --global color.branch auto
-    git config --global color.branch.current "yellow reverse"
-    git config --global color.branch.local yellow
-    git config --global color.branch.remote green
-    git config --global color.diff.meta "yellow bold"
-    git config --global color.diff.frag "magenta bold"
-    git config --global color.diff.old "red bold"
-    git config --global color.diff.new "green bold"
-    git config --global color.status.added yellow
-    git config --global color.status.changed green
-    git config --global color.status.untracked cyan
+    git_config --global color.ui true
+    git_config --global color.diff auto
+    git_config --global color.status auto
+    git_config --global color.branch auto
+    git_config --global color.branch.current "yellow reverse"
+    git_config --global color.branch.local yellow
+    git_config --global color.branch.remote green
+    git_config --global color.diff.meta "yellow bold"
+    git_config --global color.diff.frag "magenta bold"
+    git_config --global color.diff.old "red bold"
+    git_config --global color.diff.new "green bold"
+    git_config --global color.status.added yellow
+    git_config --global color.status.changed green
+    git_config --global color.status.untracked cyan
 
     # Useful aliases
-    git config --global alias.br branch
-    git config --global alias.ci commit
-    git config --global alias.co checkout
-    git config --global alias.st "status -sb"
-    git config --global alias.fa "fetch --all -p --tags"
-    git config --global alias.please "push --force-with-lease"
-    git config --global alias.commend "commit --amend --no-edit"
-    git config --global alias.ls "log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate"
-    git config --global alias.ll "log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate --numstat"
-    git config --global alias.lt "log --tags --decorate --simplify-by-decoration --oneline"
-    git config --global alias.unpushed "log @{u}.."
-    git config --global alias.roots "log --all --oneline --decorate --max-parents=0"
-    git config --global alias.changed "show --pretty=format: --name-only"
-    git config --global alias.whatadded "log --diff-filter=A"
-    log_info "✓ Git aliases configured"
+    git_config --global alias.br branch
+    git_config --global alias.ci commit
+    git_config --global alias.co checkout
+    git_config --global alias.st "status -sb"
+    git_config --global alias.fa "fetch --all -p --tags"
+    git_config --global alias.please "push --force-with-lease"
+    git_config --global alias.commend "commit --amend --no-edit"
+    git_config --global alias.ls "log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate"
+    git_config --global alias.ll "log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate --numstat"
+    git_config --global alias.lt "log --tags --decorate --simplify-by-decoration --oneline"
+    git_config --global alias.unpushed "log @{u}.."
+    git_config --global alias.roots "log --all --oneline --decorate --max-parents=0"
+    git_config --global alias.changed "show --pretty=format: --name-only"
+    git_config --global alias.whatadded "log --diff-filter=A"
+
+    # Report any errors that occurred
+    if (( ${#config_errors[@]} > 0 )); then
+        log_warn "Some git config commands failed:"
+        for err in "${config_errors[@]}"; do
+            echo "    - $err"
+        done
+    else
+        log_info "✓ Git aliases configured"
+    fi
 
     # Credential helper using GitHub CLI (if authenticated)
     if command -v gh &> /dev/null; then
@@ -250,10 +268,12 @@ log_info "Installing ast-grep..."
 if command -v ast-grep &> /dev/null; then
     log_info "✓ ast-grep already installed: $(ast-grep --version 2>/dev/null || echo 'unknown version')"
 else
-    if npm install -g @ast-grep/cli; then
+    npm_err=""
+    if npm_err=$(npm install -g @ast-grep/cli 2>&1); then
         log_info "✓ ast-grep installed successfully"
     else
-        log_warn "Failed to install ast-grep (Serena MCP may have reduced functionality)"
+        log_warn "Failed to install ast-grep: ${npm_err:-unknown error}"
+        log_warn "(Serena MCP may have reduced functionality)"
     fi
 fi
 
@@ -324,11 +344,17 @@ SAFEGUARDS
     for rcfile in /home/vscode/.zshrc /home/vscode/.bashrc; do
         if [[ ! -f "$rcfile" ]]; then
             log_warn "$(basename "$rcfile") not found, creating it"
-            touch "$rcfile"
+            if ! touch "$rcfile" 2>/dev/null; then
+                log_warn "Failed to create $(basename "$rcfile"), skipping"
+                continue
+            fi
         fi
         if ! grep -q "$safeguard_marker" "$rcfile" 2>/dev/null; then
-            echo "$safeguard_content" >> "$rcfile"
-            log_info "✓ Git safeguards added to $(basename "$rcfile")"
+            if echo "$safeguard_content" >> "$rcfile" 2>/dev/null; then
+                log_info "✓ Git safeguards added to $(basename "$rcfile")"
+            else
+                log_warn "Failed to write git safeguards to $(basename "$rcfile")"
+            fi
         fi
     done
 }

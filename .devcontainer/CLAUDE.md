@@ -80,7 +80,7 @@ Git is configured **programmatically** in `post-create.sh`, NOT via mounted `~/.
 | Setting | Source |
 |---------|--------|
 | User name/email | `GIT_AUTHOR_NAME`/`GIT_AUTHOR_EMAIL` env vars (via `remoteEnv`) |
-| Pager | delta (installed in Dockerfile) |
+| Pager | delta (installed via Homebrew in post-create.sh) |
 | Credential helper | GitHub CLI (`gh auth setup-git`) |
 | GPG signing | Disabled locally (`git config --local commit.gpgsign false`) |
 

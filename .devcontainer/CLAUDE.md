@@ -83,7 +83,7 @@ The `devcontainer-ci.yml` workflow:
 2. Points to `ci/devcontainer.json` via `configFile` parameter
 3. Runs validation commands to verify tools are installed
 
-**Triggers:** Changes to `.devcontainer/**`, `setup-venv.sh`, `requirements.txt`, `ansible/requirements-ansible.yml`
+**Triggers:** Changes to `.devcontainer/**`, `setup-venv.sh`, `pyproject.toml`, `ansible/requirements.yml`
 
 ## Sync Requirements
 

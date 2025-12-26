@@ -32,15 +32,15 @@ The devcontainer provides a complete, reproducible development environment with:
 - 1Password SSH Agent integration (via socket proxy)
 
 ### Python Packages
-All packages from `requirements.txt` are automatically installed:
-- Ansible (core and full)
+All packages from `pyproject.toml` are automatically installed via `uv`:
+- Ansible core
 - Kubernetes Python client
 - HashiCorp Vault client (hvac)
 - Network utilities (netaddr, dnspython)
 - Linting tools (ansible-lint, yamllint)
 
 ### Ansible Collections
-All collections from `ansible/requirements-ansible.yml`:
+All collections from `ansible/requirements.yml`:
 - kubernetes.core
 - community.general
 - community.hashi_vault
@@ -160,8 +160,8 @@ source .venv/bin/activate
 deactivate
 
 # Reinstall dependencies
-pip install -r requirements.txt
-ansible-galaxy collection install -r ansible/requirements-ansible.yml
+uv pip install -e .
+ansible-galaxy collection install -r ansible/requirements.yml
 ```
 
 ### Terraform Operations
@@ -265,7 +265,7 @@ RUN apt-get update && apt-get install -y \
 
 ### Adding Python Packages
 
-Add to `requirements.txt` in the root, then rebuild:
+Add to `pyproject.toml` in the `dependencies` list, then rebuild:
 
 ```bash
 # In VS Code command palette

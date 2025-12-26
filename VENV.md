@@ -29,15 +29,14 @@ deactivate
 
 ## What Gets Installed
 
-### Python Packages (`requirements.txt`)
-- **ansible-core** (>=2.18.0) - Latest Ansible core engine
-- **ansible** (>=11.0.0) - Full Ansible with community collections
+### Python Packages (`pyproject.toml`)
+- **ansible-core** (>=2.19.0) - Latest Ansible core engine
 - **kubernetes** - Python Kubernetes client for k8s module
 - **hvac** - HashiCorp Vault Python client
 - **jmespath, netaddr, dnspython** - Ansible filter dependencies
 - **ansible-lint, yamllint** - Code quality tools
 
-### Ansible Collections (`ansible/requirements-ansible.yml`)
+### Ansible Collections (`ansible/requirements.yml`)
 - **kubernetes.core** - Kubernetes management
 - **community.general** - General utilities
 - **community.hashi_vault** - Vault integration
@@ -55,14 +54,11 @@ python3 -m venv .venv
 # Activate it
 source .venv/bin/activate
 
-# Upgrade pip
-pip install --upgrade pip setuptools wheel
-
-# Install Python packages
-pip install -r requirements.txt
+# Install Python packages with uv
+uv pip install -e .
 
 # Install Ansible collections
-ansible-galaxy collection install -r ansible/requirements-ansible.yml
+ansible-galaxy collection install -r ansible/requirements.yml
 
 # Verify installation
 ansible --version
@@ -74,14 +70,14 @@ ansible --version
 
 ```bash
 source .venv/bin/activate
-pip install --upgrade -r requirements.txt
+uv pip install -e . --upgrade
 ```
 
 ### Update Ansible Collections
 
 ```bash
 source .venv/bin/activate
-ansible-galaxy collection install -r ansible/requirements-ansible.yml --force
+ansible-galaxy collection install -r ansible/requirements.yml --force
 ```
 
 ### Full Refresh
@@ -207,7 +203,7 @@ For automated pipelines, use the setup script:
 
 1. **Isolation** - Dependencies don't conflict with system packages
 2. **Repeatability** - Same versions across all environments
-3. **Version Control** - Pin exact versions in requirements.txt
+3. **Version Control** - Pin exact versions in pyproject.toml
 4. **Clean System** - No need for system-wide Ansible installation
 5. **Multiple Projects** - Different Ansible versions per project
 
@@ -216,13 +212,13 @@ For automated pipelines, use the setup script:
 1. **Always activate before running Ansible commands**
 2. **Update dependencies periodically** (monthly recommended)
 3. **Test updates in non-production first**
-4. **Commit requirements.txt changes** to share with team
-5. **Document custom packages** in requirements.txt with comments
+4. **Commit pyproject.toml changes** to share with team
+5. **Document custom packages** in pyproject.toml
 
 ## Related Files
 
-- `requirements.txt` - Python package dependencies
-- `ansible/requirements-ansible.yml` - Ansible Galaxy collections
+- `pyproject.toml` - Python package dependencies (managed with uv)
+- `ansible/requirements.yml` - Ansible Galaxy collections
 - `.python-version` - Required Python version (3.13.7)
 - `setup-venv.sh` - Automated setup script
 - `.gitignore` - Excludes .venv/ from version control

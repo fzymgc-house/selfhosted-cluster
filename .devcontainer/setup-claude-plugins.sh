@@ -25,9 +25,9 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check if Claude CLI is available
+# Check if Claude CLI is available (plugin setup is optional)
 if ! command -v claude &> /dev/null; then
-    log_error "Claude CLI not found. Skipping plugin setup."
+    log_warn "Claude CLI not found. Skipping plugin setup."
     exit 0
 fi
 
@@ -48,11 +48,15 @@ for marketplace in "${MARKETPLACES[@]}"; do
     repo="${marketplace##*|}"
 
     log_info "Adding marketplace: ${name} (${repo})"
-    if claude marketplace add "github:${repo}" --name "${name}" 2>/dev/null; then
+    if output=$(claude marketplace add "github:${repo}" --name "${name}" 2>&1); then
         log_info "✓ Added ${name}"
     else
-        # Marketplace might already exist
-        log_warn "Marketplace ${name} may already exist or failed to add"
+        # Check if it's just an "already exists" case
+        if [[ "$output" == *"already"* ]] || [[ "$output" == *"exists"* ]]; then
+            log_info "✓ Marketplace ${name} already configured"
+        else
+            log_warn "Failed to add ${name}: ${output}"
+        fi
     fi
 done
 
@@ -63,15 +67,23 @@ if [[ -f "$PLUGINS_FILE" ]]; then
 
     # Parse plugins array from JSON
     if command -v jq &> /dev/null; then
-        plugins=$(jq -r '.plugins[]?' "$PLUGINS_FILE" 2>/dev/null || echo "")
+        if ! plugins=$(jq -r '.plugins[]?' "$PLUGINS_FILE" 2>&1); then
+            log_warn "Failed to parse ${PLUGINS_FILE}: ${plugins}"
+            plugins=""
+        fi
 
         for plugin in $plugins; do
             if [[ -n "$plugin" ]]; then
                 log_info "Installing plugin: ${plugin}"
-                if claude plugin install "${plugin}" 2>/dev/null; then
+                if output=$(claude plugin install "${plugin}" 2>&1); then
                     log_info "✓ Installed ${plugin}"
                 else
-                    log_warn "Failed to install ${plugin} (may already be installed)"
+                    # Check if it's just an "already installed" case
+                    if [[ "$output" == *"already"* ]] || [[ "$output" == *"installed"* ]]; then
+                        log_info "✓ Plugin ${plugin} already installed"
+                    else
+                        log_warn "Failed to install ${plugin}: ${output}"
+                    fi
                 fi
             fi
         done

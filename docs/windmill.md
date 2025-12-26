@@ -96,12 +96,33 @@ To prevent "Saved plan is stale" errors:
 | Mechanism | Purpose |
 |-----------|---------|
 | **Concurrency control** | `concurrent_limit: 1` per module prevents parallel runs |
-| **S3 plan storage** | Plan files stored in S3 with unique job ID, not shared workspace |
+| **S3 plan storage** | Plan files stored in S3 with Windmill's `WM_JOB_ID`, not shared workspace |
 | **Plan cleanup** | Plans deleted from S3 after successful apply |
 
-Plan S3 key format: `terraform-plans/{module-path-sanitized}/{job-id}/tfplan`
+Plan S3 key format: `terraform-plans/{module--path}/{WM_JOB_ID}/tfplan`
 
-Example: `tf/vault` → `terraform-plans/tf-vault/lxyz123abc/tfplan`
+Example: `tf/vault` → `terraform-plans/tf--vault/abc123-def456/tfplan`
+
+Note: Path separators are replaced with `--` to prevent collisions (e.g., `tf/vault` vs `tf-vault`).
+
+### S3 Lifecycle Policy (Recommended)
+
+Configure a lifecycle rule on the S3 bucket to auto-expire orphaned plans as a safety net:
+
+```json
+{
+  "Rules": [
+    {
+      "ID": "expire-terraform-plans",
+      "Filter": { "Prefix": "terraform-plans/" },
+      "Status": "Enabled",
+      "Expiration": { "Days": 7 }
+    }
+  ]
+}
+```
+
+This catches plans from failed flows, timeouts, or cleanup failures.
 
 ## Terraform Modules
 

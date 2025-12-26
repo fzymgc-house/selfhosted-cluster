@@ -1,5 +1,5 @@
 summary: Run Terraform plan and store plan artifact in S3
-description: Runs terraform plan on a module and uploads the plan file to S3 for later apply
+description: Runs terraform plan on a module and uploads the plan file to S3 using WM_JOB_ID for unique storage
 lock: '!inline f/terraform/terraform_plan.script.lock'
 kind: script
 schema:
@@ -31,10 +31,5 @@ schema:
       description: S3 resource for storing plan artifacts
       default: null
       format: resource-s3
-    job_id:
-      type: string
-      description: Unique job ID for plan storage key
-      default: ''
-      originalType: string
   required:
     - module_dir

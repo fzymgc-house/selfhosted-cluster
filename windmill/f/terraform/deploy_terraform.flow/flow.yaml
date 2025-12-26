@@ -85,9 +85,6 @@ value:
           s3_resource:
             type: javascript
             expr: resource('f/resources/s3')
-          job_id:
-            type: javascript
-            expr: Date.now().toString(36) + Math.random().toString(36).substring(2)
         path: f/terraform/terraform_plan
     - id: check_changes
       value:

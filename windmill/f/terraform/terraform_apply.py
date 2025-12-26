@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TypedDict
 
 import boto3
+from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
 
@@ -19,6 +20,20 @@ class s3(TypedDict):
     secretKey: str
     useSSL: bool
     pathStyle: bool
+
+
+def _create_s3_client(s3_resource: s3):
+    """Create boto3 S3 client with proper configuration from Windmill resource."""
+    addressing_style = "path" if s3_resource.get("pathStyle", True) else "virtual"
+    return boto3.client(
+        "s3",
+        endpoint_url=s3_resource["endPoint"],
+        aws_access_key_id=s3_resource["accessKey"],
+        aws_secret_access_key=s3_resource["secretKey"],
+        region_name=s3_resource.get("region", "auto"),
+        use_ssl=s3_resource.get("useSSL", True),
+        config=Config(s3={"addressing_style": addressing_style}),
+    )
 
 
 def main(
@@ -57,14 +72,9 @@ def main(
     plan_file = module_path / "tfplan"
 
     # Download plan from S3 if key provided
+    s3_client = None
     if s3_resource and plan_s3_key:
-        s3_client = boto3.client(
-            "s3",
-            endpoint_url=s3_resource["endPoint"],
-            aws_access_key_id=s3_resource["accessKey"],
-            aws_secret_access_key=s3_resource["secretKey"],
-            region_name=s3_resource.get("region", "auto"),
-        )
+        s3_client = _create_s3_client(s3_resource)
 
         try:
             s3_client.download_file(
@@ -73,9 +83,16 @@ def main(
                 str(plan_file),
             )
         except (ClientError, BotoCoreError) as e:
-            raise RuntimeError(f"Failed to download plan from S3 ({plan_s3_key}): {e}")
+            raise RuntimeError(
+                f"[S3 Download Error] Failed to download plan from S3: {e}\n"
+                f"  Key: {plan_s3_key}\n"
+                f"  Bucket: {s3_resource['bucket']}"
+            )
         except OSError as e:
-            raise RuntimeError(f"Failed to write plan file to {plan_file}: {e}")
+            raise RuntimeError(
+                f"[Filesystem Error] Failed to write plan file: {e}\n"
+                f"  Path: {plan_file}"
+            )
 
     # Verify plan file exists
     if not plan_file.exists():
@@ -103,7 +120,7 @@ def main(
         raise RuntimeError(f"Terraform apply failed (exit {result.returncode}):\n{result.stderr}")
 
     # Clean up plan from S3 after successful apply
-    if s3_resource and plan_s3_key:
+    if s3_client and plan_s3_key:
         try:
             s3_client.delete_object(
                 Bucket=s3_resource["bucket"],
@@ -111,6 +128,10 @@ def main(
             )
         except (ClientError, BotoCoreError) as e:
             # Non-fatal: plan cleanup failure shouldn't fail the apply
-            print(f"Warning: Failed to clean up plan from S3 ({plan_s3_key}): {e}")
+            print(
+                f"[S3 Cleanup Warning] Failed to clean up plan from S3 (non-fatal): {e}\n"
+                f"  Key: {plan_s3_key}\n"
+                f"  Consider setting S3 lifecycle policy to auto-expire old plans."
+            )
 
     return {"module_dir": str(module_dir), "applied": True, "output": result.stdout}

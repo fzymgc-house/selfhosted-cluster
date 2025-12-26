@@ -24,6 +24,7 @@ provider "vault" {
 }
 
 provider "kubernetes" {
-  config_path    = "~/.kube/configs/fzymgc-house-admin.yml"
-  config_context = "fzymgc-house"
+  # Use kubeconfig for local dev, in-cluster auth for HCP TF agent (empty path)
+  config_path    = var.kubeconfig_path != "" ? var.kubeconfig_path : null
+  config_context = var.kubeconfig_context != "" ? var.kubeconfig_context : null
 }

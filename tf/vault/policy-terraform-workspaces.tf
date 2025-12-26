@@ -2,17 +2,45 @@
 
 # Vault workspace - manages Vault configuration (auth methods, policies, identity).
 # This workspace does NOT need secret access - it only manages Vault infrastructure.
+# Auth backends are restricted to specific paths to prevent privilege escalation.
 resource "vault_policy" "terraform_vault_admin" {
   name   = "terraform-vault-admin"
   policy = <<EOT
-# Manage auth methods
-path "auth/*" {
-  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+# Manage specific auth backends (no wildcard, no sudo)
+# Kubernetes auth backend
+path "auth/kubernetes/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
 }
 
-# Manage auth method configuration
-path "sys/auth/*" {
-  capabilities = ["create", "read", "update", "delete", "sudo"]
+# AppRole auth backend
+path "auth/approle/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+# JWT auth backend for HCP Terraform
+path "auth/jwt-hcp-terraform/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+# OIDC auth backend (read-only for group aliases)
+path "auth/oidc/*" {
+  capabilities = ["read", "list"]
+}
+
+# Auth method mount/unmount (specific backends only, no sudo)
+path "sys/auth/kubernetes" {
+  capabilities = ["create", "read", "update", "delete"]
+}
+path "sys/auth/approle" {
+  capabilities = ["create", "read", "update", "delete"]
+}
+path "sys/auth/jwt-hcp-terraform" {
+  capabilities = ["create", "read", "update", "delete"]
+}
+
+# List auth methods (read-only discovery)
+path "sys/auth" {
+  capabilities = ["read", "list"]
 }
 
 # Manage policies

@@ -1,4 +1,4 @@
-// workspace-variables.tf - Workspace variables for Vault OIDC auth
+// workspace-variables.tf - Workspace variables for Vault OIDC auth and Kubernetes access
 //
 // These variables configure each workspace to authenticate to Vault using
 // HCP TF workload identity (OIDC JWT). When a run executes, HCP TF generates
@@ -12,6 +12,9 @@ locals {
     for k, v in local.all_workspaces : k => v
     if k != "cluster-bootstrap"
   }
+
+  # Workspaces that need Kubernetes access (run in-cluster in HCP TF agent)
+  k8s_workspaces = toset(["vault", "core-services"])
 }
 
 # Vault address for all OIDC workspaces
@@ -35,4 +38,25 @@ resource "tfe_variable" "tfc_workload_identity_token_path" {
   value        = "/var/run/secrets/tfc/workload-identity-token"
   category     = "terraform"
   description  = "Path to HCP TF workload identity JWT"
+}
+
+# Empty kubeconfig path for in-cluster auth (agent pod uses ServiceAccount)
+resource "tfe_variable" "kubeconfig_path" {
+  for_each = local.k8s_workspaces
+
+  workspace_id = tfe_workspace.this[each.key].id
+  key          = "kubeconfig_path"
+  value        = ""
+  category     = "terraform"
+  description  = "Empty for in-cluster auth in HCP TF agent"
+}
+
+resource "tfe_variable" "kubeconfig_context" {
+  for_each = local.k8s_workspaces
+
+  workspace_id = tfe_workspace.this[each.key].id
+  key          = "kubeconfig_context"
+  value        = ""
+  category     = "terraform"
+  description  = "Empty for in-cluster auth in HCP TF agent"
 }

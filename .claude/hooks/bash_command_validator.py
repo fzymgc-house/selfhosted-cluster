@@ -8,7 +8,9 @@
 
 This hook runs as a PreToolUse hook for the Bash tool.
 It validates bash commands against a set of rules before execution.
-It blocks grep/find commands and suggests using rg or ast-grep instead.
+It blocks grep/find commands and suggests using rg instead.
+For source code searches, it suggests ast-grep (which supports Swift, Python,
+TypeScript, JavaScript, Rust, Go, C, C++, HTML, Java, Kotlin, and Ruby).
 
 Read more about hooks here: https://docs.anthropic.com/en/docs/claude-code/hooks
 """
@@ -28,8 +30,8 @@ _VALIDATION_RULES = [
         "Use 'rg --files | rg pattern' or 'rg --files -g pattern' instead of 'find -name' for better performance",
     ),
     (
-        r"^rg\b(?!.*\s--files\b(?:\s+-g\s+\S+)?).*(?:\*\.(swift|py|ts|js|jsx|tsx|rs|go|c|cpp|html|java|kt|rb|yaml|yml)\b|--type\s+(swift|python|typescript|javascript|rust|go|c|cpp|html|java|kotlin|ruby|yaml))",
-        "Use 'sg -p pattern' or 'ast-grep -p pattern' instead of 'rg' for Swift, Python, TypeScript, JavaScript, JSX, TSX, Rust, Go, C, C++, HTML, Java, Kotlin, Ruby, and YAML source code",
+        r"^rg\b(?!.*\s--files\b(?:\s+-g\s+\S+)?).*(?:\*\.(swift|py|ts|js|jsx|tsx|rs|go|c|cpp|html|java|kt|rb)\b|--type\s+(swift|python|typescript|javascript|rust|go|c|cpp|html|java|kotlin|ruby))",
+        "Use 'sg -p pattern' or 'ast-grep -p pattern' instead of 'rg' for Swift, Python, TypeScript, JavaScript, JSX, TSX, Rust, Go, C, C++, HTML, Java, Kotlin, and Ruby source code",
     ),
 ]
 
@@ -68,6 +70,9 @@ def main() -> None:
             print(f"• {message}", file=sys.stderr)
         # Exit code 2 blocks tool call and shows stderr to Claude
         sys.exit(2)
+
+    # Exit code 0 allows the tool call to proceed
+    sys.exit(0)
 
 
 if __name__ == "__main__":

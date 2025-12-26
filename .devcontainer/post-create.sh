@@ -93,8 +93,11 @@ fi
 if command -v kubectl &> /dev/null && [[ -f "${KUBECONFIG:-${HOME}/.kube/config}" ]]; then
     log_info "Checking kubectl configuration..."
     if kubectl config get-contexts fzymgc-house &> /dev/null; then
-        kubectl config use-context fzymgc-house
-        log_info "✓ kubectl default context set to fzymgc-house"
+        if kubectl config use-context fzymgc-house &> /dev/null; then
+            log_info "✓ kubectl default context set to fzymgc-house"
+        else
+            log_warn "Failed to switch to fzymgc-house context"
+        fi
     else
         log_warn "fzymgc-house context not found in kubeconfig"
     fi
@@ -114,7 +117,9 @@ fi
 # Set up direnv if .envrc exists
 if [[ -f ".envrc" ]]; then
     log_info "Setting up direnv..."
-    direnv allow .
+    if ! direnv allow .; then
+        log_warn "Failed to enable direnv - you may need to run 'direnv allow' manually"
+    fi
 fi
 
 # Install ast-grep for Serena MCP semantic code operations
@@ -203,7 +208,9 @@ if command -v claude &> /dev/null; then
     # Set up Claude Code marketplaces and plugins
     if [[ -f ".devcontainer/setup-claude-plugins.sh" ]]; then
         log_info "Setting up Claude Code marketplaces and plugins..."
-        bash .devcontainer/setup-claude-plugins.sh
+        if ! bash .devcontainer/setup-claude-plugins.sh; then
+            log_warn "Plugin setup failed - Claude may have reduced functionality"
+        fi
     fi
 else
     log_warn "Claude Code CLI not found (should be installed by devcontainer feature)"

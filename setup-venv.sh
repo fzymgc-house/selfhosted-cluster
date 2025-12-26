@@ -15,7 +15,6 @@ NC='\033[0m' # No Color
 
 # Configuration
 VENV_DIR=".venv"
-REQUIRED_PYTHON_VERSION="3.13"
 
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
@@ -46,17 +45,26 @@ main() {
         exit 1
     fi
     log_info "Installing Python packages from pyproject.toml (including dev dependencies)..."
-    uv sync --extra dev
+    if ! uv sync --extra dev; then
+        log_error "Failed to install Python packages. Check pyproject.toml and uv.lock are valid."
+        exit 1
+    fi
 
     # Activate for ansible-galaxy (needs VIRTUAL_ENV set)
     log_info "Activating virtual environment..."
+    if [[ ! -f "${VENV_DIR}/bin/activate" ]]; then
+        log_error "Virtual environment not found at ${VENV_DIR}/bin/activate"
+        exit 1
+    fi
     # shellcheck disable=SC1091
     source "${VENV_DIR}/bin/activate"
 
     # Install Ansible Galaxy collections
     if [[ -f "ansible/requirements.yml" ]]; then
         log_info "Installing Ansible Galaxy collections..."
-        ansible-galaxy collection install -r ansible/requirements.yml
+        if ! ansible-galaxy collection install -r ansible/requirements.yml; then
+            log_warn "Failed to install some Ansible collections (check network/permissions)"
+        fi
     else
         log_warn "ansible/requirements.yml not found, skipping collections"
     fi

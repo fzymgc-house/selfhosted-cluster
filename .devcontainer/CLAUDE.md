@@ -8,8 +8,8 @@ AI assistant guidance for working with devcontainer configuration.
 |----------------|---------|
 | `devcontainer.json` | Main config for local development (has host bind mounts) |
 | `ci/devcontainer.json` | CI-specific config (no host bind mounts) |
-| `Dockerfile` | Base image with system packages |
-| `post-create.sh` | Post-creation setup (venv, auth checks, git config) |
+| `Dockerfile` | Base image, shell aliases, default shell (zsh) |
+| `post-create.sh` | Post-creation setup (venv, git config, brew tools, safeguards) |
 | `login-setup.sh` | Interactive auth setup (Claude, Vault, GitHub, Terraform) |
 | `setup-claude-secrets.sh` | Verifies MCP server API keys from Vault |
 | `README.md` | Comprehensive user documentation |
@@ -51,6 +51,53 @@ Most tools are installed via devcontainer features (not Dockerfile):
 
 **Adding tools:** Prefer features over Dockerfile when available. Features are maintained upstream.
 
+### Shell Configuration
+
+**Default shell:** zsh (set in Dockerfile `CMD` and VS Code terminal settings)
+
+**CRITICAL: Dual-shell sync requirement:**
+- Aliases and shell functions **MUST** be added to both `.zshrc` AND `.bashrc`
+- Scripts may invoke `/bin/bash` explicitly, bypassing zsh
+- Use a loop pattern in Dockerfile:
+```dockerfile
+RUN for rc in /home/vscode/.zshrc /home/vscode/.bashrc; do \
+        echo 'alias foo=bar' >> "$rc"; \
+    done
+```
+
+| Config Location | What Goes There |
+|-----------------|-----------------|
+| `Dockerfile` | Static aliases (cat→bat, top→btm, etc.) |
+| `post-create.sh` | Dynamic config (git safeguards, tool checks) |
+| `devcontainer.json` | VS Code terminal settings |
+
+### Git Configuration
+
+Git is configured **programmatically** in `post-create.sh`, NOT via mounted `~/.gitconfig`.
+
+**Why:** Host gitconfig contains paths (credential helpers, GPG programs) that don't exist in container.
+
+| Setting | Source |
+|---------|--------|
+| User name/email | `GIT_AUTHOR_NAME`/`GIT_AUTHOR_EMAIL` env vars (via `remoteEnv`) |
+| Pager | delta (installed in Dockerfile) |
+| Credential helper | GitHub CLI (`gh auth setup-git`) |
+| GPG signing | Disabled locally (`git config --local commit.gpgsign false`) |
+
+### Homebrew Tools
+
+Modern CLI tools are installed via Homebrew feature + `post-create.sh`:
+
+1. Feature `ghcr.io/meaningful-ooo/devcontainer-features/homebrew:2` provides brew
+2. `post-create.sh` installs: `bat`, `bottom`, `gping`, `procs`, `broot`, `tokei`, `xh`
+3. Aliases defined in Dockerfile map traditional commands to modern equivalents
+
+**Adding a new brew tool:**
+1. Add to `BREW_TOOLS` list in `post-create.sh`
+2. Add alias to Dockerfile (if replacing a standard command)
+3. Add to README.md tool list
+4. Update "Available tools" echo section in `post-create.sh`
+
 ## Common Tasks
 
 ### Adding a New Tool
@@ -73,10 +120,20 @@ The `post-create.sh` runs after container creation:
 - Fixes Docker volume permissions
 - Checks auth status (Vault, GitHub, Terraform, Claude)
 - Runs `setup-venv.sh` for Python environment
-- Configures git defaults
+- Configures git (identity from env vars, delta pager, gh credential helper, aliases)
+- Initializes git-lfs
+- Installs Homebrew CLI tools (bat, bottom, gping, procs, broot, tokei, xh)
+- Sets up git safeguards in both `.zshrc` and `.bashrc`
 - Loads MCP server API keys from Vault (via direnv)
 
 **Pattern:** Non-blocking checks with warnings, not errors.
+
+**Shell config updates:** When adding shell functions or aliases in `post-create.sh`, use a loop:
+```bash
+for rcfile in /home/vscode/.zshrc /home/vscode/.bashrc; do
+    echo 'your_config' >> "$rcfile"
+done
+```
 
 ## CI Workflow
 
@@ -91,13 +148,18 @@ The `devcontainer-ci.yml` workflow:
 
 When modifying devcontainer config:
 
-| Change | Update CI Config? | Update Workflow? |
-|--------|-------------------|------------------|
-| Add feature | Yes | Maybe (if tool should be validated) |
-| Add bind mount | No (CI can't use) | No |
-| Add Docker volume | Yes | No |
-| Change Dockerfile | Automatic (shared) | No |
-| Add validation check | No | Yes |
+| Change | Update CI Config? | Update README? | Update Workflow? |
+|--------|-------------------|----------------|------------------|
+| Add feature | Yes | Yes (if user-facing) | Maybe (if tool should be validated) |
+| Add bind mount | No (CI can't use) | Yes | No |
+| Add Docker volume | Yes | Yes | No |
+| Change Dockerfile | Automatic (shared) | Maybe | No |
+| Add shell alias | N/A (Dockerfile) | Yes | No |
+| Add brew tool | N/A (post-create.sh) | Yes | No |
+| Add validation check | No | No | Yes |
+| Change shell config | Add to BOTH .zshrc AND .bashrc | Yes | No |
+
+**CRITICAL:** Shell aliases and functions **MUST** go to both `.zshrc` and `.bashrc`.
 
 ## Testing Changes
 

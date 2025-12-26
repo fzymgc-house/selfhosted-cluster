@@ -5,8 +5,9 @@ provider "vault" {
   dynamic "auth_login_jwt" {
     for_each = var.tfc_workload_identity_token_path != "" ? [1] : []
     content {
-      role = "tfc-authentik"
-      jwt  = file(var.tfc_workload_identity_token_path)
+      mount = "jwt-hcp-terraform"
+      role  = "tfc-authentik"
+      jwt   = file(var.tfc_workload_identity_token_path)
     }
   }
 }

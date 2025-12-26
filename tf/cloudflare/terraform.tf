@@ -12,8 +12,9 @@ provider "vault" {
   dynamic "auth_login_jwt" {
     for_each = var.tfc_workload_identity_token_path != "" ? [1] : []
     content {
-      role = "tfc-cloudflare"
-      jwt  = file(var.tfc_workload_identity_token_path)
+      mount = "jwt-hcp-terraform"
+      role  = "tfc-cloudflare"
+      jwt   = file(var.tfc_workload_identity_token_path)
     }
   }
 }

@@ -17,7 +17,6 @@ Guidance for Claude Code when working with Ansible code in this directory.
 | `kube-vip` | VIP for API endpoint HA (ARP mode, static pod) | `tp_cluster_controlplane` |
 | `calico` | Calico CNI installation | First control plane node |
 | `longhorn-disks` | Additional storage disk configuration | Nodes with `longhorn_additional_disks` defined |
-| `teleport-agent` | Teleport agent installation | All nodes |
 | `tp2-bootstrap-node` | OS configuration, networking, security | All TuringPi 2 nodes |
 | `router-hosts` | router-hosts gRPC server with Vault mTLS | `router` |
 

@@ -148,7 +148,6 @@ selfhosted-cluster/
 │   │   ├── kube-vip/           # API endpoint HA (VIP management)
 │   │   ├── calico/             # CNI installation
 │   │   ├── longhorn-disks/     # Additional storage configuration
-│   │   ├── teleport-agent/     # Teleport agent installation
 │   │   └── tp2-bootstrap-node/ # Node preparation and configuration
 │   ├── k3s-playbook.yml        # Main cluster deployment playbook
 │   ├── bootstrap-nodes-playbook.yml
@@ -162,7 +161,6 @@ selfhosted-cluster/
 │   ├── authentik/              # Identity provider setup
 │   ├── grafana/                # Dashboards and data sources
 │   ├── cloudflare/             # DNS and tunnel configuration
-│   ├── teleport/               # Access control
 │   └── core-services/          # Additional service configurations
 └── windmill/                   # Terraform automation flows
 ```

@@ -1,6 +1,10 @@
 // policy-terraform-workspaces.tf - Policies for HCP Terraform workspace OIDC auth
 
-# Vault workspace - manages Vault configuration
+# Vault workspace - manages Vault configuration (auth methods, policies, identity).
+# This workspace requires broad access because it:
+# - Configures auth backends for all services (auth/*, sys/auth/*)
+# - Manages policies that reference secrets across the organization
+# - Reads secrets to validate configuration (read-only, no write access)
 resource "vault_policy" "terraform_vault_admin" {
   name   = "terraform-vault-admin"
   policy = <<EOT
@@ -24,7 +28,7 @@ path "identity/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 
-# Read secrets for configuration
+# Read secrets for configuration validation (read-only, scoped to org)
 path "secret/data/fzymgc-house/*" {
   capabilities = ["read", "list"]
 }
@@ -132,11 +136,13 @@ path "secret/metadata/fzymgc-house/cluster/cloudflared/*" {
 EOT
 }
 
-# Core-services workspace - manages core service secrets
+# Core-services workspace - manages cross-cutting service configurations.
+# This workspace configures shared infrastructure (ingress, cert-manager, etc.)
+# and needs read access to multiple service secrets for configuration.
 resource "vault_policy" "terraform_core_services_admin" {
   name   = "terraform-core-services-admin"
   policy = <<EOT
-# Read cluster secrets
+# Read cluster secrets (cross-cutting configuration needs)
 path "secret/data/fzymgc-house/cluster/*" {
   capabilities = ["read", "list"]
 }

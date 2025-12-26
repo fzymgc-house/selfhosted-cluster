@@ -81,6 +81,17 @@ vault kv put secret/fzymgc-house/infrastructure/cloudflare/discord-webhook \
 
 After applying `tf/cloudflare`, the Worker secret is automatically configured.
 
+### Worker Deployment
+
+Deploy the Worker via wrangler (initial deploy or code updates):
+
+```bash
+cd cloudflare/workers/hcp-terraform-discord
+npx wrangler deploy
+```
+
+The Worker secret is managed by Terraform - no manual `wrangler secret` commands needed.
+
 ## Troubleshooting
 
 ### Agent not connecting
@@ -94,6 +105,35 @@ After applying `tf/cloudflare`, the Worker secret is automatically configured.
 1. Check HCP Terraform console for run logs
 2. Verify Vault OIDC role exists: `vault read auth/jwt-hcp-terraform/role/tfc-WORKSPACE`
 3. Check policy permissions: `vault policy read terraform-WORKSPACE-admin`
+
+### OIDC authentication failures
+
+Common OIDC issues and resolutions:
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `role not found` | Missing JWT role in Vault | Create role: `vault write auth/jwt-hcp-terraform/role/tfc-WORKSPACE ...` |
+| `claim not in bound_claims` | Workspace name mismatch | Check `bound_claims_value` matches HCP TF workspace name |
+| `token expired` | JWT past validity window | Verify clocks are synced; tokens valid 5 minutes |
+| `permission denied` | Policy missing capabilities | Check policy grants access to required paths |
+
+Debug OIDC authentication:
+
+```bash
+# Verify JWT auth backend exists
+vault auth list | grep jwt-hcp-terraform
+
+# Check role configuration
+vault read auth/jwt-hcp-terraform/role/tfc-WORKSPACE
+
+# Verify bound claims (must match HCP TF workspace exactly)
+vault read -field=bound_claims auth/jwt-hcp-terraform/role/tfc-WORKSPACE
+
+# Test policy access
+vault policy read terraform-WORKSPACE-admin
+```
+
+For `cluster-bootstrap` workspace: OIDC is intentionally excluded (deploys the operator itself). Run locally with `VAULT_TOKEN` environment variable.
 
 ## Related
 

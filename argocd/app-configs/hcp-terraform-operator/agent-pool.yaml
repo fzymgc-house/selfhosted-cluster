@@ -12,7 +12,7 @@ spec:
   agentTokens:
     - name: k8s-agent
   agentDeployment:
-    replicas: 1
+    replicas: 2  # Allow parallel workspace execution
     spec:
       containers:
         - name: tfc-agent

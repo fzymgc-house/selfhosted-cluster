@@ -3,4 +3,5 @@ main = "worker.js"
 compatibility_date = "2024-01-01"
 
 # Secret: DISCORD_WEBHOOK_URL
-# Set via: wrangler secret put DISCORD_WEBHOOK_URL
+# Managed by Terraform (tf/cloudflare/workers.tf) via cloudflare_workers_secret
+# Source: Vault secret at secret/fzymgc-house/infrastructure/cloudflare/discord-webhook

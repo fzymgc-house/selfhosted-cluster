@@ -55,6 +55,32 @@ The HCP Terraform Operator manages agent pods:
 - **Agent Pool CRD**: `fzymgc-house-agents`
 - **Token**: Stored in Vault at `secret/fzymgc-house/cluster/hcp-terraform`
 
+## Discord Notifications
+
+Cloudflare Worker transforms HCP Terraform webhooks to Discord embeds.
+
+| Component | Location |
+|-----------|----------|
+| Worker code | `cloudflare/workers/hcp-terraform-discord/` |
+| Secret management | `tf/cloudflare/workers.tf` |
+| Webhook URL | Vault: `secret/fzymgc-house/infrastructure/cloudflare/discord-webhook` |
+
+### Setup
+
+Create the Discord webhook secret in Vault (one-time, can copy from Windmill):
+
+```bash
+# Copy from existing Windmill config
+WEBHOOK=$(vault kv get -field=discord_webhook_url secret/fzymgc-house/cluster/windmill)
+vault kv put secret/fzymgc-house/infrastructure/cloudflare/discord-webhook url="$WEBHOOK"
+
+# Or create new webhook from Discord channel settings
+vault kv put secret/fzymgc-house/infrastructure/cloudflare/discord-webhook \
+  url="https://discord.com/api/webhooks/..."
+```
+
+After applying `tf/cloudflare`, the Worker secret is automatically configured.
+
 ## Troubleshooting
 
 ### Agent not connecting

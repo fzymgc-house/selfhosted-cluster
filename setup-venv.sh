@@ -59,11 +59,11 @@ main() {
     source "${VENV_DIR}/bin/activate"
 
     # Install Ansible Galaxy collections
-    if [[ -f "ansible/requirements-ansible.yml" ]]; then
+    if [[ -f "ansible/requirements.yml" ]]; then
         log_info "Installing Ansible Galaxy collections..."
-        ansible-galaxy collection install -r ansible/requirements-ansible.yml
+        ansible-galaxy collection install -r ansible/requirements.yml
     else
-        log_warn "ansible/requirements-ansible.yml not found, skipping collections"
+        log_warn "ansible/requirements.yml not found, skipping collections"
     fi
 
     # Verify installation

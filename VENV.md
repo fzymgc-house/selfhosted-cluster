@@ -30,14 +30,13 @@ deactivate
 ## What Gets Installed
 
 ### Python Packages (`requirements.txt`)
-- **ansible-core** (>=2.18.0) - Latest Ansible core engine
-- **ansible** (>=11.0.0) - Full Ansible with community collections
+- **ansible** (>=11.0.0) - Full Ansible with bundled community collections
 - **kubernetes** - Python Kubernetes client for k8s module
 - **hvac** - HashiCorp Vault Python client
 - **jmespath, netaddr, dnspython** - Ansible filter dependencies
 - **ansible-lint, yamllint** - Code quality tools
 
-### Ansible Collections (`ansible/requirements-ansible.yml`)
+### Ansible Collections (`ansible/requirements.yml`)
 - **kubernetes.core** - Kubernetes management
 - **community.general** - General utilities
 - **community.hashi_vault** - Vault integration
@@ -62,7 +61,7 @@ pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 
 # Install Ansible collections
-ansible-galaxy collection install -r ansible/requirements-ansible.yml
+ansible-galaxy collection install -r ansible/requirements.yml
 
 # Verify installation
 ansible --version
@@ -81,7 +80,7 @@ pip install --upgrade -r requirements.txt
 
 ```bash
 source .venv/bin/activate
-ansible-galaxy collection install -r ansible/requirements-ansible.yml --force
+ansible-galaxy collection install -r ansible/requirements.yml --force
 ```
 
 ### Full Refresh
@@ -177,7 +176,7 @@ source "$(pwd)/.venv/bin/activate"
 rm -rf ~/.ansible/collections
 
 # Reinstall with verbose output
-ansible-galaxy collection install -r ansible/requirements-ansible.yml -vvv
+ansible-galaxy collection install -r ansible/requirements.yml -vvv
 ```
 
 ### Permission Errors
@@ -222,7 +221,7 @@ For automated pipelines, use the setup script:
 ## Related Files
 
 - `requirements.txt` - Python package dependencies
-- `ansible/requirements-ansible.yml` - Ansible Galaxy collections
+- `ansible/requirements.yml` - Ansible Galaxy collections
 - `.python-version` - Required Python version (3.13.7)
 - `setup-venv.sh` - Automated setup script
 - `.gitignore` - Excludes .venv/ from version control

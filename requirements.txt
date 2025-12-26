@@ -1,11 +1,9 @@
 # Python dependencies for Ansible automation
 # Install with: pip install -r requirements.txt
 
-# Ansible core - latest stable
-ansible-core>=2.18.0,<3.0.0
-
 # Ansible full package (includes community collections)
-ansible>=13.1.0,<13.1.1
+# Using ansible instead of ansible-core for bundled collections
+ansible>=11.0.0,<12.0.0
 
 # Required for various Ansible modules
 jmespath>=1.0.1        # JSON query language for filters

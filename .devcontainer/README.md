@@ -40,7 +40,7 @@ All packages from `requirements.txt` are automatically installed:
 - Linting tools (ansible-lint, yamllint)
 
 ### Ansible Collections
-All collections from `ansible/requirements-ansible.yml`:
+All collections from `ansible/requirements.yml`:
 - kubernetes.core
 - community.general
 - community.hashi_vault
@@ -161,7 +161,7 @@ deactivate
 
 # Reinstall dependencies
 pip install -r requirements.txt
-ansible-galaxy collection install -r ansible/requirements-ansible.yml
+ansible-galaxy collection install -r ansible/requirements.yml
 ```
 
 ### Terraform Operations

@@ -12,7 +12,7 @@ spec:
   agentTokens:
     - name: k8s-agent
   agentDeployment:
-    replicas: 2  # Allow parallel workspace execution
+    replicas: 1  # Sequential execution - prevents concurrent Terraform state conflicts
     spec:
       containers:
         - name: tfc-agent

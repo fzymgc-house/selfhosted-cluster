@@ -123,6 +123,14 @@ else
     [[ -z "$GIT_USER_EMAIL" ]] && echo "    Missing: git config --global user.email 'your.email@example.com'"
 fi
 
+# Disable GPG commit signing for this repo (container lacks access to signing keys)
+log_info "Disabling GPG commit signing for this repository..."
+if git config --local commit.gpgsign false 2>/dev/null; then
+    log_info "✓ GPG commit signing disabled (local to repo)"
+else
+    log_warn "Failed to disable GPG commit signing"
+fi
+
 # Set up kubectl default context if available
 # KUBECONFIG is set in devcontainer.json to ~/.kube/configs/fzymgc-house-admin.yml
 if command -v kubectl &> /dev/null && [[ -f "${KUBECONFIG:-${HOME}/.kube/config}" ]]; then

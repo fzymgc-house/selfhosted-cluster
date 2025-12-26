@@ -224,7 +224,7 @@ The container includes these pre-configured aliases (available in both zsh and b
 - `cat` → `bat --paging=never` (syntax highlighted cat)
 - `catp` → `bat` (with paging)
 - `top` / `htop` → `btm` (system monitor)
-- `ps` → `procs` (process viewer)
+- `psx` → `procs` (modern process viewer, doesn't shadow system `ps`)
 - `tree` → `broot --sizes` (file navigator with sizes)
 - `br` → `broot`
 - `http` → `xh` (HTTP client)

@@ -30,6 +30,12 @@
 [submodule]
     fetchjobs = 4
 
+[commit]
+    gpgsign = false
+
+[tag]
+    gpgsign = false
+
 [help]
     autocorrect = 1
 

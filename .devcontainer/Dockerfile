@@ -68,7 +68,7 @@ RUN for rc in /home/vscode/.zshrc /home/vscode/.bashrc; do \
         echo 'alias catp="bat"' >> "$rc" && \
         echo 'alias top=btm' >> "$rc" && \
         echo 'alias htop=btm' >> "$rc" && \
-        echo 'alias ps=procs' >> "$rc" && \
+        echo 'alias psx=procs' >> "$rc" && \
         echo 'alias tree="broot --sizes"' >> "$rc" && \
         echo 'alias br=broot' >> "$rc" && \
         echo 'alias http=xh' >> "$rc" && \

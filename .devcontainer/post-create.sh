@@ -274,7 +274,8 @@ git() {
         fi
     done
 
-    if $has_no_verify; then
+    # Only prompt in interactive shells (stdin is a terminal)
+    if $has_no_verify && [[ -t 0 ]]; then
         echo -e "\033[1;33m[WARNING]\033[0m You are using --no-verify which skips pre-commit hooks."
         echo "This may allow code that doesn't meet project standards to be committed."
         read -r -p "Continue anyway? [y/N] " response

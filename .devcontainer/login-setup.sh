@@ -259,12 +259,8 @@ if vault token lookup &>/dev/null; then
                 log_warn "direnv allow failed: ${direnv_output}"
                 log_warn "Run 'direnv allow' manually to load API keys"
             else
-                # Source the .envrc manually since we're in a script
-                # shellcheck source=/dev/null
-                if ! direnv_export=$(direnv export bash 2>&1); then
-                    log_warn "direnv export failed: ${direnv_export}"
-                    log_warn "Environment may not be updated - restart terminal if needed"
-                else
+                # Export to current shell (stderr has log messages, stdout has exports)
+                if direnv_export=$(direnv export bash 2>/dev/null); then
                     eval "$direnv_export"
                 fi
             fi

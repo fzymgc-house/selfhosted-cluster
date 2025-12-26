@@ -1,5 +1,5 @@
-summary: ''
-description: ''
+summary: Run Terraform plan and store plan artifact in S3
+description: Runs terraform plan on a module and uploads the plan file to S3 for later apply
 lock: '!inline f/terraform/terraform_plan.script.lock'
 kind: script
 schema:
@@ -8,17 +8,32 @@ schema:
   properties:
     module_dir:
       type: string
-      description: ''
+      description: Path to the Terraform module directory
       default: null
       originalType: string
     vault_addr:
       type: string
-      description: ''
+      description: Vault server address
       default: 'https://vault.fzymgc.house'
       originalType: string
     vault_token:
       type: string
-      description: ''
+      description: Vault authentication token
+      default: ''
+      originalType: string
+    tfc_token:
+      type: string
+      description: Terraform Cloud API token (optional)
+      default: null
+      originalType: string
+    s3_resource:
+      type: object
+      description: S3 resource for storing plan artifacts
+      default: null
+      format: resource-s3
+    job_id:
+      type: string
+      description: Unique job ID for plan storage key
       default: ''
       originalType: string
   required:

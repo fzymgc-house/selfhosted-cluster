@@ -79,6 +79,28 @@ npx wmill sync pull
 npx wmill sync diff
 ```
 
+## Deploy Flow
+
+The `deploy_terraform` flow executes these steps:
+
+1. Clone repository at specified ref
+2. Initialize Terraform for specified module
+3. Run plan and upload plan artifact to S3
+4. If changes: send Discord notification, wait for approval, download plan from S3, apply
+5. If no changes: complete silently
+
+### Plan Staleness Protection
+
+To prevent "Saved plan is stale" errors:
+
+| Mechanism | Purpose |
+|-----------|---------|
+| **Concurrency control** | `concurrent_limit: 1` per module prevents parallel runs |
+| **S3 plan storage** | Plan files stored in S3 with unique job ID, not shared workspace |
+| **Plan cleanup** | Plans deleted from S3 after successful apply |
+
+Plan S3 key format: `terraform-plans/{module-path}/{job-id}/tfplan`
+
 ## Terraform Modules
 
 Supported modules for automated deployment:

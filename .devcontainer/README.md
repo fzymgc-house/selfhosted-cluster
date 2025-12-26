@@ -26,8 +26,19 @@ The devcontainer provides a complete, reproducible development environment with:
 - `direnv` - Automatic environment variable loading (via feature)
 - `go-task` - Task runner (via feature)
 - `neovim` - Modern vim editor (via devcontainer feature)
+- `git-lfs` - Git Large File Storage (repo uses LFS for images and archives via .gitattributes)
 - Git, SSH, SSHD, and essential build tools
 - Docker-in-Docker support
+
+### Modern CLI Tools (via Homebrew)
+- `bat` - cat clone with syntax highlighting and git integration
+- `bottom` (btm) - System monitor with CPU, memory, network graphs
+- `git-delta` - Improved git diffs with syntax highlighting
+- `gping` - Ping with graph visualization
+- `procs` - Modern ps replacement with color and sorting
+- `broot` - Interactive file navigator
+- `tokei` - Code statistics by language
+- `xh` - Modern HTTP client (curl/httpie alternative)
 
 ### Python Packages
 All packages from `pyproject.toml` are automatically installed via `uv sync`:
@@ -53,8 +64,12 @@ All collections from `ansible/requirements.yml`:
 2. **Docker Desktop** or Docker Engine running
 3. **Host prerequisites** (automatically mounted):
    - `~/.ssh` - SSH keys for Git and cluster access
-   - `~/.gitconfig` - Git author name and email (read-only)
    - `~/.kube/configs/fzymgc-house-admin.yml` - Kubernetes cluster configuration
+
+4. **Host environment variables** (optional, passed via `remoteEnv`):
+   - `GIT_AUTHOR_NAME` - Git commit author name
+   - `GIT_AUTHOR_EMAIL` - Git commit author email
+   - `GH_TOKEN` - GitHub CLI authentication token
 
 ### Pre-Setup: Store Credentials in Vault (Optional)
 
@@ -99,7 +114,7 @@ If you have the repository cloned locally:
 The container will automatically:
 - Build the Docker image with all tools
 - Clone (or mount) the repository into `/workspaces/selfhosted-cluster`
-- Mount your SSH keys, kubeconfig, and git config
+- Mount your SSH keys and kubeconfig
 - Run the `post-create.sh` script to set up Python venv
 - Install all Python and Ansible dependencies
 
@@ -193,13 +208,31 @@ k get pods -A
 kubectl get nodes
 ```
 
+## Default Shell
+
+The container uses **zsh** as the default shell with oh-my-zsh (installed via common-utils feature).
+
 ## Helpful Aliases
 
-The container includes these pre-configured aliases:
+The container includes these pre-configured aliases (available in both zsh and bash):
 
-- `k` → `kubectl` (default context: fzymgc-house)
+### Infrastructure
+- `k` → `kubectl`
 - `tf` → `terraform`
+
+### Modern CLI Tools
+- `cat` → `bat --paging=never` (syntax highlighted cat)
+- `catp` → `bat` (with paging)
+- `top` / `htop` → `btm` (system monitor)
+- `psx` → `procs` (modern process viewer, doesn't shadow system `ps`)
+- `tree` → `broot --sizes` (file navigator with sizes)
+- `br` → `broot`
+- `http` → `xh` (HTTP client)
+
+### File Listing
 - `ll` → `ls -alh`
+- `la` → `ls -A`
+- `l` → `ls -CF`
 
 ## Mounted Volumes
 
@@ -207,7 +240,6 @@ The container includes these pre-configured aliases:
 | Host Path | Container Path | Purpose |
 |-----------|----------------|---------|
 | `~/.ssh` | `/home/vscode/.ssh` | SSH keys (read-only) |
-| `~/.gitconfig` | `/home/vscode/.gitconfig` | Git author config (read-only) |
 | `~/.kube` | `/home/vscode/.kube` | Kubernetes config |
 
 ### Docker Volumes (Persist Across Rebuilds)
@@ -350,27 +382,33 @@ direnv allow
 
 ### Git Author Not Configured
 
-The devcontainer mounts `~/.gitconfig` from your host machine (read-only) to share git author info. If you see warnings about git author not being configured:
+Git author info is passed via environment variables from your host machine. If you see warnings about git author not being configured:
 
-**If `~/.gitconfig` doesn't exist on host:**
-
-```bash
-# On your host machine, create a basic gitconfig
-git config --global user.name "Your Name"
-git config --global user.email "your.email@example.com"
-
-# Rebuild the devcontainer to pick up the new file
-```
-
-**If gitconfig exists but author is missing:**
+**Set environment variables on host before starting container:**
 
 ```bash
-# On your host machine, add the missing settings
+# Add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
+export GIT_AUTHOR_NAME="Your Name"
+export GIT_AUTHOR_EMAIL="your.email@example.com"
+
+# Then rebuild the devcontainer
+```
+
+**Or configure inside the container:**
+
+```bash
+# One-time setup inside the container
 git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
 ```
 
-**Note:** Since the gitconfig is mounted read-only, you cannot modify it from inside the container. This is intentional for security. All git configuration changes should be made on the host machine, then the container rebuilt.
+**Note:** The devcontainer configures git using a hybrid approach:
+- **Static settings** from `gitconfig.template` (aliases, colors, branch behavior)
+- **Dynamic settings** applied by script (user identity, delta pager, credentials)
+- Delta for improved diffs (syntax highlighting, line numbers)
+- GitHub CLI as credential helper
+- Useful aliases (br, ci, co, st, fa, please, commend, ls, ll, etc.)
+- GPG signing disabled (container lacks access to signing keys)
 
 ### kubectl Context Not Found
 
@@ -469,7 +507,6 @@ devcontainer exec --workspace-folder . python --version
 ### Volume Naming
 
 Docker volumes use a `selfhosted-cluster-` prefix for easy identification:
-- `selfhosted-cluster-claude-config` - Claude Code settings
 - `selfhosted-cluster-venv` - Python virtual environment
 - `selfhosted-cluster-cache` - XDG cache (pip, uv, etc.)
 - `selfhosted-cluster-tmp` - Temporary files

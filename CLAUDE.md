@@ -123,6 +123,9 @@ terraform -chdir=tf/vault plan
 - Two-config pattern: main (`devcontainer.json`) vs CI (`ci/devcontainer.json`)
 - Host bind mounts vs Docker volumes (CI can't use host paths)
 - Feature-based tool installation
+- **Shell configuration:** zsh default, aliases MUST go to both `.zshrc` AND `.bashrc`
+- **Git config:** Programmatic (not mounted), uses `GIT_AUTHOR_*` env vars
+- **Homebrew tools:** Adding new tools, alias patterns
 - `devcontainer-ci.yml` workflow validation
 
 ## Security

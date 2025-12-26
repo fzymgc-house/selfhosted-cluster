@@ -1,0 +1,88 @@
+# Git configuration template for devcontainer
+# Static settings - copied to ~/.gitconfig by post-create.sh
+# Dynamic settings (user identity, delta, credentials) applied by script
+
+[init]
+    defaultBranch = main
+
+[core]
+    autocrlf = input
+    whitespace = trailing-space,space-before-tab
+    precomposeunicode = true
+
+[apply]
+    whitespace = nowarn
+
+[branch]
+    autosetupmerge = true
+    autosetuprebase = always
+
+[pull]
+    rebase = true
+
+[fetch]
+    prune = true
+
+[push]
+    default = simple
+    autosetupremote = true
+
+[submodule]
+    fetchjobs = 4
+
+[commit]
+    gpgsign = false
+
+[tag]
+    gpgsign = false
+
+[help]
+    autocorrect = 1
+
+[log]
+    decorate = true
+
+[status]
+    submodulesummary = true
+
+[grep]
+    extendRegexp = true
+    lineNumber = true
+
+[color]
+    ui = true
+    diff = auto
+    status = auto
+    branch = auto
+
+[color "branch"]
+    current = yellow reverse
+    local = yellow
+    remote = green
+
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+
+[color "status"]
+    added = yellow
+    changed = green
+    untracked = cyan
+
+[alias]
+    br = branch
+    ci = commit
+    co = checkout
+    st = status -sb
+    fa = fetch --all -p --tags
+    please = push --force-with-lease
+    commend = commit --amend --no-edit
+    ls = log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate
+    ll = log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate --numstat
+    lt = log --tags --decorate --simplify-by-decoration --oneline
+    unpushed = log @{u}..
+    roots = log --all --oneline --decorate --max-parents=0
+    changed = show --pretty=format: --name-only
+    whatadded = log --diff-filter=A

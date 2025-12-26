@@ -72,55 +72,97 @@ fi
 # Run the existing setup script
 log_info "Running Python virtual environment setup..."
 if [[ -f "setup-venv.sh" ]]; then
+    set +e  # Temporarily allow non-zero exit
     bash setup-venv.sh
+    venv_exit_code=$?
+    set -e
+    if [[ $venv_exit_code -ne 0 ]]; then
+        log_warn "Python venv setup failed (exit $venv_exit_code)"
+        log_warn "You may need to run 'bash setup-venv.sh' manually"
+    else
+        log_info "✓ Python venv setup completed"
+    fi
 else
     log_warn "setup-venv.sh not found, skipping Python setup"
 fi
 
-# Configure git defaults and verify author info
-# Note: Run from /tmp to avoid git worktree path issues in container
-# (worktree .git file references host path that doesn't exist inside container)
+# Configure git with container-appropriate settings
+# Host ~/.gitconfig is NOT mounted (paths like credential helpers don't translate)
+# Instead, we configure everything fresh with container-compatible values
 log_info "Configuring git..."
 
-# Check if gitconfig is writable (may be read-only bind mount from host)
-if [[ -w "${HOME}/.gitconfig" ]] || [[ ! -f "${HOME}/.gitconfig" ]]; then
-    # Writable or doesn't exist yet - safe to set defaults
-    git_config_err=""
-    if ! git_config_err=$(cd /tmp && git config --global init.defaultBranch main && \
-                          git config --global pull.rebase true && \
-                          git config --global fetch.prune true 2>&1); then
-        log_warn "Failed to configure git defaults: ${git_config_err:-unknown error}"
+setup_git_config() {
+    local template_file=".devcontainer/gitconfig.template"
+    local gitconfig_dest="${HOME}/.gitconfig"
+
+    # Copy static settings from template
+    if [[ -f "$template_file" ]]; then
+        if cp "$template_file" "$gitconfig_dest" 2>/dev/null; then
+            log_info "✓ Git config template applied"
+        else
+            log_warn "Failed to copy git config template"
+            return 1
+        fi
+    else
+        log_warn "Git config template not found: $template_file"
+        return 1
     fi
-else
-    log_info "\$HOME/.gitconfig is read-only (mounted from host), using existing settings"
-fi
 
-# Check if git author info is available (from mounted ~/.gitconfig or prior config)
-# Note: git config exits 1 if key not set, other codes indicate real errors
-if ! GIT_USER_NAME="$(cd /tmp && git config --global user.name 2>&1)"; then
-    GIT_USER_NAME=""
-fi
-if ! GIT_USER_EMAIL="$(cd /tmp && git config --global user.email 2>&1)"; then
-    GIT_USER_EMAIL=""
-fi
+    # Dynamic: User identity from environment variables
+    local user_name="${GIT_AUTHOR_NAME:-}"
+    local user_email="${GIT_AUTHOR_EMAIL:-}"
 
-if [[ -n "$GIT_USER_NAME" && -n "$GIT_USER_EMAIL" ]]; then
-    log_info "✓ Git author: $GIT_USER_NAME <$GIT_USER_EMAIL>"
-elif [[ ! -f "${HOME}/.gitconfig" ]]; then
-    log_warn "\$HOME/.gitconfig not mounted (file may not exist on host)"
-    echo "    Create on host: git config --global user.name 'Your Name'"
-    echo "                    git config --global user.email 'your.email@example.com'"
-    echo "    Or configure manually in container after rebuild"
-elif [[ -z "$GIT_USER_NAME" && -z "$GIT_USER_EMAIL" ]]; then
-    log_warn "Git author not configured in ~/.gitconfig"
-    echo "    Configure on host:"
-    echo "      git config --global user.name 'Your Name'"
-    echo "      git config --global user.email 'your.email@example.com'"
-else
-    # Partial config - one is set, one is missing
-    log_warn "Git author incomplete in ~/.gitconfig"
-    [[ -z "$GIT_USER_NAME" ]] && echo "    Missing: git config --global user.name 'Your Name'"
-    [[ -z "$GIT_USER_EMAIL" ]] && echo "    Missing: git config --global user.email 'your.email@example.com'"
+    if [[ -n "$user_name" && -n "$user_email" ]]; then
+        git config --global user.name "$user_name"
+        git config --global user.email "$user_email"
+        log_info "✓ Git author: $user_name <$user_email>"
+    else
+        log_warn "Git author not configured"
+        echo "    Set on host before container start:"
+        echo "      export GIT_AUTHOR_NAME='Your Name'"
+        echo "      export GIT_AUTHOR_EMAIL='your@email.com'"
+    fi
+
+    # Dynamic: Delta pager (only if installed via Homebrew)
+    if command -v delta &> /dev/null; then
+        # Core delta settings (required)
+        git config --global core.pager delta
+        git config --global interactive.diffFilter "delta --color-only"
+        git config --global merge.conflictStyle diff3
+        git config --global diff.colorMoved default
+
+        # Delta options (suppress errors for older versions that may not support all flags)
+        git config --global delta.navigate true 2>/dev/null || true
+        git config --global delta.light false 2>/dev/null || true
+        git config --global delta.line-numbers true 2>/dev/null || true
+        git config --global delta.syntax-theme Dracula 2>/dev/null || true
+        git config --global delta.hyperlinks true 2>/dev/null || true
+        log_info "✓ Delta configured as git pager"
+    fi
+
+    # Dynamic: Credential helper via GitHub CLI
+    if command -v gh &> /dev/null; then
+        gh_err=""
+        if gh_err=$(gh auth setup-git 2>&1); then
+            log_info "✓ GitHub CLI configured as credential helper"
+        else
+            log_warn "Failed to configure gh as credential helper: $gh_err"
+            echo "    Run 'gh auth login' then 'gh auth setup-git' after login-setup.sh"
+        fi
+    fi
+}
+
+setup_git_config
+
+# Initialize git-lfs (installed in Dockerfile)
+if command -v git-lfs &> /dev/null; then
+    log_info "Initializing git-lfs..."
+    lfs_err=""
+    if lfs_err=$(git lfs install --skip-repo 2>&1); then
+        log_info "✓ git-lfs initialized"
+    else
+        log_warn "Failed to initialize git-lfs: ${lfs_err:-unknown error}"
+    fi
 fi
 
 # Disable GPG commit signing for this repo (container lacks access to signing keys)
@@ -177,21 +219,59 @@ log_info "Installing ast-grep..."
 if command -v ast-grep &> /dev/null; then
     log_info "✓ ast-grep already installed: $(ast-grep --version 2>/dev/null || echo 'unknown version')"
 else
-    if npm install -g @ast-grep/cli; then
+    npm_err=""
+    if npm_err=$(npm install -g @ast-grep/cli 2>&1); then
         log_info "✓ ast-grep installed successfully"
     else
-        log_warn "Failed to install ast-grep (Serena MCP may have reduced functionality)"
+        log_warn "Failed to install ast-grep: ${npm_err:-unknown error}"
+        log_warn "(Serena MCP may have reduced functionality)"
     fi
+fi
+
+# Install CLI tools via Homebrew (homebrew feature installed via devcontainer.json)
+log_info "Installing CLI tools via Homebrew..."
+if command -v brew &> /dev/null; then
+    # Tools to install:
+    # - bat: cat clone with syntax highlighting
+    # - bottom: system monitor (btm command)
+    # - git-delta: improved git diffs with syntax highlighting
+    # - gping: ping with graph visualization
+    # - procs: modern ps replacement
+    # - broot: file navigator
+    # - tokei: code statistics
+    # - xh: modern HTTP client (curl/httpie alternative)
+    BREW_TOOLS="bat bottom git-delta gping procs broot tokei xh"
+
+    # Find tools that need installation
+    missing_tools=()
+    for tool in $BREW_TOOLS; do
+        if brew list "$tool" &> /dev/null; then
+            log_info "✓ $tool already installed"
+        else
+            missing_tools+=("$tool")
+        fi
+    done
+
+    # Install all missing tools in parallel (single brew command)
+    if (( ${#missing_tools[@]} > 0 )); then
+        log_info "Installing: ${missing_tools[*]}"
+        brew_err=""
+        if brew_err=$(brew install "${missing_tools[@]}" 2>&1); then
+            log_info "✓ All tools installed successfully"
+        else
+            log_warn "Some tools failed to install: ${brew_err:-unknown error}"
+        fi
+    fi
+else
+    log_warn "Homebrew not available, skipping CLI tool installation"
 fi
 
 # Set up git safeguards to warn on --no-verify usage
 log_info "Setting up git safeguards..."
 setup_git_safeguards() {
-    local bashrc="/home/vscode/.bashrc"
     local safeguard_marker="# Git safeguards for Claude Code"
-
-    if ! grep -q "$safeguard_marker" "$bashrc" 2>/dev/null; then
-        cat >> "$bashrc" << 'SAFEGUARDS'
+    local safeguard_content
+    read -r -d '' safeguard_content << 'SAFEGUARDS' || true
 
 # Git safeguards for Claude Code
 # Warn when using --no-verify to prevent accidental pre-commit bypass
@@ -200,13 +280,14 @@ git() {
     local has_no_verify=false
 
     for arg in "${args[@]}"; do
-        if [[ "$arg" == "--no-verify" || "$arg" == "-n" ]]; then
+        if [[ "$arg" == "--no-verify" ]]; then
             has_no_verify=true
             break
         fi
     done
 
-    if $has_no_verify; then
+    # Only prompt in interactive shells (stdin is a terminal)
+    if $has_no_verify && [[ -t 0 ]]; then
         echo -e "\033[1;33m[WARNING]\033[0m You are using --no-verify which skips pre-commit hooks."
         echo "This may allow code that doesn't meet project standards to be committed."
         read -r -p "Continue anyway? [y/N] " response
@@ -219,10 +300,31 @@ git() {
     command git "${args[@]}"
 }
 SAFEGUARDS
-        log_info "✓ Git safeguards added to ~/.bashrc"
-    else
-        log_info "✓ Git safeguards already configured"
-    fi
+
+    # Add safeguards to both zsh and bash rc files
+    for rcfile in /home/vscode/.zshrc /home/vscode/.bashrc; do
+        if [[ ! -f "$rcfile" ]]; then
+            log_warn "$(basename "$rcfile") not found, creating it"
+            if ! touch "$rcfile" 2>/dev/null; then
+                log_warn "Failed to create $(basename "$rcfile"), skipping"
+                continue
+            fi
+        fi
+        # Check if file is readable before grep
+        if [[ ! -r "$rcfile" ]]; then
+            log_warn "$(basename "$rcfile") is not readable, skipping"
+            continue
+        fi
+        if ! grep -q "$safeguard_marker" "$rcfile" 2>/dev/null; then
+            if echo "$safeguard_content" >> "$rcfile" 2>/dev/null; then
+                log_info "✓ Git safeguards added to $(basename "$rcfile")"
+            else
+                log_warn "Failed to write git safeguards to $(basename "$rcfile")"
+            fi
+        else
+            log_info "✓ Git safeguards already configured in $(basename "$rcfile")"
+        fi
+    done
 }
 setup_git_safeguards
 
@@ -273,6 +375,15 @@ echo "  - helm: $(helm version --short 2>/dev/null || echo 'not available')"
 echo "  - Python: $(python --version 2>&1)"
 echo "  - ast-grep: $(ast-grep --version 2>/dev/null || echo 'not available')"
 echo "  - uv: $(uv --version 2>/dev/null || echo 'not available')"
+echo "  - git-lfs: $(git-lfs version 2>/dev/null || echo 'not available')"
+echo "  - delta: $(delta --version 2>/dev/null || echo 'not available')"
+echo "  - bat: $(bat --version 2>/dev/null | head -1 || echo 'not available')"
+echo "  - btm: $(btm --version 2>/dev/null || echo 'not available')"
+echo "  - gping: $(gping --version 2>/dev/null || echo 'not available')"
+echo "  - procs: $(procs --version 2>/dev/null || echo 'not available')"
+echo "  - broot: $(broot --version 2>/dev/null || echo 'not available')"
+echo "  - tokei: $(tokei --version 2>/dev/null || echo 'not available')"
+echo "  - xh: $(xh --version 2>/dev/null || echo 'not available')"
 echo ""
 echo "First-time setup:"
 echo "  bash .devcontainer/login-setup.sh    # Interactive login for all services"

@@ -41,17 +41,12 @@ main() {
 
     # Install Python packages using uv sync (creates venv if needed)
     # Note: In devcontainer, .venv is a Docker volume (Linux-native, persists across rebuilds)
-    if [[ -f "pyproject.toml" ]]; then
-        log_info "Installing Python packages from pyproject.toml (including dev dependencies)..."
-        uv sync --extra dev
-    elif [[ -f "requirements.txt" ]]; then
-        log_warn "pyproject.toml not found, falling back to requirements.txt..."
-        uv venv "${VENV_DIR}" --python "${REQUIRED_PYTHON_VERSION}"
-        uv pip install --python "${VENV_DIR}/bin/python" -r requirements.txt
-    else
-        log_error "No pyproject.toml or requirements.txt found"
+    if [[ ! -f "pyproject.toml" ]]; then
+        log_error "pyproject.toml not found"
         exit 1
     fi
+    log_info "Installing Python packages from pyproject.toml (including dev dependencies)..."
+    uv sync --extra dev
 
     # Activate for ansible-galaxy (needs VIRTUAL_ENV set)
     log_info "Activating virtual environment..."

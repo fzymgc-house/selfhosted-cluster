@@ -32,7 +32,7 @@ The devcontainer provides a complete, reproducible development environment with:
 - 1Password SSH Agent integration (via socket proxy)
 
 ### Python Packages
-All packages from `requirements.txt` are automatically installed:
+All packages from `pyproject.toml` are automatically installed via `uv sync`:
 - Ansible (core and full)
 - Kubernetes Python client
 - HashiCorp Vault client (hvac)
@@ -160,7 +160,7 @@ source .venv/bin/activate
 deactivate
 
 # Reinstall dependencies
-pip install -r requirements.txt
+uv sync --extra dev
 ansible-galaxy collection install -r ansible/requirements.yml
 ```
 
@@ -265,11 +265,17 @@ RUN apt-get update && apt-get install -y \
 
 ### Adding Python Packages
 
-Add to `requirements.txt` in the root, then rebuild:
+Add to `pyproject.toml` dependencies, then rebuild:
 
 ```bash
-# In VS Code command palette
-Dev Containers: Rebuild Container
+# Update lock file
+uv lock
+
+# Sync environment
+uv sync --extra dev
+
+# Or rebuild container
+# In VS Code command palette: Dev Containers: Rebuild Container
 ```
 
 ### Adding VS Code Extensions

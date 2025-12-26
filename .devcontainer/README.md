@@ -60,20 +60,25 @@ All collections from `ansible/requirements-ansible.yml`:
    - `~/.kube/config` - Kubernetes cluster configuration
    - `~/.1password/agent.sock` - 1Password SSH agent socket
 
-### Pre-Setup: Store Your Anthropic API Key (Optional)
+### Pre-Setup: Store Credentials in Vault (Optional)
 
-For Claude Code to work immediately, store your API key in Vault **before** starting the container:
+For faster setup, pre-store your credentials in Vault **before** starting the container:
 
 ```bash
 # On your host machine (not in the container)
 export VAULT_ADDR=https://vault.fzymgc.house
 vault login -method=oidc
 
-# Store your Anthropic API key (replace <your-username> with your Vault entity name)
-vault kv put secret/users/<your-username>/anthropic api_key=sk-ant-...
+# Store Terraform Cloud token (replace <your-username> with your Vault entity name)
+vault kv put secret/users/<your-username>/terraform-cloud token=...
+
+# Store MCP server API keys (optional - for enhanced Claude Code features)
+vault kv put secret/users/<your-username>/firecrawl api_key=fc-...
+vault kv put secret/users/<your-username>/exa api_key=...
+vault kv put secret/users/<your-username>/notion api_key=secret_...
 ```
 
-If you skip this step, the `login-setup.sh` script inside the container will prompt you to store the key interactively.
+If you skip this, `login-setup.sh` will prompt you interactively. Claude Code itself uses OAuth login via `claude doctor`.
 
 ### Opening the Repository in a Container
 
@@ -112,10 +117,11 @@ bash .devcontainer/login-setup.sh
 ```
 
 This script will:
-- Authenticate to Vault (OIDC)
-- Store or retrieve your Anthropic API key
+- Authenticate to Vault (token-based, OIDC not supported in container)
+- Store/retrieve MCP server API keys (optional)
+- Store/retrieve Terraform Cloud token and create credentials file
 - Authenticate to GitHub CLI
-- Authenticate to Terraform Cloud
+- Run `claude doctor` for Claude Code OAuth login
 
 ### Verifying the Setup
 
@@ -329,9 +335,9 @@ This checks your environment and prompts for login if needed. Your session is st
 bash .devcontainer/login-setup.sh
 ```
 
-### MCP Server API Keys (Optional)
+### Vault-Stored Credentials
 
-MCP server API keys (Firecrawl, Exa, Notion) are stored in Vault and loaded automatically via direnv.
+Credentials for MCP servers and Terraform Cloud are stored in Vault and managed via `login-setup.sh`.
 
 **Important:** Vault OIDC login requires a localhost:8250 callback, which doesn't work in devcontainers. Use the helper script to create a token on your **host machine**:
 
@@ -343,25 +349,28 @@ MCP server API keys (Firecrawl, Exa, Notion) are stored in Vault and loaded auto
 
 Then in the devcontainer:
 ```bash
-# Paste the token when prompted
-vault login token=<paste-token-here>
+# Paste the token when prompted by login-setup.sh
+bash .devcontainer/login-setup.sh
 
-# Store MCP keys (optional)
+# Or manually:
+vault login token=<paste-token-here>
+vault kv put secret/users/<your-entity-name>/terraform-cloud token=...
 vault kv put secret/users/<your-entity-name>/firecrawl api_key=fc-...
 vault kv put secret/users/<your-entity-name>/exa api_key=...
 vault kv put secret/users/<your-entity-name>/notion api_key=secret_...
-
-# Reload environment
 direnv allow
 ```
 
-**How it works:** The `.envrc` file fetches API keys from Vault when you enter the workspace directory.
+**How it works:**
+- Terraform Cloud token is stored in Vault and used to create `~/.terraform.d/credentials.tfrc.json`
+- MCP server API keys are loaded via direnv when you enter the workspace directory
 
-| API Key | Environment Variable | Purpose |
-|---------|---------------------|---------|
-| Firecrawl | `FIRECRAWL_API_KEY` | Web scraping/search MCP |
-| Exa | `EXA_API_KEY` | Deep research MCP |
-| Notion | `NOTION_API_KEY` | Notion workspace MCP |
+| Credential | Vault Path | Purpose |
+|------------|------------|---------|
+| Terraform Cloud | `secret/users/<name>/terraform-cloud` | Infrastructure remote state |
+| Firecrawl | `secret/users/<name>/firecrawl` | Web scraping/search MCP |
+| Exa | `secret/users/<name>/exa` | Deep research MCP |
+| Notion | `secret/users/<name>/notion` | Notion workspace MCP |
 
 ### kubectl Context Not Found
 

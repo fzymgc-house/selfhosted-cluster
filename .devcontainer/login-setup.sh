@@ -28,7 +28,10 @@ echo ""
 
 # Ensure direnv is allowed (loads .envrc which fetches secrets from Vault)
 if command -v direnv &>/dev/null; then
-    direnv allow . 2>/dev/null || true
+    if ! direnv_output=$(direnv allow . 2>&1); then
+        log_warn "direnv allow failed: ${direnv_output}"
+        log_warn "Environment variables from .envrc may not be loaded"
+    fi
 fi
 
 # Track what needs setup
@@ -124,7 +127,10 @@ if $needs_vault; then
                 log_info "Vault authentication successful"
                 needs_vault=false
                 # Reload direnv to pick up Vault-based secrets
-                direnv allow . 2>/dev/null || true
+                if ! direnv_output=$(direnv allow . 2>&1); then
+                    log_warn "direnv reload failed: ${direnv_output}"
+                    log_warn "Run 'direnv allow' manually to load MCP server keys"
+                fi
             else
                 log_warn "Vault token login failed:"
                 echo "    ${VAULT_ERROR}" | head -3
@@ -239,13 +245,18 @@ if vault token lookup &>/dev/null; then
         echo ""
         log_info "Reloading environment to pick up API keys..."
         if command -v direnv &>/dev/null; then
-            if ! direnv allow . 2>&1; then
-                log_warn "direnv allow failed - run 'direnv allow' manually"
-            fi
-            # Source the .envrc manually since we're in a script
-            # shellcheck source=/dev/null
-            if ! source <(direnv export bash 2>&1); then
-                log_warn "direnv export failed - environment may not be updated"
+            if ! direnv_output=$(direnv allow . 2>&1); then
+                log_warn "direnv allow failed: ${direnv_output}"
+                log_warn "Run 'direnv allow' manually to load API keys"
+            else
+                # Source the .envrc manually since we're in a script
+                # shellcheck source=/dev/null
+                if ! direnv_export=$(direnv export bash 2>&1); then
+                    log_warn "direnv export failed: ${direnv_export}"
+                    log_warn "Environment may not be updated - restart terminal if needed"
+                else
+                    eval "$direnv_export"
+                fi
             fi
         else
             log_warn "direnv not found - source .envrc manually"
@@ -278,9 +289,18 @@ if vault token lookup &>/dev/null && [[ -n "${ENTITY_NAME:-}" ]]; then
 
     # Check if token exists in Vault
     if tf_result=$(vault kv get -format=json "$TF_SECRET_PATH" 2>&1); then
-        TF_TOKEN=$(echo "$tf_result" | jq -r '.data.data.token // empty' 2>/dev/null)
-        if [[ -n "$TF_TOKEN" ]]; then
+        if ! TF_TOKEN=$(echo "$tf_result" | jq -r '.data.data.token // empty' 2>&1); then
+            log_warn "Failed to parse Terraform token from Vault response"
+            TF_TOKEN=""
+        elif [[ -n "$TF_TOKEN" ]]; then
             log_info "Terraform Cloud token found in Vault"
+        fi
+    else
+        # Distinguish "not found" from actual errors
+        if echo "$tf_result" | grep -q "No value found"; then
+            : # Secret doesn't exist yet, will prompt below
+        elif echo "$tf_result" | grep -q "permission denied"; then
+            log_warn "Terraform Cloud: Permission denied reading ${TF_SECRET_PATH}"
         fi
     fi
 
@@ -307,7 +327,11 @@ if vault token lookup &>/dev/null && [[ -n "${ENTITY_NAME:-}" ]]; then
                     log_info "Terraform Cloud token stored in Vault"
                     TF_TOKEN="$TF_TOKEN_INPUT"
                     # Reload direnv to pick up new token
-                    direnv allow . 2>/dev/null || true
+                    if command -v direnv &>/dev/null; then
+                        if ! direnv_output=$(direnv allow . 2>&1); then
+                            log_warn "direnv reload failed: ${direnv_output}"
+                        fi
+                    fi
                 else
                     log_warn "Failed to store Terraform Cloud token:"
                     echo "    ${tf_error}" | head -2
@@ -321,8 +345,12 @@ if vault token lookup &>/dev/null && [[ -n "${ENTITY_NAME:-}" ]]; then
     if [[ -n "$TF_TOKEN" ]]; then
         TF_CREDS_DIR="${HOME}/.terraform.d"
         TF_CREDS_FILE="${TF_CREDS_DIR}/credentials.tfrc.json"
-        mkdir -p "$TF_CREDS_DIR"
-        cat > "$TF_CREDS_FILE" <<EOF
+
+        # Create directory with error handling
+        if ! mkdir -p "$TF_CREDS_DIR" 2>/dev/null; then
+            log_warn "Failed to create directory: ${TF_CREDS_DIR}"
+            log_warn "You may need to create ~/.terraform.d/credentials.tfrc.json manually"
+        elif ! cat > "$TF_CREDS_FILE" <<EOF
 {
   "credentials": {
     "app.terraform.io": {
@@ -331,9 +359,16 @@ if vault token lookup &>/dev/null && [[ -n "${ENTITY_NAME:-}" ]]; then
   }
 }
 EOF
-        chmod 600 "$TF_CREDS_FILE"
-        log_info "Terraform credentials file created: ${TF_CREDS_FILE}"
-        needs_terraform=false
+        then
+            log_warn "Failed to write credentials file: ${TF_CREDS_FILE}"
+        elif ! chmod 600 "$TF_CREDS_FILE" 2>/dev/null; then
+            log_warn "Failed to set permissions on ${TF_CREDS_FILE}"
+            log_info "Terraform credentials file created (permissions may be incorrect)"
+            needs_terraform=false
+        else
+            log_info "Terraform credentials file created: ${TF_CREDS_FILE}"
+            needs_terraform=false
+        fi
     fi
 elif $needs_terraform; then
     log_step "Step 3: Terraform Cloud Authentication"

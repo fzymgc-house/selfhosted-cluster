@@ -1,9 +1,0 @@
-{
-  "plugins": [
-    "superpowers@superpowers-marketplace",
-    "commit-commands@claude-code-plugins",
-    "pr-review-toolkit@claude-code-plugins",
-    "feature-dev@claude-code-plugins",
-    "elements-of-style@superpowers-marketplace"
-  ]
-}

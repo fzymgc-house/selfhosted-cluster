@@ -202,16 +202,11 @@ else
 fi
 
 # Verify Claude Code is available (installed by devcontainer feature)
+# Note: Marketplaces and plugins are configured declaratively in .claude/settings.json
+# (extraKnownMarketplaces and enabledPlugins) - no runtime setup needed
 if command -v claude &> /dev/null; then
     log_info "✓ Claude Code CLI available: $(claude --version 2>/dev/null || echo 'unknown version')"
-
-    # Set up Claude Code marketplaces and plugins
-    if [[ -f ".devcontainer/setup-claude-plugins.sh" ]]; then
-        log_info "Setting up Claude Code marketplaces and plugins..."
-        if ! bash .devcontainer/setup-claude-plugins.sh; then
-            log_warn "Plugin setup failed - Claude may have reduced functionality"
-        fi
-    fi
+    log_info "  Plugins configured via .claude/settings.json (applied on folder trust)"
 else
     log_warn "Claude Code CLI not found (should be installed by devcontainer feature)"
 fi

@@ -35,11 +35,13 @@
             "version": "latest"
         },
         "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
-        "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {}
+        "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {},
+        "ghcr.io/devcontainers-contrib/features/neovim-apt-get:1": {},
+        "ghcr.io/meaningful-ooo/devcontainer-features/homebrew:2": {}
     },
 
     // CI-specific mounts: Docker volumes only (no host bind mounts)
-    // Host paths like ~/.ssh, ~/.kube, ~/.1password don't exist on CI runners
+    // Host paths like ~/.ssh, ~/.kube don't exist on CI runners
     "mounts": [
         "source=selfhosted-cluster-venv,target=/workspaces/${localWorkspaceFolderBasename}/.venv,type=volume",
         "source=selfhosted-cluster-cache,target=/home/vscode/.cache,type=volume",
@@ -50,6 +52,14 @@
     "containerEnv": {
         "VAULT_ADDR": "https://vault.fzymgc.house",
         "XDG_CACHE_HOME": "/home/vscode/.cache"
+    },
+
+    // Pass through environment from host for GitHub CLI and git author
+    // Note: These may be empty in CI but post-create.sh handles that gracefully
+    "remoteEnv": {
+        "GH_TOKEN": "${localEnv:GH_TOKEN}",
+        "GIT_AUTHOR_NAME": "${localEnv:GIT_AUTHOR_NAME}",
+        "GIT_AUTHOR_EMAIL": "${localEnv:GIT_AUTHOR_EMAIL}"
     },
 
     // Post-create command to set up the environment
@@ -92,6 +102,12 @@
                     "*.tfvars": "terraform",
                     "*.yml": "ansible",
                     "*.yaml": "ansible"
+                },
+                "terminal.integrated.defaultProfile.linux": "zsh",
+                "terminal.integrated.profiles.linux": {
+                    "zsh": {
+                        "path": "/bin/zsh"
+                    }
                 }
             }
         }

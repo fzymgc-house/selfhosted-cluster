@@ -15,7 +15,6 @@ NC='\033[0m' # No Color
 
 # Configuration
 VENV_DIR=".venv"
-REQUIRED_PYTHON_VERSION="3.13"
 
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
@@ -41,29 +40,37 @@ main() {
 
     # Install Python packages using uv sync (creates venv if needed)
     # Note: In devcontainer, .venv is a Docker volume (Linux-native, persists across rebuilds)
-    if [[ -f "pyproject.toml" ]]; then
-        log_info "Installing Python packages from pyproject.toml (including dev dependencies)..."
-        uv sync --extra dev
-    elif [[ -f "requirements.txt" ]]; then
-        log_warn "pyproject.toml not found, falling back to requirements.txt..."
-        uv venv "${VENV_DIR}" --python "${REQUIRED_PYTHON_VERSION}"
-        uv pip install --python "${VENV_DIR}/bin/python" -r requirements.txt
-    else
-        log_error "No pyproject.toml or requirements.txt found"
+    if [[ ! -f "pyproject.toml" ]]; then
+        log_error "pyproject.toml not found"
+        exit 1
+    fi
+    log_info "Installing Python packages from pyproject.toml (including dev dependencies)..."
+    if ! uv sync --extra dev; then
+        log_error "Failed to install Python packages. Check pyproject.toml and uv.lock are valid."
         exit 1
     fi
 
     # Activate for ansible-galaxy (needs VIRTUAL_ENV set)
     log_info "Activating virtual environment..."
+    if [[ ! -f "${VENV_DIR}/bin/activate" ]]; then
+        log_error "Virtual environment not found at ${VENV_DIR}/bin/activate"
+        exit 1
+    fi
     # shellcheck disable=SC1091
     source "${VENV_DIR}/bin/activate"
 
-    # Install Ansible Galaxy collections
-    if [[ -f "ansible/requirements-ansible.yml" ]]; then
+    # Install Ansible Galaxy collections (required for this repository)
+    if [[ -f "ansible/requirements.yml" ]]; then
         log_info "Installing Ansible Galaxy collections..."
-        ansible-galaxy collection install -r ansible/requirements-ansible.yml
+        local galaxy_output
+        if ! galaxy_output=$(ansible-galaxy collection install -r ansible/requirements.yml 2>&1); then
+            log_error "Failed to install Ansible collections - environment is NOT ready:"
+            echo "$galaxy_output" | sed 's/^/    /'
+            log_error "Fix the above issues and re-run ./setup-venv.sh"
+            exit 1
+        fi
     else
-        log_warn "ansible/requirements-ansible.yml not found, skipping collections"
+        log_warn "ansible/requirements.yml not found, skipping collections"
     fi
 
     # Verify installation

@@ -25,8 +25,13 @@ log_warn() {
 log_info "Fixing Docker volume permissions..."
 for dir in "/home/vscode/.claude" "/home/vscode/.cache" "${PWD}/.venv" "/tmp"; do
     if [[ -d "$dir" ]]; then
-        if ! sudo chown -R "$(id -u):$(id -g)" "$dir" 2>&1; then
-            log_warn "Failed to fix permissions on $dir (may affect functionality)"
+        chown_err=""
+        if ! chown_err=$(sudo chown -R "$(id -u):$(id -g)" "$dir" 2>&1); then
+            if [[ -n "$chown_err" ]]; then
+                log_warn "Failed to fix permissions on $dir: $chown_err"
+            else
+                log_warn "Failed to fix permissions on $dir (no error details)"
+            fi
         fi
     fi
 done
@@ -93,8 +98,16 @@ fi
 if command -v kubectl &> /dev/null && [[ -f "${KUBECONFIG:-${HOME}/.kube/config}" ]]; then
     log_info "Checking kubectl configuration..."
     if kubectl config get-contexts fzymgc-house &> /dev/null; then
-        kubectl config use-context fzymgc-house
-        log_info "✓ kubectl default context set to fzymgc-house"
+        kubectl_err=""
+        if kubectl_err=$(kubectl config use-context fzymgc-house 2>&1); then
+            log_info "✓ kubectl default context set to fzymgc-house"
+        else
+            if [[ -n "$kubectl_err" ]]; then
+                log_warn "Failed to switch to fzymgc-house context: $kubectl_err"
+            else
+                log_warn "Failed to switch to fzymgc-house context (no error details)"
+            fi
+        fi
     else
         log_warn "fzymgc-house context not found in kubeconfig"
     fi
@@ -114,7 +127,11 @@ fi
 # Set up direnv if .envrc exists
 if [[ -f ".envrc" ]]; then
     log_info "Setting up direnv..."
-    direnv allow .
+    direnv_err=""
+    if ! direnv_err=$(direnv allow . 2>&1); then
+        log_warn "Failed to enable direnv: $direnv_err"
+        log_warn "You may need to run 'direnv allow' manually"
+    fi
 fi
 
 # Install ast-grep for Serena MCP semantic code operations
@@ -197,8 +214,11 @@ else
 fi
 
 # Verify Claude Code is available (installed by devcontainer feature)
+# Note: Marketplaces and plugins are configured declaratively in .claude/settings.json
+# (extraKnownMarketplaces and enabledPlugins) - no runtime setup needed
 if command -v claude &> /dev/null; then
     log_info "✓ Claude Code CLI available: $(claude --version 2>/dev/null || echo 'unknown version')"
+    log_info "  Plugins configured via .claude/settings.json (applied on folder trust)"
 else
     log_warn "Claude Code CLI not found (should be installed by devcontainer feature)"
 fi

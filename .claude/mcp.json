@@ -8,7 +8,7 @@
       "command": "npx",
       "args": ["-y", "kubernetes-mcp-server@latest", "--read-only"],
       "env": {
-        "KUBECONFIG": "/home/vscode/.kube/config"
+        "KUBECONFIG": "/home/vscode/.kube/configs/fzymgc-house-admin.yml"
       }
     },
     "context7": {

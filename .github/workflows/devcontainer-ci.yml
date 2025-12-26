@@ -8,14 +8,16 @@ on:
     paths:
       - '.devcontainer/**'
       - 'setup-venv.sh'
-      - 'requirements.txt'
-      - 'ansible/requirements-ansible.yml'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'ansible/requirements.yml'
   pull_request:
     paths:
       - '.devcontainer/**'
       - 'setup-venv.sh'
-      - 'requirements.txt'
-      - 'ansible/requirements-ansible.yml'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'ansible/requirements.yml'
 
 jobs:
   build-and-validate:

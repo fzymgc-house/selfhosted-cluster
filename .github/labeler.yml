@@ -37,4 +37,5 @@ dependencies:
           - 'package-lock.json'
           - 'go.mod'
           - 'go.sum'
-          - 'requirements.txt'
+          - 'pyproject.toml'
+          - 'uv.lock'

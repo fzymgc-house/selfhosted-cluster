@@ -1,4 +1,6 @@
 {
+  "enableAllProjectMcpServers": true,
+  "outputStyle": "Explanatory",
   "permissions": {
     "allow": [
       "Edit(.devcontainer/**)",
@@ -13,6 +15,57 @@
       "Bash(ansible:*)",
       "Bash(vault:*)",
       "Bash(gh:*)"
+    ]
+  },
+  "extraKnownMarketplaces": {
+    "superpowers-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers-marketplace"
+      }
+    },
+    "claude-code-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-code"
+      }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    },
+    "fzymgc-house-skills": {
+      "source": {
+        "source": "github",
+        "repo": "fzymgc-house/fzymgc-house-skills"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true,
+    "commit-commands@claude-code-plugins": true,
+    "pr-review-toolkit@claude-code-plugins": true,
+    "feature-dev@claude-code-plugins": true,
+    "elements-of-style@superpowers-marketplace": true,
+    "grafana@fzymgc-house-skills": true
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/bash_command_validator.py"
+          },
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/gremlin-heredoc-containment.py"
+          }
+        ]
+      }
     ]
   }
 }

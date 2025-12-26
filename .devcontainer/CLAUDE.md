@@ -14,7 +14,9 @@ AI assistant guidance for working with devcontainer configuration.
 | `setup-claude-secrets.sh` | Verifies MCP server API keys from Vault |
 | `README.md` | Comprehensive user documentation |
 
-**Related:** `scripts/create-vault-token.sh` - Creates Vault token on host for container auth (run on HOST, not in container)
+**Related:**
+- `scripts/create-vault-token.sh` - Creates Vault token on host for container auth (run on HOST, not in container)
+- `.claude/settings.json` - Declarative plugin config (`extraKnownMarketplaces`, `enabledPlugins`)
 
 ## Key Concepts
 
@@ -83,7 +85,7 @@ The `devcontainer-ci.yml` workflow:
 2. Points to `ci/devcontainer.json` via `configFile` parameter
 3. Runs validation commands to verify tools are installed
 
-**Triggers:** Changes to `.devcontainer/**`, `setup-venv.sh`, `requirements.txt`, `ansible/requirements-ansible.yml`
+**Triggers:** Changes to `.devcontainer/**`, `setup-venv.sh`, `pyproject.toml`, `uv.lock`, `ansible/requirements.yml`
 
 ## Sync Requirements
 

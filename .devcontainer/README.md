@@ -57,6 +57,7 @@ All collections from `ansible/requirements.yml`:
 4. **1Password** with SSH agent enabled (for SSH key management)
 5. **Host prerequisites** (automatically mounted):
    - `~/.ssh` - SSH keys for Git and cluster access
+   - `~/.gitconfig` - Git author name and email (read-only)
    - `~/.kube/configs/fzymgc-house-admin.yml` - Kubernetes cluster configuration
    - `~/.1password/agent.sock` - 1Password SSH agent socket
 
@@ -103,7 +104,7 @@ If you have the repository cloned locally:
 The container will automatically:
 - Build the Docker image with all tools
 - Clone (or mount) the repository into `/workspaces/selfhosted-cluster`
-- Mount your SSH keys, kubeconfig, and 1Password socket
+- Mount your SSH keys, kubeconfig, git config, and 1Password socket
 - Run the `post-create.sh` script to set up Python venv
 - Install all Python and Ansible dependencies
 
@@ -211,6 +212,7 @@ The container includes these pre-configured aliases:
 | Host Path | Container Path | Purpose |
 |-----------|----------------|---------|
 | `~/.ssh` | `/home/vscode/.ssh` | SSH keys (read-only) |
+| `~/.gitconfig` | `/home/vscode/.gitconfig` | Git author config (read-only) |
 | `~/.kube` | `/home/vscode/.kube` | Kubernetes config |
 | `~/.1password` | `/home/vscode/.1password` | 1Password SSH agent socket |
 
@@ -377,6 +379,30 @@ direnv allow
 | Firecrawl | `secret/users/<name>/firecrawl` | Web scraping/search MCP |
 | Exa | `secret/users/<name>/exa` | Deep research MCP |
 | Notion | `secret/users/<name>/notion` | Notion workspace MCP |
+
+### Git Author Not Configured
+
+The devcontainer mounts `~/.gitconfig` from your host machine (read-only) to share git author info. If you see warnings about git author not being configured:
+
+**If `~/.gitconfig` doesn't exist on host:**
+
+```bash
+# On your host machine, create a basic gitconfig
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+
+# Rebuild the devcontainer to pick up the new file
+```
+
+**If gitconfig exists but author is missing:**
+
+```bash
+# On your host machine, add the missing settings
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+```
+
+**Note:** Since the gitconfig is mounted read-only, you cannot modify it from inside the container. This is intentional for security. All git configuration changes should be made on the host machine, then the container rebuilt.
 
 ### kubectl Context Not Found
 

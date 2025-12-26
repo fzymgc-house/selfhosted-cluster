@@ -26,6 +26,19 @@ echo "║           Development Environment Login Setup              ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
 
+# Ensure direnv is allowed and exported (loads .envrc which fetches secrets from Vault)
+if command -v direnv &>/dev/null; then
+    if ! direnv_output=$(direnv allow . 2>&1); then
+        log_warn "direnv allow failed: ${direnv_output}"
+        log_warn "Environment variables from .envrc may not be loaded"
+    else
+        # Export to current shell so environment variables are immediately available
+        if direnv_export=$(direnv export bash 2>/dev/null); then
+            eval "$direnv_export"
+        fi
+    fi
+fi
+
 # Track what needs setup
 needs_vault=false
 needs_github=false
@@ -52,15 +65,15 @@ else
     needs_github=true
 fi
 
-# Terraform
+# Terraform (will be configured from Vault token later)
 if [[ -f "${HOME}/.terraform.d/credentials.tfrc.json" ]]; then
-    log_info "Terraform Cloud: Credentials found"
+    log_info "Terraform Cloud: Credentials file exists"
 else
-    log_warn "Terraform Cloud: Not authenticated"
+    log_warn "Terraform Cloud: No credentials file"
     needs_terraform=true
 fi
 
-# Claude (check for config file from 'claude login')
+# Claude (check for config file from 'claude doctor')
 if [[ -f "${HOME}/.claude.json" ]]; then
     log_info "Claude Code: Logged in"
 else
@@ -118,6 +131,16 @@ if $needs_vault; then
             if VAULT_ERROR=$(vault login token="$VAULT_TOKEN_INPUT" 2>&1); then
                 log_info "Vault authentication successful"
                 needs_vault=false
+                # Reload direnv to pick up Vault-based secrets
+                if ! direnv_output=$(direnv allow . 2>&1); then
+                    log_warn "direnv reload failed: ${direnv_output}"
+                    log_warn "Run 'direnv allow' manually to load MCP server keys"
+                else
+                    # Export to current shell
+                    if direnv_export=$(direnv export bash 2>/dev/null); then
+                        eval "$direnv_export"
+                    fi
+                fi
             else
                 log_warn "Vault token login failed:"
                 echo "    ${VAULT_ERROR}" | head -3
@@ -232,17 +255,29 @@ if vault token lookup &>/dev/null; then
         echo ""
         log_info "Reloading environment to pick up API keys..."
         if command -v direnv &>/dev/null; then
-            if ! direnv allow . 2>&1; then
-                log_warn "direnv allow failed - run 'direnv allow' manually"
-            fi
-            # Source the .envrc manually since we're in a script
-            # shellcheck source=/dev/null
-            if ! source <(direnv export bash 2>&1); then
-                log_warn "direnv export failed - environment may not be updated"
+            if ! direnv_output=$(direnv allow . 2>&1); then
+                log_warn "direnv allow failed: ${direnv_output}"
+                log_warn "Run 'direnv allow' manually to load API keys"
+            else
+                # Source the .envrc manually since we're in a script
+                # shellcheck source=/dev/null
+                if ! direnv_export=$(direnv export bash 2>&1); then
+                    log_warn "direnv export failed: ${direnv_export}"
+                    log_warn "Environment may not be updated - restart terminal if needed"
+                else
+                    eval "$direnv_export"
+                fi
             fi
         else
             log_warn "direnv not found - source .envrc manually"
         fi
+    else
+        log_warn "Could not determine Vault entity name"
+        echo "    Cannot store/retrieve API keys without a valid entity name."
+        echo "    This may happen if your Vault token has no associated identity."
+        echo ""
+        echo "    You can still use Vault manually:"
+        echo "      vault kv put secret/users/<your-username>/firecrawl api_key=..."
     fi
     echo ""
 fi
@@ -262,32 +297,116 @@ if $needs_github; then
     echo ""
 fi
 
-# Step 3: Terraform Cloud
-if $needs_terraform; then
-    log_step "Step 3: Terraform Cloud Authentication"
-    echo "    Terraform Cloud stores remote state for infrastructure."
-    echo ""
-    read -p "    Run 'terraform login'? [Y/n] " -n 1 -r
-    echo ""
-    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        terraform login || {
-            log_warn "Terraform login failed. You can retry later with: terraform login"
-        }
+# Step 3: Terraform Cloud (token stored in Vault, credentials file created locally)
+# This runs if Vault is authenticated, regardless of needs_terraform flag
+# (to allow updating an existing token)
+if vault token lookup &>/dev/null && [[ -n "${ENTITY_NAME:-}" ]]; then
+    TF_SECRET_PATH="secret/users/${ENTITY_NAME}/terraform-cloud"
+    TF_TOKEN=""
+
+    # Check if token exists in Vault
+    if tf_result=$(vault kv get -format=json "$TF_SECRET_PATH" 2>&1); then
+        if ! TF_TOKEN=$(echo "$tf_result" | jq -r '.data.data.token // empty' 2>&1); then
+            log_warn "Failed to parse Terraform token from Vault response"
+            TF_TOKEN=""
+        elif [[ -n "$TF_TOKEN" ]]; then
+            log_info "Terraform Cloud token found in Vault"
+        fi
+    else
+        # Distinguish "not found" from actual errors
+        if echo "$tf_result" | grep -q "No value found"; then
+            : # Secret doesn't exist yet, will prompt below
+        elif echo "$tf_result" | grep -q "permission denied"; then
+            log_warn "Terraform Cloud: Permission denied reading ${TF_SECRET_PATH}"
+        fi
     fi
+
+    # Prompt to store/update token if missing or user wants to update
+    if [[ -z "$TF_TOKEN" ]] || $needs_terraform; then
+        log_step "Step 3: Terraform Cloud Token"
+        echo "    Terraform Cloud stores remote state for infrastructure."
+        echo "    Token is stored in Vault at: ${TF_SECRET_PATH}"
+        echo ""
+        if [[ -n "$TF_TOKEN" ]]; then
+            read -p "    Token exists. Update it? [y/N] " -n 1 -r
+        else
+            read -p "    Do you have a Terraform Cloud token to store? [y/N] " -n 1 -r
+        fi
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo ""
+            echo "    Get a token from: https://app.terraform.io/app/settings/tokens"
+            echo "    Enter your Terraform Cloud token:"
+            read -rs TF_TOKEN_INPUT
+            echo ""
+            if [[ -n "$TF_TOKEN_INPUT" ]]; then
+                if tf_error=$(vault kv put "$TF_SECRET_PATH" token="$TF_TOKEN_INPUT" 2>&1); then
+                    log_info "Terraform Cloud token stored in Vault"
+                    TF_TOKEN="$TF_TOKEN_INPUT"
+                    # Reload direnv to pick up new token
+                    if command -v direnv &>/dev/null; then
+                        if ! direnv_output=$(direnv allow . 2>&1); then
+                            log_warn "direnv reload failed: ${direnv_output}"
+                        else
+                            # Export to current shell
+                            if direnv_export=$(direnv export bash 2>/dev/null); then
+                                eval "$direnv_export"
+                            fi
+                        fi
+                    fi
+                else
+                    log_warn "Failed to store Terraform Cloud token:"
+                    echo "    ${tf_error}" | head -2
+                fi
+            fi
+        fi
+        echo ""
+    fi
+
+    # Create/update credentials file if we have a token
+    if [[ -n "$TF_TOKEN" ]]; then
+        TF_CREDS_DIR="${HOME}/.terraform.d"
+        TF_CREDS_FILE="${TF_CREDS_DIR}/credentials.tfrc.json"
+
+        # Create directory with error handling
+        if ! mkdir -p "$TF_CREDS_DIR" 2>/dev/null; then
+            log_warn "Failed to create directory: ${TF_CREDS_DIR}"
+            log_warn "You may need to create ~/.terraform.d/credentials.tfrc.json manually"
+        elif ! printf '%s\n' '{
+  "credentials": {
+    "app.terraform.io": {
+      "token": "'"${TF_TOKEN}"'"
+    }
+  }
+}' > "$TF_CREDS_FILE"; then
+            log_warn "Failed to write credentials file: ${TF_CREDS_FILE}"
+        elif ! chmod 600 "$TF_CREDS_FILE" 2>/dev/null; then
+            log_warn "Failed to set permissions on ${TF_CREDS_FILE}"
+            log_info "Terraform credentials file created (permissions may be incorrect)"
+            needs_terraform=false
+        else
+            log_info "Terraform credentials file created: ${TF_CREDS_FILE}"
+            needs_terraform=false
+        fi
+    fi
+elif $needs_terraform; then
+    log_step "Step 3: Terraform Cloud Authentication"
+    echo "    Terraform Cloud requires Vault authentication to store token."
+    echo "    Complete Vault setup first, then re-run this script."
     echo ""
 fi
 
-# Step 4: Claude Code (interactive OAuth login - MUST BE LAST, takes over terminal)
+# Step 4: Claude Code (interactive - MUST BE LAST, takes over terminal)
 if $needs_claude; then
     log_step "Step 4: Claude Code Authentication"
-    echo "    Claude Code uses interactive OAuth login (opens browser)."
+    echo "    Claude doctor checks environment and prompts for login if needed."
     echo "    NOTE: This takes over the terminal until complete."
     echo ""
-    read -p "    Run 'claude login'? [Y/n] " -n 1 -r
+    read -p "    Run 'claude doctor'? [Y/n] " -n 1 -r
     echo ""
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        claude login || {
-            log_warn "Claude login failed. You can retry later with: claude login"
+        claude doctor || {
+            log_warn "Claude doctor failed. You can retry later with: claude doctor"
         }
     fi
     echo ""

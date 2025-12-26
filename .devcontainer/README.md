@@ -53,8 +53,12 @@ All collections from `ansible/requirements.yml`:
 2. **Docker Desktop** or Docker Engine running
 3. **Host prerequisites** (automatically mounted):
    - `~/.ssh` - SSH keys for Git and cluster access
-   - `~/.gitconfig` - Git author name and email (read-only)
    - `~/.kube/configs/fzymgc-house-admin.yml` - Kubernetes cluster configuration
+
+4. **Host environment variables** (optional, passed via `remoteEnv`):
+   - `GIT_AUTHOR_NAME` - Git commit author name
+   - `GIT_AUTHOR_EMAIL` - Git commit author email
+   - `GH_TOKEN` - GitHub CLI authentication token
 
 ### Pre-Setup: Store Credentials in Vault (Optional)
 
@@ -207,7 +211,6 @@ The container includes these pre-configured aliases:
 | Host Path | Container Path | Purpose |
 |-----------|----------------|---------|
 | `~/.ssh` | `/home/vscode/.ssh` | SSH keys (read-only) |
-| `~/.gitconfig` | `/home/vscode/.gitconfig` | Git author config (read-only) |
 | `~/.kube` | `/home/vscode/.kube` | Kubernetes config |
 
 ### Docker Volumes (Persist Across Rebuilds)
@@ -350,27 +353,31 @@ direnv allow
 
 ### Git Author Not Configured
 
-The devcontainer mounts `~/.gitconfig` from your host machine (read-only) to share git author info. If you see warnings about git author not being configured:
+Git author info is passed via environment variables from your host machine. If you see warnings about git author not being configured:
 
-**If `~/.gitconfig` doesn't exist on host:**
-
-```bash
-# On your host machine, create a basic gitconfig
-git config --global user.name "Your Name"
-git config --global user.email "your.email@example.com"
-
-# Rebuild the devcontainer to pick up the new file
-```
-
-**If gitconfig exists but author is missing:**
+**Set environment variables on host before starting container:**
 
 ```bash
-# On your host machine, add the missing settings
+# Add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
+export GIT_AUTHOR_NAME="Your Name"
+export GIT_AUTHOR_EMAIL="your.email@example.com"
+
+# Then rebuild the devcontainer
+```
+
+**Or configure inside the container:**
+
+```bash
+# One-time setup inside the container
 git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
 ```
 
-**Note:** Since the gitconfig is mounted read-only, you cannot modify it from inside the container. This is intentional for security. All git configuration changes should be made on the host machine, then the container rebuilt.
+**Note:** The devcontainer configures git with comprehensive settings including:
+- Delta for improved diffs (syntax highlighting, line numbers)
+- GitHub CLI as credential helper
+- Useful aliases (br, ci, co, st, fa, please, commend, ls, ll, etc.)
+- GPG signing disabled (container lacks access to signing keys)
 
 ### kubectl Context Not Found
 

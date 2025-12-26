@@ -35,11 +35,12 @@
             "version": "latest"
         },
         "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
-        "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {}
+        "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {},
+        "ghcr.io/devcontainers-contrib/features/neovim-apt-get:1": {}
     },
 
     // CI-specific mounts: Docker volumes only (no host bind mounts)
-    // Host paths like ~/.ssh, ~/.kube, ~/.1password don't exist on CI runners
+    // Host paths like ~/.ssh, ~/.kube don't exist on CI runners
     "mounts": [
         "source=selfhosted-cluster-venv,target=/workspaces/${localWorkspaceFolderBasename}/.venv,type=volume",
         "source=selfhosted-cluster-cache,target=/home/vscode/.cache,type=volume",

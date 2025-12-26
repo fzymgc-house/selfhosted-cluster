@@ -77,50 +77,122 @@ else
     log_warn "setup-venv.sh not found, skipping Python setup"
 fi
 
-# Configure git defaults and verify author info
-# Note: Run from /tmp to avoid git worktree path issues in container
-# (worktree .git file references host path that doesn't exist inside container)
+# Configure git with container-appropriate settings
+# Host ~/.gitconfig is NOT mounted (paths like credential helpers don't translate)
+# Instead, we configure everything fresh with container-compatible values
 log_info "Configuring git..."
 
-# Check if gitconfig is writable (may be read-only bind mount from host)
-if [[ -w "${HOME}/.gitconfig" ]] || [[ ! -f "${HOME}/.gitconfig" ]]; then
-    # Writable or doesn't exist yet - safe to set defaults
-    git_config_err=""
-    if ! git_config_err=$(cd /tmp && git config --global init.defaultBranch main && \
-                          git config --global pull.rebase true && \
-                          git config --global fetch.prune true 2>&1); then
-        log_warn "Failed to configure git defaults: ${git_config_err:-unknown error}"
+setup_git_config() {
+    # User identity - from environment variables passed from host
+    # Set GIT_AUTHOR_NAME and GIT_AUTHOR_EMAIL on host to auto-configure
+    local user_name="${GIT_AUTHOR_NAME:-}"
+    local user_email="${GIT_AUTHOR_EMAIL:-}"
+
+    if [[ -n "$user_name" && -n "$user_email" ]]; then
+        git config --global user.name "$user_name"
+        git config --global user.email "$user_email"
+        log_info "✓ Git author: $user_name <$user_email>"
+    else
+        log_warn "Git author not configured"
+        echo "    Set on host before container start:"
+        echo "      export GIT_AUTHOR_NAME='Your Name'"
+        echo "      export GIT_AUTHOR_EMAIL='your@email.com'"
+        echo "    Or configure manually: git config --global user.name 'Your Name'"
     fi
-else
-    log_info "\$HOME/.gitconfig is read-only (mounted from host), using existing settings"
-fi
 
-# Check if git author info is available (from mounted ~/.gitconfig or prior config)
-# Note: git config exits 1 if key not set, other codes indicate real errors
-if ! GIT_USER_NAME="$(cd /tmp && git config --global user.name 2>&1)"; then
-    GIT_USER_NAME=""
-fi
-if ! GIT_USER_EMAIL="$(cd /tmp && git config --global user.email 2>&1)"; then
-    GIT_USER_EMAIL=""
-fi
+    # Core settings
+    git config --global init.defaultBranch main
+    git config --global core.autocrlf input
+    git config --global core.whitespace trailing-space,space-before-tab
+    git config --global core.precomposeunicode true
+    git config --global apply.whitespace nowarn
 
-if [[ -n "$GIT_USER_NAME" && -n "$GIT_USER_EMAIL" ]]; then
-    log_info "✓ Git author: $GIT_USER_NAME <$GIT_USER_EMAIL>"
-elif [[ ! -f "${HOME}/.gitconfig" ]]; then
-    log_warn "\$HOME/.gitconfig not mounted (file may not exist on host)"
-    echo "    Create on host: git config --global user.name 'Your Name'"
-    echo "                    git config --global user.email 'your.email@example.com'"
-    echo "    Or configure manually in container after rebuild"
-elif [[ -z "$GIT_USER_NAME" && -z "$GIT_USER_EMAIL" ]]; then
-    log_warn "Git author not configured in ~/.gitconfig"
-    echo "    Configure on host:"
-    echo "      git config --global user.name 'Your Name'"
-    echo "      git config --global user.email 'your.email@example.com'"
-else
-    # Partial config - one is set, one is missing
-    log_warn "Git author incomplete in ~/.gitconfig"
-    [[ -z "$GIT_USER_NAME" ]] && echo "    Missing: git config --global user.name 'Your Name'"
-    [[ -z "$GIT_USER_EMAIL" ]] && echo "    Missing: git config --global user.email 'your.email@example.com'"
+    # Delta pager (installed in Dockerfile)
+    if command -v delta &> /dev/null; then
+        git config --global core.pager delta
+        git config --global interactive.diffFilter "delta --color-only"
+        git config --global merge.conflictStyle diff3
+        git config --global diff.colorMoved default
+        # Delta options
+        git config --global delta.navigate true
+        git config --global delta.light false
+        git config --global delta.line-numbers true
+        git config --global delta.syntax-theme Dracula
+        git config --global delta.hyperlinks true
+        log_info "✓ Delta configured as git pager"
+    fi
+
+    # Branch and push behavior
+    git config --global branch.autosetupmerge true
+    git config --global branch.autosetuprebase always
+    git config --global pull.rebase true
+    git config --global fetch.prune true
+    git config --global push.default simple
+    git config --global push.autosetupremote true
+    git config --global submodule.fetchjobs 4
+
+    # Helpful defaults
+    git config --global help.autocorrect 1
+    git config --global log.decorate true
+    git config --global status.submodulesummary true
+    git config --global grep.extendRegexp true
+    git config --global grep.lineNumber true
+
+    # Color settings
+    git config --global color.ui true
+    git config --global color.diff auto
+    git config --global color.status auto
+    git config --global color.branch auto
+    git config --global color.branch.current "yellow reverse"
+    git config --global color.branch.local yellow
+    git config --global color.branch.remote green
+    git config --global color.diff.meta "yellow bold"
+    git config --global color.diff.frag "magenta bold"
+    git config --global color.diff.old "red bold"
+    git config --global color.diff.new "green bold"
+    git config --global color.status.added yellow
+    git config --global color.status.changed green
+    git config --global color.status.untracked cyan
+
+    # Useful aliases
+    git config --global alias.br branch
+    git config --global alias.ci commit
+    git config --global alias.co checkout
+    git config --global alias.st "status -sb"
+    git config --global alias.fa "fetch --all -p --tags"
+    git config --global alias.please "push --force-with-lease"
+    git config --global alias.commend "commit --amend --no-edit"
+    git config --global alias.ls "log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate"
+    git config --global alias.ll "log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate --numstat"
+    git config --global alias.lt "log --tags --decorate --simplify-by-decoration --oneline"
+    git config --global alias.unpushed "log @{u}.."
+    git config --global alias.roots "log --all --oneline --decorate --max-parents=0"
+    git config --global alias.changed "show --pretty=format: --name-only"
+    git config --global alias.whatadded "log --diff-filter=A"
+    log_info "✓ Git aliases configured"
+
+    # Credential helper using GitHub CLI (if authenticated)
+    if command -v gh &> /dev/null; then
+        gh_err=""
+        if gh_err=$(gh auth setup-git 2>&1); then
+            log_info "✓ GitHub CLI configured as credential helper"
+        else
+            log_warn "Failed to configure gh as credential helper: $gh_err"
+            echo "    Run 'gh auth login' then 'gh auth setup-git' after login-setup.sh"
+        fi
+    fi
+}
+
+setup_git_config
+
+# Initialize git-lfs (installed in Dockerfile)
+if command -v git-lfs &> /dev/null; then
+    log_info "Initializing git-lfs..."
+    if git lfs install --skip-repo &> /dev/null; then
+        log_info "✓ git-lfs initialized"
+    else
+        log_warn "Failed to initialize git-lfs"
+    fi
 fi
 
 # Disable GPG commit signing for this repo (container lacks access to signing keys)
@@ -273,6 +345,8 @@ echo "  - helm: $(helm version --short 2>/dev/null || echo 'not available')"
 echo "  - Python: $(python --version 2>&1)"
 echo "  - ast-grep: $(ast-grep --version 2>/dev/null || echo 'not available')"
 echo "  - uv: $(uv --version 2>/dev/null || echo 'not available')"
+echo "  - git-lfs: $(git-lfs version 2>/dev/null || echo 'not available')"
+echo "  - delta: $(delta --version 2>/dev/null || echo 'not available')"
 echo ""
 echo "First-time setup:"
 echo "  bash .devcontainer/login-setup.sh    # Interactive login for all services"

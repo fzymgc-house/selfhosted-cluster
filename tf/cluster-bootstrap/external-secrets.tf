@@ -15,10 +15,9 @@ resource "helm_release" "external_secrets_operator" {
 
   wait = true
 
-  set {
-    name  = "installCRDs"
-    value = "true"
-  }
+  values = [yamlencode({
+    installCRDs = true
+  })]
 
   depends_on = [helm_release.cert_manager]
 }

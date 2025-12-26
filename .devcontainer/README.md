@@ -32,7 +32,7 @@ The devcontainer provides a complete, reproducible development environment with:
 - 1Password SSH Agent integration (via socket proxy)
 
 ### Python Packages
-All packages from `requirements.txt` are automatically installed:
+All packages from `pyproject.toml` are automatically installed via `uv sync`:
 - Ansible (core and full)
 - Kubernetes Python client
 - HashiCorp Vault client (hvac)
@@ -40,7 +40,7 @@ All packages from `requirements.txt` are automatically installed:
 - Linting tools (ansible-lint, yamllint)
 
 ### Ansible Collections
-All collections from `ansible/requirements-ansible.yml`:
+All collections from `ansible/requirements.yml`:
 - kubernetes.core
 - community.general
 - community.hashi_vault
@@ -160,8 +160,8 @@ source .venv/bin/activate
 deactivate
 
 # Reinstall dependencies
-pip install -r requirements.txt
-ansible-galaxy collection install -r ansible/requirements-ansible.yml
+uv sync --extra dev
+ansible-galaxy collection install -r ansible/requirements.yml
 ```
 
 ### Terraform Operations
@@ -265,11 +265,17 @@ RUN apt-get update && apt-get install -y \
 
 ### Adding Python Packages
 
-Add to `requirements.txt` in the root, then rebuild:
+Add to `pyproject.toml` dependencies, then rebuild:
 
 ```bash
-# In VS Code command palette
-Dev Containers: Rebuild Container
+# Update lock file
+uv lock
+
+# Sync environment
+uv sync --extra dev
+
+# Or rebuild container
+# In VS Code command palette: Dev Containers: Rebuild Container
 ```
 
 ### Adding VS Code Extensions
@@ -374,14 +380,33 @@ direnv allow
 
 ### kubectl Context Not Found
 
-```bash
-# List available contexts
-kubectl config get-contexts
+The devcontainer expects a specific kubeconfig file at `~/.kube/configs/fzymgc-house-admin.yml` on your host machine. This file is:
+- Mounted into the container at `/home/vscode/.kube/configs/fzymgc-house-admin.yml`
+- Used by `KUBECONFIG` environment variable (set in devcontainer.json)
+- Referenced by the Kubernetes MCP server for cluster access
 
-# If fzymgc-house doesn't exist, you'll need to set it up:
-# 1. Copy kubeconfig from your k3s cluster
-# 2. Save to ~/.kube/configs/fzymgc-house-admin.yml on host
-# 3. Rebuild container
+**Setup:**
+
+```bash
+# On your host machine, create the configs directory
+mkdir -p ~/.kube/configs
+
+# Copy your kubeconfig from the k3s cluster
+# (Replace with your actual cluster access method)
+scp user@control-node:/etc/rancher/k3s/k3s.yaml ~/.kube/configs/fzymgc-house-admin.yml
+
+# Update the server address to the cluster VIP
+sed -i '' 's|127.0.0.1|192.168.20.140|g' ~/.kube/configs/fzymgc-house-admin.yml
+
+# Rebuild the devcontainer to pick up the new file
+```
+
+**Verify:**
+
+```bash
+# Inside the devcontainer
+kubectl config get-contexts
+kubectl get nodes
 ```
 
 ## Performance Tips

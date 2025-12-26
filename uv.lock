@@ -9,6 +9,18 @@ supported-markers = [
 ]
 
 [[package]]
+name = "ansible"
+version = "11.13.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ansible-core", marker = "sys_platform != 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/08/26/182bfd55a1d5a24148e52589decba98a0c6fe3c9b15db19df342a6b4f072/ansible-11.13.0.tar.gz", hash = "sha256:c15a046c851c22e8430783bdbcb8f6603c35f0d7c766992ca0a6a9ed975e4a9a", size = 53138771, upload-time = "2025-12-09T21:00:37.827Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/13/03/ccb0340249d5a3f2607b384e8fa11b5ce7ab7812da14bb4157b9e1a51be1/ansible-11.13.0-py3-none-any.whl", hash = "sha256:7f1c9c6a6026ff214d9240647e4d2b019b2a9d4c7a2bc733932bcf92af80ab04", size = 57605169, upload-time = "2025-12-09T21:00:29.948Z" },
+]
+
+[[package]]
 name = "ansible-builder"
 version = "3.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -41,7 +53,7 @@ wheels = [
 
 [[package]]
 name = "ansible-core"
-version = "2.20.1"
+version = "2.18.12"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography", marker = "sys_platform != 'win32'" },
@@ -50,9 +62,9 @@ dependencies = [
     { name = "pyyaml", marker = "sys_platform != 'win32'" },
     { name = "resolvelib", marker = "sys_platform != 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3e/47/3543ea4e7ad65859c0043e9a03e1da99c57c22dfb29027e9951dd58e7524/ansible_core-2.20.1.tar.gz", hash = "sha256:a891e5f90cd46626778f0f3d545ec1115840c9b50e8adf25944c5e1748452106", size = 3313203, upload-time = "2025-12-09T16:49:57.189Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2d/ce/de4c409e152c549ead13f5817708898cf8ec79153c2b5999d52a1caaf2e4/ansible_core-2.18.12.tar.gz", hash = "sha256:40e03f74bee7f0eb65e76827017373c4e56dc57ba0618e98c435d875e8e349fc", size = 3094733, upload-time = "2025-12-09T16:47:46.458Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/56/8c/b9ef852c9322bffd08ef72c8d6737922af810920e8ebd6ae5c9c5ac1f623/ansible_core-2.20.1-py3-none-any.whl", hash = "sha256:2a66825b4a53f130b62515e7e2a3d811d544b19b6e8a22d9ef88c55896384cb3", size = 2412350, upload-time = "2025-12-09T16:49:55.562Z" },
+    { url = "https://files.pythonhosted.org/packages/f6/c4/bdd094627ffe1ab67bca78484d1fefa4340714e130c974d9931880258c99/ansible_core-2.18.12-py3-none-any.whl", hash = "sha256:2cf5bc90cf729f5ab3a2ea3af5d1748d3868275b91e3246d55e133a2449e0adb", size = 2219737, upload-time = "2025-12-09T16:47:44.743Z" },
 ]
 
 [[package]]
@@ -1090,11 +1102,11 @@ wheels = [
 
 [[package]]
 name = "resolvelib"
-version = "1.2.1"
+version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/1d/14/4669927e06631070edb968c78fdb6ce8992e27c9ab2cde4b3993e22ac7af/resolvelib-1.2.1.tar.gz", hash = "sha256:7d08a2022f6e16ce405d60b68c390f054efcfd0477d4b9bd019cc941c28fad1c", size = 24575, upload-time = "2025-10-11T01:07:44.582Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ce/10/f699366ce577423cbc3df3280063099054c23df70856465080798c6ebad6/resolvelib-1.0.1.tar.gz", hash = "sha256:04ce76cbd63fded2078ce224785da6ecd42b9564b1390793f64ddecbe997b309", size = 21065, upload-time = "2023-03-09T05:10:38.292Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e2/23/c941a0d0353681ca138489983c4309e0f5095dfd902e1357004f2357ddf2/resolvelib-1.2.1-py3-none-any.whl", hash = "sha256:fb06b66c8da04172d9e72a21d7d06186d8919e32ae5ab5cdf5b9d920be805ac2", size = 18737, upload-time = "2025-10-11T01:07:43.081Z" },
+    { url = "https://files.pythonhosted.org/packages/d2/fc/e9ccf0521607bcd244aa0b3fbd574f71b65e9ce6a112c83af988bbbe2e23/resolvelib-1.0.1-py2.py3-none-any.whl", hash = "sha256:d2da45d1a8dfee81bdd591647783e340ef3bcb104b54c383f70d422ef5cc7dbf", size = 17194, upload-time = "2023-03-09T05:10:36.214Z" },
 ]
 
 [[package]]
@@ -1210,7 +1222,7 @@ name = "selfhosted-cluster"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "ansible-core", marker = "sys_platform != 'win32'" },
+    { name = "ansible", marker = "sys_platform != 'win32'" },
     { name = "cryptography", marker = "sys_platform != 'win32'" },
     { name = "dnspython", marker = "sys_platform != 'win32'" },
     { name = "hvac", marker = "sys_platform != 'win32'" },
@@ -1234,7 +1246,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ansible-core", specifier = ">=2.19.0,<3.0.0" },
+    { name = "ansible", specifier = ">=11.0.0,<12.0.0" },
     { name = "ansible-dev-tools", marker = "extra == 'dev'", specifier = ">=25.12.0" },
     { name = "ansible-lint", marker = "extra == 'dev'", specifier = ">=24.10.0" },
     { name = "cryptography", specifier = ">=44.0.0" },

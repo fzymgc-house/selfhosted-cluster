@@ -107,7 +107,7 @@ terraform -chdir=tf/vault plan
 ### `tf/CLAUDE.md`
 **Read when:** Modifying Terraform modules or Vault policies
 - Module structure (versions.tf, terraform.tf, variables.tf, etc.)
-- All modules: cluster-bootstrap, vault, authentik, grafana, cloudflare, teleport, core-services
+- All modules: cluster-bootstrap, vault, authentik, grafana, cloudflare, core-services
 - Resource naming (underscore_separated), Vault policy patterns
 - Provider version constraints (vary by module)
 

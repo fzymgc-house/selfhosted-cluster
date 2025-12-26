@@ -14,5 +14,22 @@
       "Bash(vault:*)",
       "Bash(gh:*)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/bash_command_validator.py"
+          },
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/gremlin-heredoc-containment.py"
+          }
+        ]
+      }
+    ]
   }
 }

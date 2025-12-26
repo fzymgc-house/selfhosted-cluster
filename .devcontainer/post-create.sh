@@ -199,6 +199,12 @@ fi
 # Verify Claude Code is available (installed by devcontainer feature)
 if command -v claude &> /dev/null; then
     log_info "✓ Claude Code CLI available: $(claude --version 2>/dev/null || echo 'unknown version')"
+
+    # Set up Claude Code marketplaces and plugins
+    if [[ -f ".devcontainer/setup-claude-plugins.sh" ]]; then
+        log_info "Setting up Claude Code marketplaces and plugins..."
+        bash .devcontainer/setup-claude-plugins.sh
+    fi
 else
     log_warn "Claude Code CLI not found (should be installed by devcontainer feature)"
 fi

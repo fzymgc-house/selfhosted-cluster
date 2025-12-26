@@ -6,5 +6,6 @@ namespace: hcp-terraform
 resources:
   - namespace.yaml
   - external-secrets.yaml
+  - agent-pool.yaml
 
 # Helm values will be referenced by ArgoCD application

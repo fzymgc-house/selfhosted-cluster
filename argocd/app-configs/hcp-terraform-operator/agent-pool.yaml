@@ -1,0 +1,25 @@
+apiVersion: app.terraform.io/v1alpha2
+kind: AgentPool
+metadata:
+  name: fzymgc-house-agents
+  namespace: hcp-terraform
+spec:
+  organization: fzymgc-house
+  token:
+    secretKeyRef:
+      name: hcp-terraform-agent-token
+      key: token
+  agentTokens:
+    - name: k8s-agent
+  agentDeployment:
+    replicas: 1
+    spec:
+      containers:
+        - name: tfc-agent
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

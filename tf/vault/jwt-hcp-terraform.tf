@@ -17,3 +17,78 @@ resource "vault_jwt_auth_backend" "hcp_terraform" {
   bound_issuer       = "https://app.terraform.io"
   description        = "HCP Terraform workload identity for dynamic credentials"
 }
+
+resource "vault_jwt_auth_backend_role" "tfc_vault" {
+  backend   = vault_jwt_auth_backend.hcp_terraform.path
+  role_name = "tfc-vault"
+
+  bound_audiences = ["vault.workload.identity"]
+  bound_claims = {
+    sub = "organization:fzymgc-house:project:*:workspace:vault:run_phase:*"
+  }
+
+  user_claim     = "terraform_workspace_name"
+  role_type      = "jwt"
+  token_ttl      = 1200
+  token_policies = ["terraform-vault-admin"]
+}
+
+resource "vault_jwt_auth_backend_role" "tfc_authentik" {
+  backend   = vault_jwt_auth_backend.hcp_terraform.path
+  role_name = "tfc-authentik"
+
+  bound_audiences = ["vault.workload.identity"]
+  bound_claims = {
+    sub = "organization:fzymgc-house:project:*:workspace:authentik:run_phase:*"
+  }
+
+  user_claim     = "terraform_workspace_name"
+  role_type      = "jwt"
+  token_ttl      = 1200
+  token_policies = ["terraform-authentik-admin"]
+}
+
+resource "vault_jwt_auth_backend_role" "tfc_grafana" {
+  backend   = vault_jwt_auth_backend.hcp_terraform.path
+  role_name = "tfc-grafana"
+
+  bound_audiences = ["vault.workload.identity"]
+  bound_claims = {
+    sub = "organization:fzymgc-house:project:*:workspace:grafana:run_phase:*"
+  }
+
+  user_claim     = "terraform_workspace_name"
+  role_type      = "jwt"
+  token_ttl      = 1200
+  token_policies = ["terraform-grafana-admin"]
+}
+
+resource "vault_jwt_auth_backend_role" "tfc_cloudflare" {
+  backend   = vault_jwt_auth_backend.hcp_terraform.path
+  role_name = "tfc-cloudflare"
+
+  bound_audiences = ["vault.workload.identity"]
+  bound_claims = {
+    sub = "organization:fzymgc-house:project:*:workspace:cloudflare:run_phase:*"
+  }
+
+  user_claim     = "terraform_workspace_name"
+  role_type      = "jwt"
+  token_ttl      = 1200
+  token_policies = ["terraform-cloudflare-admin"]
+}
+
+resource "vault_jwt_auth_backend_role" "tfc_core_services" {
+  backend   = vault_jwt_auth_backend.hcp_terraform.path
+  role_name = "tfc-core-services"
+
+  bound_audiences = ["vault.workload.identity"]
+  bound_claims = {
+    sub = "organization:fzymgc-house:project:*:workspace:core-services:run_phase:*"
+  }
+
+  user_claim     = "terraform_workspace_name"
+  role_type      = "jwt"
+  token_ttl      = 1200
+  token_policies = ["terraform-core-services-admin"]
+}

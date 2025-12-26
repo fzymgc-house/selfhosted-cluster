@@ -89,7 +89,7 @@ Git is configured **programmatically** in `post-create.sh`, NOT via mounted `~/.
 Modern CLI tools are installed via Homebrew feature + `post-create.sh`:
 
 1. Feature `ghcr.io/meaningful-ooo/devcontainer-features/homebrew:2` provides brew
-2. `post-create.sh` installs: `bat`, `bottom`, `gping`, `procs`, `broot`, `tokei`, `xh`
+2. `post-create.sh` installs: `bat`, `bottom`, `git-delta`, `gping`, `procs`, `broot`, `tokei`, `xh`
 3. Aliases defined in Dockerfile map traditional commands to modern equivalents
 
 **Adding a new brew tool:**

@@ -44,21 +44,6 @@ RUN update-ca-certificates
 # Install k3sup for cluster management
 RUN curl -sLS https://get.k3sup.dev | sh
 
-# Install git-delta for better diffs
-# Detect architecture and download appropriate binary
-RUN ARCH=$(dpkg --print-architecture) \
-    && DELTA_VERSION=$(curl -s https://api.github.com/repos/dandavison/delta/releases/latest | jq -r .tag_name) \
-    && if [ "$ARCH" = "arm64" ]; then \
-         DELTA_ARCH="aarch64-unknown-linux-gnu"; \
-       else \
-         DELTA_ARCH="x86_64-unknown-linux-gnu"; \
-       fi \
-    && curl -fsSL "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/delta-${DELTA_VERSION}-${DELTA_ARCH}.tar.gz" \
-       | tar -xz -C /tmp \
-    && mv /tmp/delta-*/delta /usr/local/bin/ \
-    && rm -rf /tmp/delta-* \
-    && delta --version
-
 # Install HashiCorp Vault CLI
 RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg \
     && echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list \
@@ -86,7 +71,6 @@ RUN for rc in /home/vscode/.zshrc /home/vscode/.bashrc; do \
         echo 'alias ps=procs' >> "$rc" && \
         echo 'alias tree="broot --sizes"' >> "$rc" && \
         echo 'alias br=broot' >> "$rc" && \
-        echo 'alias curl=xh' >> "$rc" && \
         echo 'alias http=xh' >> "$rc" && \
         echo '' >> "$rc" && \
         echo '# ls aliases' >> "$rc" && \

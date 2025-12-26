@@ -188,10 +188,11 @@ setup_git_config
 # Initialize git-lfs (installed in Dockerfile)
 if command -v git-lfs &> /dev/null; then
     log_info "Initializing git-lfs..."
-    if git lfs install --skip-repo &> /dev/null; then
+    lfs_err=""
+    if lfs_err=$(git lfs install --skip-repo 2>&1); then
         log_info "✓ git-lfs initialized"
     else
-        log_warn "Failed to initialize git-lfs"
+        log_warn "Failed to initialize git-lfs: ${lfs_err:-unknown error}"
     fi
 fi
 
@@ -262,20 +263,22 @@ if command -v brew &> /dev/null; then
     # Tools to install:
     # - bat: cat clone with syntax highlighting
     # - bottom: system monitor (btm command)
+    # - git-delta: improved git diffs with syntax highlighting
     # - gping: ping with graph visualization
     # - procs: modern ps replacement
     # - broot: file navigator
     # - tokei: code statistics
     # - xh: modern HTTP client (curl/httpie alternative)
-    BREW_TOOLS="bat bottom gping procs broot tokei xh"
+    BREW_TOOLS="bat bottom git-delta gping procs broot tokei xh"
     for tool in $BREW_TOOLS; do
         if brew list "$tool" &> /dev/null; then
             log_info "✓ $tool already installed"
         else
-            if brew install "$tool" &> /dev/null; then
+            brew_err=""
+            if brew_err=$(brew install "$tool" 2>&1); then
                 log_info "✓ $tool installed"
             else
-                log_warn "Failed to install $tool"
+                log_warn "Failed to install $tool: ${brew_err:-unknown error}"
             fi
         fi
     done
@@ -319,7 +322,11 @@ SAFEGUARDS
 
     # Add safeguards to both zsh and bash rc files
     for rcfile in /home/vscode/.zshrc /home/vscode/.bashrc; do
-        if [[ -f "$rcfile" ]] && ! grep -q "$safeguard_marker" "$rcfile" 2>/dev/null; then
+        if [[ ! -f "$rcfile" ]]; then
+            log_warn "$(basename "$rcfile") not found, creating it"
+            touch "$rcfile"
+        fi
+        if ! grep -q "$safeguard_marker" "$rcfile" 2>/dev/null; then
             echo "$safeguard_content" >> "$rcfile"
             log_info "✓ Git safeguards added to $(basename "$rcfile")"
         fi

@@ -26,7 +26,6 @@ The devcontainer provides a complete, reproducible development environment with:
 - `direnv` - Automatic environment variable loading (via feature)
 - `go-task` - Task runner (via feature)
 - `neovim` - Modern vim editor (via devcontainer feature)
-- `delta` - Improved git diffs with syntax highlighting
 - `git-lfs` - Git Large File Storage
 - Git, SSH, SSHD, and essential build tools
 - Docker-in-Docker support
@@ -34,6 +33,7 @@ The devcontainer provides a complete, reproducible development environment with:
 ### Modern CLI Tools (via Homebrew)
 - `bat` - cat clone with syntax highlighting and git integration
 - `bottom` (btm) - System monitor with CPU, memory, network graphs
+- `git-delta` - Improved git diffs with syntax highlighting
 - `gping` - Ping with graph visualization
 - `procs` - Modern ps replacement with color and sorting
 - `broot` - Interactive file navigator
@@ -114,7 +114,7 @@ If you have the repository cloned locally:
 The container will automatically:
 - Build the Docker image with all tools
 - Clone (or mount) the repository into `/workspaces/selfhosted-cluster`
-- Mount your SSH keys, kubeconfig, and git config
+- Mount your SSH keys and kubeconfig
 - Run the `post-create.sh` script to set up Python venv
 - Install all Python and Ansible dependencies
 
@@ -227,7 +227,7 @@ The container includes these pre-configured aliases (available in both zsh and b
 - `ps` → `procs` (process viewer)
 - `tree` → `broot --sizes` (file navigator with sizes)
 - `br` → `broot`
-- `curl` / `http` → `xh` (HTTP client)
+- `http` → `xh` (HTTP client)
 
 ### File Listing
 - `ll` → `ls -alh`
@@ -505,7 +505,6 @@ devcontainer exec --workspace-folder . python --version
 ### Volume Naming
 
 Docker volumes use a `selfhosted-cluster-` prefix for easy identification:
-- `selfhosted-cluster-claude-config` - Claude Code settings
 - `selfhosted-cluster-venv` - Python virtual environment
 - `selfhosted-cluster-cache` - XDG cache (pip, uv, etc.)
 - `selfhosted-cluster-tmp` - Temporary files

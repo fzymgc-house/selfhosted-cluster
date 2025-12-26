@@ -56,7 +56,7 @@ metadata:
   namespace: postgres
 spec:
   method: plugin
-  schedule: "0 */4 * * *"
+  schedule: "0 0 */4 * * *"
   backupOwnerReference: cluster
   cluster:
     name: main

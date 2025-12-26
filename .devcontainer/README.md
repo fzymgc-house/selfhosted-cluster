@@ -26,7 +26,7 @@ The devcontainer provides a complete, reproducible development environment with:
 - `direnv` - Automatic environment variable loading (via feature)
 - `go-task` - Task runner (via feature)
 - `neovim` - Modern vim editor (via devcontainer feature)
-- `git-lfs` - Git Large File Storage
+- `git-lfs` - Git Large File Storage (repo uses LFS for images and archives via .gitattributes)
 - Git, SSH, SSHD, and essential build tools
 - Docker-in-Docker support
 

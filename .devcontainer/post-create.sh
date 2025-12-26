@@ -125,15 +125,18 @@ setup_git_config() {
 
     # Dynamic: Delta pager (only if installed via Homebrew)
     if command -v delta &> /dev/null; then
+        # Core delta settings (required)
         git config --global core.pager delta
         git config --global interactive.diffFilter "delta --color-only"
         git config --global merge.conflictStyle diff3
         git config --global diff.colorMoved default
-        git config --global delta.navigate true
-        git config --global delta.light false
-        git config --global delta.line-numbers true
-        git config --global delta.syntax-theme Dracula
-        git config --global delta.hyperlinks true
+
+        # Delta options (suppress errors for older versions that may not support all flags)
+        git config --global delta.navigate true 2>/dev/null || true
+        git config --global delta.light false 2>/dev/null || true
+        git config --global delta.line-numbers true 2>/dev/null || true
+        git config --global delta.syntax-theme Dracula 2>/dev/null || true
+        git config --global delta.hyperlinks true 2>/dev/null || true
         log_info "✓ Delta configured as git pager"
     fi
 
@@ -238,18 +241,27 @@ if command -v brew &> /dev/null; then
     # - tokei: code statistics
     # - xh: modern HTTP client (curl/httpie alternative)
     BREW_TOOLS="bat bottom git-delta gping procs broot tokei xh"
+
+    # Find tools that need installation
+    missing_tools=()
     for tool in $BREW_TOOLS; do
         if brew list "$tool" &> /dev/null; then
             log_info "✓ $tool already installed"
         else
-            brew_err=""
-            if brew_err=$(brew install "$tool" 2>&1); then
-                log_info "✓ $tool installed"
-            else
-                log_warn "Failed to install $tool: ${brew_err:-unknown error}"
-            fi
+            missing_tools+=("$tool")
         fi
     done
+
+    # Install all missing tools in parallel (single brew command)
+    if (( ${#missing_tools[@]} > 0 )); then
+        log_info "Installing: ${missing_tools[*]}"
+        brew_err=""
+        if brew_err=$(brew install "${missing_tools[@]}" 2>&1); then
+            log_info "✓ All tools installed successfully"
+        else
+            log_warn "Some tools failed to install: ${brew_err:-unknown error}"
+        fi
+    fi
 else
     log_warn "Homebrew not available, skipping CLI tool installation"
 fi

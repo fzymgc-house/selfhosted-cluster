@@ -99,7 +99,9 @@ To prevent "Saved plan is stale" errors:
 | **S3 plan storage** | Plan files stored in S3 with unique job ID, not shared workspace |
 | **Plan cleanup** | Plans deleted from S3 after successful apply |
 
-Plan S3 key format: `terraform-plans/{module-path}/{job-id}/tfplan`
+Plan S3 key format: `terraform-plans/{module-path-sanitized}/{job-id}/tfplan`
+
+Example: `tf/vault` → `terraform-plans/tf-vault/lxyz123abc/tfplan`
 
 ## Terraform Modules
 

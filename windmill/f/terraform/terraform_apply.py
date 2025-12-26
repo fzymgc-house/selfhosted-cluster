@@ -1,4 +1,6 @@
 """Apply Terraform changes using plan from S3."""
+# requirements:
+# boto3
 
 import os
 import subprocess
@@ -6,6 +8,7 @@ from pathlib import Path
 from typing import TypedDict
 
 import boto3
+from botocore.exceptions import BotoCoreError, ClientError
 
 
 class s3(TypedDict):
@@ -14,6 +17,8 @@ class s3(TypedDict):
     endPoint: str
     accessKey: str
     secretKey: str
+    useSSL: bool
+    pathStyle: bool
 
 
 def main(
@@ -36,7 +41,13 @@ def main(
         plan_s3_key: S3 key where plan file is stored
 
     Returns:
-        dict with apply status and output
+        dict with keys:
+            - module_dir: Original module directory path
+            - applied: Always True (function raises on failure)
+            - output: Terraform apply stdout
+
+    Note:
+        S3 plan cleanup failures are logged but do not fail the apply.
     """
     module_path = Path(module_dir)
 
@@ -61,8 +72,10 @@ def main(
                 plan_s3_key,
                 str(plan_file),
             )
-        except Exception as e:
+        except (ClientError, BotoCoreError) as e:
             raise RuntimeError(f"Failed to download plan from S3 ({plan_s3_key}): {e}")
+        except OSError as e:
+            raise RuntimeError(f"Failed to write plan file to {plan_file}: {e}")
 
     # Verify plan file exists
     if not plan_file.exists():
@@ -96,8 +109,8 @@ def main(
                 Bucket=s3_resource["bucket"],
                 Key=plan_s3_key,
             )
-        except Exception:
+        except (ClientError, BotoCoreError) as e:
             # Non-fatal: plan cleanup failure shouldn't fail the apply
-            pass
+            print(f"Warning: Failed to clean up plan from S3 ({plan_s3_key}): {e}")
 
     return {"module_dir": str(module_dir), "applied": True, "output": result.stdout}

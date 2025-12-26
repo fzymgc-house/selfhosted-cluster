@@ -1,4 +1,6 @@
 """Run Terraform plan and store plan artifact in S3."""
+# requirements:
+# boto3
 
 import json
 import os
@@ -7,6 +9,7 @@ from pathlib import Path
 from typing import TypedDict
 
 import boto3
+from botocore.exceptions import BotoCoreError, ClientError
 
 
 class s3(TypedDict):
@@ -15,6 +18,8 @@ class s3(TypedDict):
     endPoint: str
     accessKey: str
     secretKey: str
+    useSSL: bool
+    pathStyle: bool
 
 
 def main(
@@ -34,10 +39,16 @@ def main(
         vault_token: Vault authentication token
         tfc_token: Terraform Cloud API token (optional)
         s3_resource: S3 resource for storing plan artifacts
-        job_id: Unique job ID for plan storage key
+        job_id: Unique job ID for plan storage key. If empty, S3 storage is skipped.
 
     Returns:
-        dict with plan summary, details, and S3 key if stored
+        dict with keys:
+            - module_dir: Original module directory path
+            - plan_summary: Human-readable summary (e.g., "Plan: 1 to add, 0 to change, 0 to destroy")
+            - plan_details: Full terraform show output
+            - changes: dict with add/change/destroy counts
+            - has_changes: bool indicating if any resources will change
+            - plan_s3_key: S3 key where plan is stored (None if S3 not configured)
     """
     module_path = Path(module_dir)
 
@@ -112,11 +123,16 @@ def main(
             region_name=s3_resource.get("region", "auto"),
         )
 
-        s3_client.upload_file(
-            str(plan_file),
-            s3_resource["bucket"],
-            plan_s3_key,
-        )
+        try:
+            s3_client.upload_file(
+                str(plan_file),
+                s3_resource["bucket"],
+                plan_s3_key,
+            )
+        except (ClientError, BotoCoreError) as e:
+            raise RuntimeError(
+                f"Terraform plan succeeded but failed to upload to S3 ({plan_s3_key}): {e}"
+            )
 
     return {
         "module_dir": str(module_dir),

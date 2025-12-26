@@ -89,7 +89,8 @@ if [[ -z "$(cd /tmp && git config --global user.name 2>/dev/null)" ]]; then
 fi
 
 # Set up kubectl default context if available
-if command -v kubectl &> /dev/null && [[ -f "${HOME}/.kube/config" ]]; then
+# KUBECONFIG is set in devcontainer.json to ~/.kube/configs/fzymgc-house-admin.yml
+if command -v kubectl &> /dev/null && [[ -f "${KUBECONFIG:-${HOME}/.kube/config}" ]]; then
     log_info "Checking kubectl configuration..."
     if kubectl config get-contexts fzymgc-house &> /dev/null; then
         kubectl config use-context fzymgc-house

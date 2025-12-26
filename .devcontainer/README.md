@@ -57,7 +57,7 @@ All collections from `ansible/requirements-ansible.yml`:
 4. **1Password** with SSH agent enabled (for SSH key management)
 5. **Host prerequisites** (automatically mounted):
    - `~/.ssh` - SSH keys for Git and cluster access
-   - `~/.kube/config` - Kubernetes cluster configuration
+   - `~/.kube/configs/fzymgc-house-admin.yml` - Kubernetes cluster configuration
    - `~/.1password/agent.sock` - 1Password SSH agent socket
 
 ### Pre-Setup: Store Credentials in Vault (Optional)
@@ -233,7 +233,7 @@ The container includes these pre-configured aliases:
 
 Pre-configured environment variables:
 
-- `KUBECONFIG=/home/vscode/.kube/config`
+- `KUBECONFIG=/home/vscode/.kube/configs/fzymgc-house-admin.yml`
 - `VAULT_ADDR=https://vault.fzymgc.house`
 - `SSH_AUTH_SOCK` - Forwarded from host
 
@@ -380,7 +380,7 @@ kubectl config get-contexts
 
 # If fzymgc-house doesn't exist, you'll need to set it up:
 # 1. Copy kubeconfig from your k3s cluster
-# 2. Add to ~/.kube/config on host
+# 2. Save to ~/.kube/configs/fzymgc-house-admin.yml on host
 # 3. Rebuild container
 ```
 

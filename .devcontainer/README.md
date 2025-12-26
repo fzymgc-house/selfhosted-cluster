@@ -208,13 +208,31 @@ k get pods -A
 kubectl get nodes
 ```
 
+## Default Shell
+
+The container uses **zsh** as the default shell with oh-my-zsh (installed via common-utils feature).
+
 ## Helpful Aliases
 
-The container includes these pre-configured aliases:
+The container includes these pre-configured aliases (available in both zsh and bash):
 
-- `k` → `kubectl` (default context: fzymgc-house)
+### Infrastructure
+- `k` → `kubectl`
 - `tf` → `terraform`
+
+### Modern CLI Tools
+- `cat` → `bat --paging=never` (syntax highlighted cat)
+- `catp` → `bat` (with paging)
+- `top` / `htop` → `btm` (system monitor)
+- `ps` → `procs` (process viewer)
+- `tree` → `broot --sizes` (file navigator with sizes)
+- `br` → `broot`
+- `curl` / `http` → `xh` (HTTP client)
+
+### File Listing
 - `ll` → `ls -alh`
+- `la` → `ls -A`
+- `l` → `ls -CF`
 
 ## Mounted Volumes
 

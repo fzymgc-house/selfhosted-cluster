@@ -286,11 +286,9 @@ fi
 # Set up git safeguards to warn on --no-verify usage
 log_info "Setting up git safeguards..."
 setup_git_safeguards() {
-    local bashrc="/home/vscode/.bashrc"
     local safeguard_marker="# Git safeguards for Claude Code"
-
-    if ! grep -q "$safeguard_marker" "$bashrc" 2>/dev/null; then
-        cat >> "$bashrc" << 'SAFEGUARDS'
+    local safeguard_content
+    read -r -d '' safeguard_content << 'SAFEGUARDS' || true
 
 # Git safeguards for Claude Code
 # Warn when using --no-verify to prevent accidental pre-commit bypass
@@ -318,10 +316,14 @@ git() {
     command git "${args[@]}"
 }
 SAFEGUARDS
-        log_info "✓ Git safeguards added to ~/.bashrc"
-    else
-        log_info "✓ Git safeguards already configured"
-    fi
+
+    # Add safeguards to both zsh and bash rc files
+    for rcfile in /home/vscode/.zshrc /home/vscode/.bashrc; do
+        if [[ -f "$rcfile" ]] && ! grep -q "$safeguard_marker" "$rcfile" 2>/dev/null; then
+            echo "$safeguard_content" >> "$rcfile"
+            log_info "✓ Git safeguards added to $(basename "$rcfile")"
+        fi
+    done
 }
 setup_git_safeguards
 

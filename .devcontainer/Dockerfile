@@ -68,10 +68,32 @@ RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/sh
 # Switch to vscode user
 USER vscode
 
-# Add helpful aliases
-RUN echo 'alias k=kubectl' >> /home/vscode/.bashrc \
-    && echo 'alias tf=terraform' >> /home/vscode/.bashrc \
-    && echo 'alias ll="ls -alh"' >> /home/vscode/.bashrc
+# Set zsh as default shell
+SHELL ["/bin/zsh", "-c"]
+
+# Add helpful aliases to both .zshrc and .bashrc for compatibility
+RUN for rc in /home/vscode/.zshrc /home/vscode/.bashrc; do \
+        echo '' >> "$rc" && \
+        echo '# Infrastructure aliases' >> "$rc" && \
+        echo 'alias k=kubectl' >> "$rc" && \
+        echo 'alias tf=terraform' >> "$rc" && \
+        echo '' >> "$rc" && \
+        echo '# Modern CLI tool aliases' >> "$rc" && \
+        echo 'alias cat="bat --paging=never"' >> "$rc" && \
+        echo 'alias catp="bat"' >> "$rc" && \
+        echo 'alias top=btm' >> "$rc" && \
+        echo 'alias htop=btm' >> "$rc" && \
+        echo 'alias ps=procs' >> "$rc" && \
+        echo 'alias tree="broot --sizes"' >> "$rc" && \
+        echo 'alias br=broot' >> "$rc" && \
+        echo 'alias curl=xh' >> "$rc" && \
+        echo 'alias http=xh' >> "$rc" && \
+        echo '' >> "$rc" && \
+        echo '# ls aliases' >> "$rc" && \
+        echo 'alias ll="ls -alh"' >> "$rc" && \
+        echo 'alias la="ls -A"' >> "$rc" && \
+        echo 'alias l="ls -CF"' >> "$rc"; \
+    done
 
 # Default command (workdir set by devcontainer.json)
-CMD ["/bin/bash"]
+CMD ["/bin/zsh"]

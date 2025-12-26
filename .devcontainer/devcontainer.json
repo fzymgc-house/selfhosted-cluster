@@ -126,6 +126,16 @@
         }
     },
 
-    // Use bash as the default shell
-    "remoteUser": "vscode"
+    // Use zsh as the default shell
+    "remoteUser": "vscode",
+
+    // Set zsh as default terminal shell
+    "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+            "zsh": {
+                "path": "/bin/zsh"
+            }
+        }
+    }
 }

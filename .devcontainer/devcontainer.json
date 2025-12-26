@@ -46,7 +46,9 @@
         // direnv for automatic environment variable loading
         "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {},
         // neovim editor
-        "ghcr.io/devcontainers-contrib/features/neovim-apt-get:1": {}
+        "ghcr.io/devcontainers-contrib/features/neovim-apt-get:1": {},
+        // Homebrew for additional CLI tools
+        "ghcr.io/meaningful-ooo/devcontainer-features/homebrew:2": {}
     },
 
     // Mount host's SSH, kubeconfig, and git config for authentication

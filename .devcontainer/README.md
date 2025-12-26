@@ -26,8 +26,19 @@ The devcontainer provides a complete, reproducible development environment with:
 - `direnv` - Automatic environment variable loading (via feature)
 - `go-task` - Task runner (via feature)
 - `neovim` - Modern vim editor (via devcontainer feature)
+- `delta` - Improved git diffs with syntax highlighting
+- `git-lfs` - Git Large File Storage
 - Git, SSH, SSHD, and essential build tools
 - Docker-in-Docker support
+
+### Modern CLI Tools (via Homebrew)
+- `bat` - cat clone with syntax highlighting and git integration
+- `bottom` (btm) - System monitor with CPU, memory, network graphs
+- `gping` - Ping with graph visualization
+- `procs` - Modern ps replacement with color and sorting
+- `broot` - Interactive file navigator
+- `tokei` - Code statistics by language
+- `xh` - Modern HTTP client (curl/httpie alternative)
 
 ### Python Packages
 All packages from `pyproject.toml` are automatically installed via `uv sync`:

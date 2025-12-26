@@ -256,6 +256,33 @@ else
     fi
 fi
 
+# Install CLI tools via Homebrew (homebrew feature installed via devcontainer.json)
+log_info "Installing CLI tools via Homebrew..."
+if command -v brew &> /dev/null; then
+    # Tools to install:
+    # - bat: cat clone with syntax highlighting
+    # - bottom: system monitor (btm command)
+    # - gping: ping with graph visualization
+    # - procs: modern ps replacement
+    # - broot: file navigator
+    # - tokei: code statistics
+    # - xh: modern HTTP client (curl/httpie alternative)
+    BREW_TOOLS="bat bottom gping procs broot tokei xh"
+    for tool in $BREW_TOOLS; do
+        if brew list "$tool" &> /dev/null; then
+            log_info "✓ $tool already installed"
+        else
+            if brew install "$tool" &> /dev/null; then
+                log_info "✓ $tool installed"
+            else
+                log_warn "Failed to install $tool"
+            fi
+        fi
+    done
+else
+    log_warn "Homebrew not available, skipping CLI tool installation"
+fi
+
 # Set up git safeguards to warn on --no-verify usage
 log_info "Setting up git safeguards..."
 setup_git_safeguards() {
@@ -347,6 +374,13 @@ echo "  - ast-grep: $(ast-grep --version 2>/dev/null || echo 'not available')"
 echo "  - uv: $(uv --version 2>/dev/null || echo 'not available')"
 echo "  - git-lfs: $(git-lfs version 2>/dev/null || echo 'not available')"
 echo "  - delta: $(delta --version 2>/dev/null || echo 'not available')"
+echo "  - bat: $(bat --version 2>/dev/null | head -1 || echo 'not available')"
+echo "  - btm: $(btm --version 2>/dev/null || echo 'not available')"
+echo "  - gping: $(gping --version 2>/dev/null || echo 'not available')"
+echo "  - procs: $(procs --version 2>/dev/null || echo 'not available')"
+echo "  - broot: $(broot --version 2>/dev/null || echo 'not available')"
+echo "  - tokei: $(tokei --version 2>/dev/null || echo 'not available')"
+echo "  - xh: $(xh --version 2>/dev/null || echo 'not available')"
 echo ""
 echo "First-time setup:"
 echo "  bash .devcontainer/login-setup.sh    # Interactive login for all services"

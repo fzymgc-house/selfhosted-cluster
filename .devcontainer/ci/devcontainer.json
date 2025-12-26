@@ -36,7 +36,8 @@
         },
         "ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
         "ghcr.io/christophermacgown/devcontainer-features/direnv:1": {},
-        "ghcr.io/devcontainers-contrib/features/neovim-apt-get:1": {}
+        "ghcr.io/devcontainers-contrib/features/neovim-apt-get:1": {},
+        "ghcr.io/meaningful-ooo/devcontainer-features/homebrew:2": {}
     },
 
     // CI-specific mounts: Docker volumes only (no host bind mounts)

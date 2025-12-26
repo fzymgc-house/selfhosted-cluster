@@ -274,9 +274,5 @@ resource "kubernetes_secret" "database" {
 - DNS record management
 - Cloudflare Tunnel configuration
 
-### Teleport Module (`tf/teleport`)
-- Teleport cluster configuration
-- Access control policies
-
 ### Core Services (`tf/core-services`)
 - Cross-cutting service configurations

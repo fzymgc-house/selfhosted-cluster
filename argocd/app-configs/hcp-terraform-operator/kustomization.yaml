@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: hcp-terraform
+
+resources:
+  - namespace.yaml
+  - external-secrets.yaml
+
+# Helm values will be referenced by ArgoCD application

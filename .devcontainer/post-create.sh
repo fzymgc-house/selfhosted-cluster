@@ -23,7 +23,7 @@ log_warn() {
 # These are mounted as named volumes and need proper vscode user ownership
 # Note: PWD is the workspace directory, set by devcontainer before running postCreateCommand
 log_info "Fixing Docker volume permissions..."
-for dir in "/home/vscode/.claude" "/home/vscode/.cache" "${PWD}/.venv" "/tmp"; do
+for dir in "/home/vscode/.cache" "${PWD}/.venv" "/tmp"; do
     if [[ -d "$dir" ]]; then
         chown_err=""
         if ! chown_err=$(sudo chown -R "$(id -u):$(id -g)" "$dir" 2>&1); then

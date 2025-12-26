@@ -58,11 +58,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run .claude/hooks/bash_command_validator.py"
+            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/bash_command_validator.py"
           },
           {
             "type": "command",
-            "command": "uv run .claude/hooks/gremlin-heredoc-containment.py"
+            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/gremlin-heredoc-containment.py"
           }
         ]
       }

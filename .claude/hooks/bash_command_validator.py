@@ -23,22 +23,26 @@ import json
 import re
 import sys
 
-# Supported ast-grep languages (for documentation and pattern building)
-_AST_GREP_EXTENSIONS = r"swift|py|ts|js|jsx|tsx|rs|go|c|cpp|html|java|kt|rb"
+# Supported ast-grep language types for --type flag matching
 _AST_GREP_TYPES = r"swift|python|typescript|javascript|rust|go|c|cpp|html|java|kotlin|ruby"
+
+# Maximum characters to show in error message previews
+_ERROR_PREVIEW_MAX_CHARS = 200
 
 # Define validation rules as a list of (regex pattern, message) tuples
 _VALIDATION_RULES = [
+    # Block grep anywhere in command - rg is a full replacement
+    # Matches: grep, cmd | grep, cmd && grep, etc.
     (
-        r"^grep\b(?!.*\|)",
-        "Use 'rg' (ripgrep) instead of 'grep' for better performance and features",
+        r"\bgrep\b",
+        "Use 'rg' (ripgrep) instead of 'grep' - it's faster and a full replacement",
     ),
     (
         r"^find\s+\S+\s+-name\b",
         "Use 'rg --files | rg pattern' or 'rg --files -g pattern' instead of 'find -name' for better performance",
     ),
     # Block rg content searches with --type for source code (ast-grep handles these better)
-    # Does NOT match: rg --files, rg --files -g, rg -l (file listing modes)
+    # Excludes commands containing --files or -l anywhere (file listing modes)
     (
         rf"^rg\b(?!.*\s--files\b)(?!.*\s-l\b).*--type\s+({_AST_GREP_TYPES})\b",
         "Use 'sg -p pattern' or 'ast-grep -p pattern' instead of 'rg --type' for source code searches",
@@ -47,20 +51,32 @@ _VALIDATION_RULES = [
 
 
 def _validate_command(command: str) -> list[str]:
-    """Validate a command against the rules."""
+    """Validate a command against the rules.
+
+    Raises:
+        SystemExit: If a regex pattern is malformed (configuration error).
+
+    """
     issues = []
     for pattern, message in _VALIDATION_RULES:
-        if re.search(pattern, command):
-            issues.append(message)
+        try:
+            if re.search(pattern, command):
+                issues.append(message)
+        except re.error as e:
+            print(f"Hook config error: Invalid regex '{pattern}': {e}", file=sys.stderr)
+            sys.exit(1)
     return issues
 
 
 def main() -> None:
     """Run the hook."""
+    # Read stdin first for better error context
+    raw_input = sys.stdin.read()
     try:
-        input_data = json.load(sys.stdin)
+        input_data = json.loads(raw_input)
     except json.JSONDecodeError as e:
-        print(f"Error: Invalid JSON input: {e}", file=sys.stderr)
+        preview = raw_input[:_ERROR_PREVIEW_MAX_CHARS] + "..." if len(raw_input) > _ERROR_PREVIEW_MAX_CHARS else raw_input
+        print(f"Error: Invalid JSON input: {e}\nReceived: {preview}", file=sys.stderr)
         # Exit code 1 shows stderr to the user but not to Claude
         sys.exit(1)
 
@@ -69,6 +85,10 @@ def main() -> None:
         sys.exit(0)
 
     tool_input = input_data.get("tool_input", {})
+    if not isinstance(tool_input, dict):
+        print(f"Error: Expected tool_input to be dict, got {type(tool_input).__name__}", file=sys.stderr)
+        sys.exit(1)
+
     command = tool_input.get("command", "")
 
     if not command:

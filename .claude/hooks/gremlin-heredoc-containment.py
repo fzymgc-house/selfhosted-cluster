@@ -21,6 +21,9 @@ import sys
 _SEVERITY_HEREDOC = 1
 _SEVERITY_SNEAKY = 2
 
+# Maximum characters to show in error message previews
+_ERROR_PREVIEW_MAX_CHARS = 200
+
 # Patterns that indicate file-writing via bash instead of the Write tool
 HEREDOC_PATTERNS = [
     # Standard heredoc to file: cat << 'EOF' > file, cat <<EOF > file, etc.
@@ -34,12 +37,16 @@ HEREDOC_PATTERNS = [
     r"printf\s+['\"].*\\n.*['\"]\s*>\s*\S+",
 ]
 
-# The sneaky Python workaround patterns
+# Python one-liner workarounds to write files
 PYTHON_WRITE_PATTERNS = [
     # python -c "...Path...write_text..."
     r"python3?\s+-c\s+['\"].*Path.*write_text",
     r"python3?\s+-c\s+['\"].*open\s*\(.*write",
-    # Even sneakier: base64 decode to file
+]
+
+# Shell workarounds to write files (avoiding Write tool)
+SHELL_WORKAROUND_PATTERNS = [
+    # base64 decode to file - another way to bypass Write tool
     r"base64\s+-d.*>\s*\S+",
     r"base64\s+--decode.*>\s*\S+",
 ]
@@ -52,16 +59,27 @@ def detect_gremlin_behavior(command: str) -> tuple[bool, int]:
         (is_gremlin, severity)
         severity: 1 = standard heredoc, 2 = sneaky workaround
 
+    Raises:
+        SystemExit: If a regex pattern is malformed (configuration error).
+
     """
     # Check for heredoc patterns
     for pattern in HEREDOC_PATTERNS:
-        if re.search(pattern, command, re.IGNORECASE | re.DOTALL):
-            return (True, _SEVERITY_HEREDOC)
+        try:
+            if re.search(pattern, command, re.IGNORECASE | re.DOTALL):
+                return (True, _SEVERITY_HEREDOC)
+        except re.error as e:
+            print(f"Hook config error: Invalid regex '{pattern}': {e}", file=sys.stderr)
+            sys.exit(1)
 
-    # Check for Python workarounds
-    for pattern in PYTHON_WRITE_PATTERNS:
-        if re.search(pattern, command, re.IGNORECASE | re.DOTALL):
-            return (True, _SEVERITY_SNEAKY)
+    # Check for Python and shell workarounds
+    for pattern in PYTHON_WRITE_PATTERNS + SHELL_WORKAROUND_PATTERNS:
+        try:
+            if re.search(pattern, command, re.IGNORECASE | re.DOTALL):
+                return (True, _SEVERITY_SNEAKY)
+        except re.error as e:
+            print(f"Hook config error: Invalid regex '{pattern}': {e}", file=sys.stderr)
+            sys.exit(1)
 
     return (False, 0)
 
@@ -97,10 +115,13 @@ Please use the Write tool to create or modify files."""
 
 def main() -> None:
     """Run the hook."""
+    # Read stdin first for better error context
+    raw_input = sys.stdin.read()
     try:
-        input_data = json.load(sys.stdin)
+        input_data = json.loads(raw_input)
     except json.JSONDecodeError as e:
-        print(f"Hook error: Invalid JSON input: {e}", file=sys.stderr)
+        preview = raw_input[:_ERROR_PREVIEW_MAX_CHARS] + "..." if len(raw_input) > _ERROR_PREVIEW_MAX_CHARS else raw_input
+        print(f"Hook error: Invalid JSON input: {e}\nReceived: {preview}", file=sys.stderr)
         sys.exit(1)
 
     tool_name = input_data.get("tool_name", "")
@@ -109,6 +130,10 @@ def main() -> None:
     # Only check Bash commands
     if tool_name != "Bash":
         sys.exit(0)
+
+    if not isinstance(tool_input, dict):
+        print(f"Error: Expected tool_input to be dict, got {type(tool_input).__name__}", file=sys.stderr)
+        sys.exit(1)
 
     command = tool_input.get("command", "")
     if not command:

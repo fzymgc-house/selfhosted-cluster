@@ -25,8 +25,9 @@ log_warn() {
 log_info "Fixing Docker volume permissions..."
 for dir in "/home/vscode/.claude" "/home/vscode/.cache" "${PWD}/.venv" "/tmp"; do
     if [[ -d "$dir" ]]; then
-        if ! sudo chown -R "$(id -u):$(id -g)" "$dir" 2>&1; then
-            log_warn "Failed to fix permissions on $dir (may affect functionality)"
+        chown_err=""
+        if ! chown_err=$(sudo chown -R "$(id -u):$(id -g)" "$dir" 2>&1); then
+            log_warn "Failed to fix permissions on $dir: $chown_err"
         fi
     fi
 done
@@ -117,8 +118,10 @@ fi
 # Set up direnv if .envrc exists
 if [[ -f ".envrc" ]]; then
     log_info "Setting up direnv..."
-    if ! direnv allow .; then
-        log_warn "Failed to enable direnv - you may need to run 'direnv allow' manually"
+    direnv_err=""
+    if ! direnv_err=$(direnv allow . 2>&1); then
+        log_warn "Failed to enable direnv: $direnv_err"
+        log_warn "You may need to run 'direnv allow' manually"
     fi
 fi
 

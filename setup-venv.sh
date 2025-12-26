@@ -62,8 +62,10 @@ main() {
     # Install Ansible Galaxy collections
     if [[ -f "ansible/requirements.yml" ]]; then
         log_info "Installing Ansible Galaxy collections..."
-        if ! ansible-galaxy collection install -r ansible/requirements.yml; then
-            log_warn "Failed to install some Ansible collections (check network/permissions)"
+        local galaxy_output
+        if ! galaxy_output=$(ansible-galaxy collection install -r ansible/requirements.yml 2>&1); then
+            log_warn "Failed to install some Ansible collections:"
+            echo "$galaxy_output" | sed 's/^/    /'
         fi
     else
         log_warn "ansible/requirements.yml not found, skipping collections"

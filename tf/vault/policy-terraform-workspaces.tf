@@ -67,13 +67,13 @@ EOT
 resource "vault_policy" "terraform_cloudflare_admin" {
   name   = "terraform-cloudflare-admin"
   policy = <<EOT
-# Read Cloudflare secrets
-path "secret/data/fzymgc-house/cluster/cloudflare" {
+# Read Cloudflare API token from infrastructure secrets
+path "secret/data/fzymgc-house/infrastructure/cloudflare/*" {
   capabilities = ["read", "list"]
 }
 
 # Read Cloudflare secret metadata
-path "secret/metadata/fzymgc-house/cluster/cloudflare" {
+path "secret/metadata/fzymgc-house/infrastructure/cloudflare/*" {
   capabilities = ["read", "list"]
 }
 EOT

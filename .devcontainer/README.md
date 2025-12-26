@@ -219,7 +219,6 @@ The container includes these pre-configured aliases:
 ### Docker Volumes (Persist Across Rebuilds)
 | Volume Name | Container Path | Purpose |
 |-------------|----------------|---------|
-| `selfhosted-cluster-claude-config` | `/home/vscode/.claude` | Claude Code settings |
 | `selfhosted-cluster-venv` | `/workspaces/<folder>/.venv` | Python virtual environment |
 | `selfhosted-cluster-cache` | `/home/vscode/.cache` | XDG cache (pip, uv, etc.) |
 | `selfhosted-cluster-tmp` | `/tmp` | Temporary files |
@@ -229,7 +228,7 @@ The container includes these pre-configured aliases:
 **Notes:**
 - Host bind mounts: Changes inside the container affect your host system
 - Vault tokens are **not** mounted - you must authenticate inside the container with `vault login`
-- Claude Code config uses a Docker volume for persistence across rebuilds
+- Claude Code project settings are in `.claude/settings.json` (part of the repo)
 
 ## Environment Variables
 

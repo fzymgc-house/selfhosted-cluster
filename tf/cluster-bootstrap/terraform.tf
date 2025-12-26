@@ -8,7 +8,7 @@ terraform {
 }
 
 provider "helm" {
-  kubernetes {
+  kubernetes = {
     config_path = pathexpand("~/.kube/configs/fzymgc-house-admin.yml")
   }
 }

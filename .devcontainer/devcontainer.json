@@ -67,7 +67,7 @@
     // Set environment variables
     // remoteEnv passes host environment variables into the container
     "containerEnv": {
-        "KUBECONFIG": "/home/vscode/.kube/config",
+        "KUBECONFIG": "/home/vscode/.kube/configs/fzymgc-house-admin.yml",
         "VAULT_ADDR": "https://vault.fzymgc.house",
         "SSH_AUTH_SOCK": "/home/vscode/.1password/agent.sock",
         "XDG_CACHE_HOME": "/home/vscode/.cache"

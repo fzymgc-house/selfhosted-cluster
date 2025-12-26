@@ -41,7 +41,6 @@
     // CI-specific mounts: Docker volumes only (no host bind mounts)
     // Host paths like ~/.ssh, ~/.kube, ~/.1password don't exist on CI runners
     "mounts": [
-        "source=selfhosted-cluster-claude-config,target=/home/vscode/.claude,type=volume",
         "source=selfhosted-cluster-venv,target=/workspaces/${localWorkspaceFolderBasename}/.venv,type=volume",
         "source=selfhosted-cluster-cache,target=/home/vscode/.cache,type=volume",
         "source=selfhosted-cluster-tmp,target=/tmp,type=volume"

@@ -59,7 +59,6 @@
         "source=${localEnv:HOME}/.1password,target=/home/vscode/.1password,type=bind",
         // Docker volumes for isolation and performance (persist across rebuilds)
         // Note: venv uses folder basename so it works with local folders and volume clones
-        "source=selfhosted-cluster-claude-config,target=/home/vscode/.claude,type=volume",
         "source=selfhosted-cluster-venv,target=/workspaces/${localWorkspaceFolderBasename}/.venv,type=volume",
         "source=selfhosted-cluster-cache,target=/home/vscode/.cache,type=volume",
         "source=selfhosted-cluster-tmp,target=/tmp,type=volume"

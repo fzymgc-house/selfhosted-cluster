@@ -59,13 +59,15 @@ main() {
     # shellcheck disable=SC1091
     source "${VENV_DIR}/bin/activate"
 
-    # Install Ansible Galaxy collections
+    # Install Ansible Galaxy collections (required for this repository)
     if [[ -f "ansible/requirements.yml" ]]; then
         log_info "Installing Ansible Galaxy collections..."
         local galaxy_output
         if ! galaxy_output=$(ansible-galaxy collection install -r ansible/requirements.yml 2>&1); then
-            log_warn "Failed to install some Ansible collections:"
+            log_error "Failed to install Ansible collections - environment is NOT ready:"
             echo "$galaxy_output" | sed 's/^/    /'
+            log_error "Fix the above issues and re-run ./setup-venv.sh"
+            exit 1
         fi
     else
         log_warn "ansible/requirements.yml not found, skipping collections"

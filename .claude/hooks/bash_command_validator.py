@@ -37,12 +37,16 @@ _VALIDATION_RULES = [
         r"\bgrep\b",
         "Use 'rg' (ripgrep) instead of 'grep' - it's faster and a full replacement",
     ),
+    # Block find -name anywhere in command (word boundary for consistency with grep rule)
     (
-        r"^find\s+\S+\s+-name\b",
+        r"\bfind\s+\S+\s+-name\b",
         "Use 'rg --files | rg pattern' or 'rg --files -g pattern' instead of 'find -name' for better performance",
     ),
     # Block rg content searches with --type for source code (ast-grep handles these better)
-    # Excludes commands containing --files or -l anywhere (file listing modes)
+    # Pattern uses negative lookahead (?!...) to ALLOW file listing modes:
+    #   --files: lists matching files without content
+    #   -l: prints only filenames (like --files-with-matches)
+    # Uses start anchor (^) because rg must be the primary command for this check
     (
         rf"^rg\b(?!.*\s--files\b)(?!.*\s-l\b).*--type\s+({_AST_GREP_TYPES})\b",
         "Use 'sg -p pattern' or 'ast-grep -p pattern' instead of 'rg --type' for source code searches",
@@ -52,6 +56,12 @@ _VALIDATION_RULES = [
 
 def _validate_command(command: str) -> list[str]:
     """Validate a command against the rules.
+
+    Args:
+        command: The bash command string to validate.
+
+    Returns:
+        List of validation error messages (empty if command passes all checks).
 
     Raises:
         SystemExit: If a regex pattern is malformed (configuration error).
@@ -101,7 +111,6 @@ def main() -> None:
         # Exit code 2 blocks tool call and shows stderr to Claude
         sys.exit(2)
 
-    # Exit code 0 allows the tool call to proceed
     sys.exit(0)
 
 

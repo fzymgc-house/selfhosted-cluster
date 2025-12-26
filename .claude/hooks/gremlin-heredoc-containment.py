@@ -55,9 +55,13 @@ SHELL_WORKAROUND_PATTERNS = [
 def detect_gremlin_behavior(command: str) -> tuple[bool, int]:
     """Detect various forms of file-writing avoidance.
 
+    Args:
+        command: The bash command string to check.
+
     Returns:
-        (is_gremlin, severity)
-        severity: 1 = standard heredoc, 2 = sneaky workaround
+        Tuple of (is_gremlin, severity) where:
+        - is_gremlin: True if gremlin behavior detected, False otherwise
+        - severity: 0 = no issue, 1 = standard heredoc, 2 = sneaky workaround
 
     Raises:
         SystemExit: If a regex pattern is malformed (configuration error).
@@ -97,11 +101,12 @@ designed for this exact purpose. You've demonstrated you know how to use it.
 Please use the Write tool to create or modify files."""
 
     if severity == _SEVERITY_SNEAKY:
-        return """🔒 I see you, gremlin. The Python workaround isn't clever either.
+        return """🔒 I see you, gremlin. That workaround isn't clever either.
 
-You tried to bypass the heredoc block by writing a Python one-liner to
-write the file instead. This is MORE work, not less. You are actively
-making things harder to avoid using the tool designed for this task.
+You tried to bypass the heredoc block using an alternative method
+(Python one-liner, base64 decode, etc.) to write the file instead.
+This is MORE work, not less. You are actively making things harder
+to avoid using the tool designed for this task.
 
 Please use the Write tool.
 
@@ -146,7 +151,6 @@ def main() -> None:
         print(message, file=sys.stderr)
         sys.exit(2)
 
-    # Not gremlin behavior, allow the command
     sys.exit(0)
 
 

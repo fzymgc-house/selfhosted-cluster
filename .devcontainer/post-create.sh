@@ -27,7 +27,11 @@ for dir in "/home/vscode/.claude" "/home/vscode/.cache" "${PWD}/.venv" "/tmp"; d
     if [[ -d "$dir" ]]; then
         chown_err=""
         if ! chown_err=$(sudo chown -R "$(id -u):$(id -g)" "$dir" 2>&1); then
-            log_warn "Failed to fix permissions on $dir: $chown_err"
+            if [[ -n "$chown_err" ]]; then
+                log_warn "Failed to fix permissions on $dir: $chown_err"
+            else
+                log_warn "Failed to fix permissions on $dir (no error details)"
+            fi
         fi
     fi
 done
@@ -94,10 +98,15 @@ fi
 if command -v kubectl &> /dev/null && [[ -f "${KUBECONFIG:-${HOME}/.kube/config}" ]]; then
     log_info "Checking kubectl configuration..."
     if kubectl config get-contexts fzymgc-house &> /dev/null; then
-        if kubectl config use-context fzymgc-house &> /dev/null; then
+        kubectl_err=""
+        if kubectl_err=$(kubectl config use-context fzymgc-house 2>&1); then
             log_info "✓ kubectl default context set to fzymgc-house"
         else
-            log_warn "Failed to switch to fzymgc-house context"
+            if [[ -n "$kubectl_err" ]]; then
+                log_warn "Failed to switch to fzymgc-house context: $kubectl_err"
+            else
+                log_warn "Failed to switch to fzymgc-house context (no error details)"
+            fi
         fi
     else
         log_warn "fzymgc-house context not found in kubeconfig"

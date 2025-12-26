@@ -1,13 +1,14 @@
 # SPDX-License-Identifier: MIT-0
 # Claude Code devcontainer policy
 #
-# Grants users access to their personal MCP server API keys stored in Vault:
-# - Firecrawl (web scraping/search)
-# - Exa (deep research)
-# - Notion (workspace integration)
+# Grants users access to read and store their personal API keys/tokens in Vault:
+# - Terraform Cloud (infrastructure state) - stored via login-setup.sh
+# - Firecrawl (web scraping/search) - stored via login-setup.sh
+# - Exa (deep research) - stored via login-setup.sh
+# - Notion (workspace integration) - stored via login-setup.sh
 #
-# Note: Claude Code uses OAuth login (claude login), not API keys.
-# The Anthropic path is retained for backwards compatibility.
+# Note: Claude Code uses OAuth login (claude doctor), not API keys.
+# The Anthropic path is retained for backwards compatibility (read-only).
 #
 # Each user stores their keys at: secret/users/<entity-name>/<service>
 #
@@ -28,18 +29,23 @@ resource "vault_policy" "claude_code" {
       capabilities = ["read"]
     }
 
-    # Allow reading MCP server API keys
+    # Terraform Cloud token - stored via login-setup.sh, used to create credentials.tfrc.json
+    path "secret/data/users/{{identity.entity.name}}/terraform-cloud" {
+      capabilities = ["create", "read", "update"]
+    }
+
+    # MCP server API keys - stored via login-setup.sh
     # These are optional - Claude Code functions without them
     path "secret/data/users/{{identity.entity.name}}/firecrawl" {
-      capabilities = ["read"]
+      capabilities = ["create", "read", "update"]
     }
 
     path "secret/data/users/{{identity.entity.name}}/exa" {
-      capabilities = ["read"]
+      capabilities = ["create", "read", "update"]
     }
 
     path "secret/data/users/{{identity.entity.name}}/notion" {
-      capabilities = ["read"]
+      capabilities = ["create", "read", "update"]
     }
 
     # Allow listing the user's secrets directory (for discoverability)

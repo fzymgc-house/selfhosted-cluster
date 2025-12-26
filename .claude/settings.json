@@ -1,5 +1,6 @@
 {
   "enableAllProjectMcpServers": true,
+  "outputStyle": "Explanatory",
   "permissions": {
     "allow": [
       "Edit(.devcontainer/**)",

@@ -380,14 +380,33 @@ direnv allow
 
 ### kubectl Context Not Found
 
-```bash
-# List available contexts
-kubectl config get-contexts
+The devcontainer expects a specific kubeconfig file at `~/.kube/configs/fzymgc-house-admin.yml` on your host machine. This file is:
+- Mounted into the container at `/home/vscode/.kube/configs/fzymgc-house-admin.yml`
+- Used by `KUBECONFIG` environment variable (set in devcontainer.json)
+- Referenced by the Kubernetes MCP server for cluster access
 
-# If fzymgc-house doesn't exist, you'll need to set it up:
-# 1. Copy kubeconfig from your k3s cluster
-# 2. Save to ~/.kube/configs/fzymgc-house-admin.yml on host
-# 3. Rebuild container
+**Setup:**
+
+```bash
+# On your host machine, create the configs directory
+mkdir -p ~/.kube/configs
+
+# Copy your kubeconfig from the k3s cluster
+# (Replace with your actual cluster access method)
+scp user@control-node:/etc/rancher/k3s/k3s.yaml ~/.kube/configs/fzymgc-house-admin.yml
+
+# Update the server address to the cluster VIP
+sed -i '' 's|127.0.0.1|192.168.20.140|g' ~/.kube/configs/fzymgc-house-admin.yml
+
+# Rebuild the devcontainer to pick up the new file
+```
+
+**Verify:**
+
+```bash
+# Inside the devcontainer
+kubectl config get-contexts
+kubectl get nodes
 ```
 
 ## Performance Tips

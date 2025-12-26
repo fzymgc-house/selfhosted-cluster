@@ -7,10 +7,14 @@
 """Bash command validator hook for Claude Code.
 
 This hook runs as a PreToolUse hook for the Bash tool.
-It validates bash commands against a set of rules before execution.
-It blocks grep/find commands and suggests using rg instead.
-For source code searches, it suggests ast-grep (which supports Swift, Python,
-TypeScript, JavaScript, Rust, Go, C, C++, HTML, Java, Kotlin, and Ruby).
+It validates bash commands against a set of rules before execution:
+
+1. Blocks grep (suggests rg instead)
+2. Blocks find -name (suggests rg --files instead)
+3. Blocks rg --type <lang> for source code searches (suggests ast-grep instead)
+   - Only blocks content searches, NOT file listing (--files, -l)
+   - Supported languages: Swift, Python, TypeScript, JavaScript, Rust, Go,
+     C, C++, HTML, Java, Kotlin, Ruby
 
 Read more about hooks here: https://docs.anthropic.com/en/docs/claude-code/hooks
 """
@@ -18,6 +22,10 @@ Read more about hooks here: https://docs.anthropic.com/en/docs/claude-code/hooks
 import json
 import re
 import sys
+
+# Supported ast-grep languages (for documentation and pattern building)
+_AST_GREP_EXTENSIONS = r"swift|py|ts|js|jsx|tsx|rs|go|c|cpp|html|java|kt|rb"
+_AST_GREP_TYPES = r"swift|python|typescript|javascript|rust|go|c|cpp|html|java|kotlin|ruby"
 
 # Define validation rules as a list of (regex pattern, message) tuples
 _VALIDATION_RULES = [
@@ -29,9 +37,11 @@ _VALIDATION_RULES = [
         r"^find\s+\S+\s+-name\b",
         "Use 'rg --files | rg pattern' or 'rg --files -g pattern' instead of 'find -name' for better performance",
     ),
+    # Block rg content searches with --type for source code (ast-grep handles these better)
+    # Does NOT match: rg --files, rg --files -g, rg -l (file listing modes)
     (
-        r"^rg\b(?!.*\s--files\b(?:\s+-g\s+\S+)?).*(?:\*\.(swift|py|ts|js|jsx|tsx|rs|go|c|cpp|html|java|kt|rb)\b|--type\s+(swift|python|typescript|javascript|rust|go|c|cpp|html|java|kotlin|ruby))",
-        "Use 'sg -p pattern' or 'ast-grep -p pattern' instead of 'rg' for Swift, Python, TypeScript, JavaScript, JSX, TSX, Rust, Go, C, C++, HTML, Java, Kotlin, and Ruby source code",
+        rf"^rg\b(?!.*\s--files\b)(?!.*\s-l\b).*--type\s+({_AST_GREP_TYPES})\b",
+        "Use 'sg -p pattern' or 'ast-grep -p pattern' instead of 'rg --type' for source code searches",
     ),
 ]
 

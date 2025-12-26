@@ -39,21 +39,18 @@ main() {
     fi
     log_info "Using uv $(uv --version | awk '{print $2}')"
 
-    # Create virtual environment if it doesn't exist
+    # Install Python packages using uv sync (creates venv if needed)
     # Note: In devcontainer, .venv is a Docker volume (Linux-native, persists across rebuilds)
-    if [[ -x "${VENV_DIR}/bin/python" ]] && "${VENV_DIR}/bin/python" --version &> /dev/null; then
-        log_info "Virtual environment already exists at ${VENV_DIR}"
-    else
-        log_info "Creating virtual environment with Python ${REQUIRED_PYTHON_VERSION}..."
+    if [[ -f "pyproject.toml" ]]; then
+        log_info "Installing Python packages from pyproject.toml (including dev dependencies)..."
+        uv sync --extra dev
+    elif [[ -f "requirements.txt" ]]; then
+        log_warn "pyproject.toml not found, falling back to requirements.txt..."
         uv venv "${VENV_DIR}" --python "${REQUIRED_PYTHON_VERSION}"
-    fi
-
-    # Install Python requirements using uv (much faster than pip)
-    if [[ -f "requirements.txt" ]]; then
-        log_info "Installing Python packages from requirements.txt..."
         uv pip install --python "${VENV_DIR}/bin/python" -r requirements.txt
     else
-        log_warn "requirements.txt not found, skipping Python packages"
+        log_error "No pyproject.toml or requirements.txt found"
+        exit 1
     fi
 
     # Activate for ansible-galaxy (needs VIRTUAL_ENV set)

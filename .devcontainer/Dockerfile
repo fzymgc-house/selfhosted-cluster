@@ -49,10 +49,6 @@ RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/sh
     && apt-get update && apt-get install -y vault \
     && rm -rf /var/lib/apt/lists/*
 
-# Set up Python virtual environment directory
-ENV VIRTUAL_ENV=/workspace/.venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
 # Switch to vscode user
 USER vscode
 
@@ -61,8 +57,5 @@ RUN echo 'alias k=kubectl' >> /home/vscode/.bashrc \
     && echo 'alias tf=terraform' >> /home/vscode/.bashrc \
     && echo 'alias ll="ls -alh"' >> /home/vscode/.bashrc
 
-# Set working directory
-WORKDIR /workspace
-
-# Default command
+# Default command (workdir set by devcontainer.json)
 CMD ["/bin/bash"]

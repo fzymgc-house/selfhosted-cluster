@@ -3,12 +3,17 @@
 # Create a Vault token for use in devcontainer
 #
 # Run this script on your HOST (not inside the devcontainer) to create
-# an orphan token that can be used for container authentication.
+# a child token that can be used for container authentication.
 #
 # The token has:
 #   - 8 hour TTL (enough for a work session)
-#   - Orphan status (doesn't get revoked when parent expires)
+#   - Inherits parent's identity entity (required for templated policies)
 #   - claude-code policy (access to user secrets)
+#
+# Note: Child tokens inherit the parent's entity, which is required for
+# the {{identity.entity.name}} templating in the claude-code policy.
+# The token will be revoked if the parent OIDC token is revoked, but
+# OIDC tokens typically last ~14 days which is plenty for dev sessions.
 #
 # Usage:
 #   ./create-vault-token.sh
@@ -102,11 +107,10 @@ fi
 
 log_info "Vault entity: ${ENTITY_NAME:-unknown}"
 
-# Create orphan token with limited TTL
+# Create child token with limited TTL (inherits parent's entity for templated policies)
 log_step "Creating devcontainer token (8 hour TTL)..."
 
 TOKEN_OUTPUT=$(vault token create \
-    -orphan \
     -ttl=8h \
     -display-name="devcontainer-${ENTITY_NAME:-user}" \
     -policy=claude-code \
@@ -147,7 +151,7 @@ if $COPIED_TO_CLIPBOARD; then
     echo "Token details:"
     echo "  - TTL: ${TTL} seconds (~8 hours)"
     echo "  - Policy: claude-code"
-    echo "  - Type: Orphan (won't expire with parent)"
+    echo "  - Entity: ${ENTITY_NAME:-unknown} (inherited from parent)"
     echo ""
 else
     echo "────────────────────────────────────────────────────────────────"
@@ -162,7 +166,7 @@ else
     echo "Token details:"
     echo "  - TTL: ${TTL} seconds (~8 hours)"
     echo "  - Policy: claude-code"
-    echo "  - Type: Orphan (won't expire with parent)"
+    echo "  - Entity: ${ENTITY_NAME:-unknown} (inherited from parent)"
     echo ""
 fi
 

@@ -1,0 +1,6 @@
+name = "hcp-terraform-discord"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Secret: DISCORD_WEBHOOK_URL
+# Set via: wrangler secret put DISCORD_WEBHOOK_URL

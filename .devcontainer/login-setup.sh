@@ -26,11 +26,16 @@ echo "║           Development Environment Login Setup              ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
 
-# Ensure direnv is allowed (loads .envrc which fetches secrets from Vault)
+# Ensure direnv is allowed and exported (loads .envrc which fetches secrets from Vault)
 if command -v direnv &>/dev/null; then
     if ! direnv_output=$(direnv allow . 2>&1); then
         log_warn "direnv allow failed: ${direnv_output}"
         log_warn "Environment variables from .envrc may not be loaded"
+    else
+        # Export to current shell so environment variables are immediately available
+        if direnv_export=$(direnv export bash 2>/dev/null); then
+            eval "$direnv_export"
+        fi
     fi
 fi
 
@@ -130,6 +135,11 @@ if $needs_vault; then
                 if ! direnv_output=$(direnv allow . 2>&1); then
                     log_warn "direnv reload failed: ${direnv_output}"
                     log_warn "Run 'direnv allow' manually to load MCP server keys"
+                else
+                    # Export to current shell
+                    if direnv_export=$(direnv export bash 2>/dev/null); then
+                        eval "$direnv_export"
+                    fi
                 fi
             else
                 log_warn "Vault token login failed:"
@@ -261,6 +271,13 @@ if vault token lookup &>/dev/null; then
         else
             log_warn "direnv not found - source .envrc manually"
         fi
+    else
+        log_warn "Could not determine Vault entity name"
+        echo "    Cannot store/retrieve API keys without a valid entity name."
+        echo "    This may happen if your Vault token has no associated identity."
+        echo ""
+        echo "    You can still use Vault manually:"
+        echo "      vault kv put secret/users/<your-username>/firecrawl api_key=..."
     fi
     echo ""
 fi
@@ -330,6 +347,11 @@ if vault token lookup &>/dev/null && [[ -n "${ENTITY_NAME:-}" ]]; then
                     if command -v direnv &>/dev/null; then
                         if ! direnv_output=$(direnv allow . 2>&1); then
                             log_warn "direnv reload failed: ${direnv_output}"
+                        else
+                            # Export to current shell
+                            if direnv_export=$(direnv export bash 2>/dev/null); then
+                                eval "$direnv_export"
+                            fi
                         fi
                     fi
                 else
@@ -350,16 +372,13 @@ if vault token lookup &>/dev/null && [[ -n "${ENTITY_NAME:-}" ]]; then
         if ! mkdir -p "$TF_CREDS_DIR" 2>/dev/null; then
             log_warn "Failed to create directory: ${TF_CREDS_DIR}"
             log_warn "You may need to create ~/.terraform.d/credentials.tfrc.json manually"
-        elif ! cat > "$TF_CREDS_FILE" <<EOF
-{
+        elif ! printf '%s\n' '{
   "credentials": {
     "app.terraform.io": {
-      "token": "${TF_TOKEN}"
+      "token": "'"${TF_TOKEN}"'"
     }
   }
-}
-EOF
-        then
+}' > "$TF_CREDS_FILE"; then
             log_warn "Failed to write credentials file: ${TF_CREDS_FILE}"
         elif ! chmod 600 "$TF_CREDS_FILE" 2>/dev/null; then
             log_warn "Failed to set permissions on ${TF_CREDS_FILE}"

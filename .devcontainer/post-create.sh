@@ -81,23 +81,46 @@ fi
 # Note: Run from /tmp to avoid git worktree path issues in container
 # (worktree .git file references host path that doesn't exist inside container)
 log_info "Configuring git..."
-(
-    cd /tmp
-    git config --global init.defaultBranch main
-    git config --global pull.rebase true
-    git config --global fetch.prune true
-)
+
+# Check if gitconfig is writable (may be read-only bind mount from host)
+if [[ -w "${HOME}/.gitconfig" ]] || [[ ! -f "${HOME}/.gitconfig" ]]; then
+    # Writable or doesn't exist yet - safe to set defaults
+    git_config_err=""
+    if ! git_config_err=$(cd /tmp && git config --global init.defaultBranch main && \
+                          git config --global pull.rebase true && \
+                          git config --global fetch.prune true 2>&1); then
+        log_warn "Failed to configure git defaults: ${git_config_err:-unknown error}"
+    fi
+else
+    log_info "\$HOME/.gitconfig is read-only (mounted from host), using existing settings"
+fi
 
 # Check if git author info is available (from mounted ~/.gitconfig or prior config)
-GIT_USER_NAME="$(cd /tmp && git config --global user.name 2>/dev/null || echo '')"
-GIT_USER_EMAIL="$(cd /tmp && git config --global user.email 2>/dev/null || echo '')"
+# Note: git config exits 1 if key not set, other codes indicate real errors
+if ! GIT_USER_NAME="$(cd /tmp && git config --global user.name 2>&1)"; then
+    GIT_USER_NAME=""
+fi
+if ! GIT_USER_EMAIL="$(cd /tmp && git config --global user.email 2>&1)"; then
+    GIT_USER_EMAIL=""
+fi
+
 if [[ -n "$GIT_USER_NAME" && -n "$GIT_USER_EMAIL" ]]; then
     log_info "✓ Git author: $GIT_USER_NAME <$GIT_USER_EMAIL>"
-else
-    log_warn "Git author not configured (host ~/.gitconfig may not be mounted)"
-    echo "    Configure manually:"
+elif [[ ! -f "${HOME}/.gitconfig" ]]; then
+    log_warn "\$HOME/.gitconfig not mounted (file may not exist on host)"
+    echo "    Create on host: git config --global user.name 'Your Name'"
+    echo "                    git config --global user.email 'your.email@example.com'"
+    echo "    Or configure manually in container after rebuild"
+elif [[ -z "$GIT_USER_NAME" && -z "$GIT_USER_EMAIL" ]]; then
+    log_warn "Git author not configured in ~/.gitconfig"
+    echo "    Configure on host:"
     echo "      git config --global user.name 'Your Name'"
     echo "      git config --global user.email 'your.email@example.com'"
+else
+    # Partial config - one is set, one is missing
+    log_warn "Git author incomplete in ~/.gitconfig"
+    [[ -z "$GIT_USER_NAME" ]] && echo "    Missing: git config --global user.name 'Your Name'"
+    [[ -z "$GIT_USER_EMAIL" ]] && echo "    Missing: git config --global user.email 'your.email@example.com'"
 fi
 
 # Set up kubectl default context if available

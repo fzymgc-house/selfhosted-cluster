@@ -1,10 +1,13 @@
 # tf/vault/k8s-rbac-vault-certs.tf
 # Kubernetes RBAC bindings for Vault-issued certificate groups.
-# Maps certificate Organization field to ClusterRoles.
+# Maps certificate Organization field to built-in ClusterRoles:
+#   - cluster-admin: Full cluster access (k8s-admins group)
+#   - edit: Read/write workloads, no RBAC (k8s-developers group)
+#   - view: Read-only access (k8s-viewers group)
 
 resource "kubernetes_cluster_role_binding_v1" "vault_cert_admins" {
   metadata {
-    name = "vault-cert-cluster-admins"
+    name = "vault-cert-admins"
     labels = {
       "app.kubernetes.io/managed-by" = "terraform"
       "app.kubernetes.io/component"  = "rbac"

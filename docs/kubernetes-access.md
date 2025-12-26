@@ -16,11 +16,13 @@ This guide explains how to authenticate to the fzymgc-house Kubernetes cluster u
 vault login -method=oidc
 
 # 2. Get a Kubernetes certificate and configure kubectl
-./scripts/k8s-login.sh admin    # or: developer, viewer
+k8s-login.sh admin    # or: developer, viewer
 
 # 3. Use kubectl
 kubectl get nodes
 ```
+
+> **Note:** The `scripts/` directory is in PATH via `.envrc`. Run `direnv allow` if prompted.
 
 ## Access Levels
 
@@ -55,11 +57,18 @@ Re-run `./scripts/k8s-login.sh <role>` to get a fresh certificate.
 
 ## Break-Glass Access
 
-For emergency access when Vault/Authentik are unavailable, use the static admin kubeconfig:
+> **⚠️ WARNING**: Only use when Vault/Authentik are unavailable and emergency action is required.
+> All break-glass usage should be documented and reviewed.
+
+For emergency access when normal authentication fails:
 
 ```bash
 export KUBECONFIG=~/.kube/configs/fzymgc-house-admin.yml
 kubectl get nodes
 ```
 
-This should only be used for break-glass scenarios.
+**Important:**
+- This bypasses all identity-based access controls
+- Actions are not tied to your identity in audit logs
+- Return to normal authentication as soon as possible
+- Document the incident and reason for break-glass access

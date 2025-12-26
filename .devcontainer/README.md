@@ -13,7 +13,6 @@ The devcontainer provides a complete, reproducible development environment with:
 - **kubectl** for Kubernetes management
 - **Helm** for Kubernetes package management
 - **GitHub CLI (gh)** for PR and repository management
-- **1Password SSH Agent** for SSH key management (via socket proxy)
 - **k3sup** for k3s cluster management
 
 ### AI Development
@@ -29,7 +28,6 @@ The devcontainer provides a complete, reproducible development environment with:
 - `neovim` - Modern vim editor (via devcontainer feature)
 - Git, SSH, SSHD, and essential build tools
 - Docker-in-Docker support
-- 1Password SSH Agent integration (via socket proxy)
 
 ### Python Packages
 All packages from `pyproject.toml` are automatically installed via `uv sync`:
@@ -53,13 +51,10 @@ All collections from `ansible/requirements.yml`:
 
 1. **VS Code** with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 2. **Docker Desktop** or Docker Engine running
-3. **socat** (for 1Password socket proxy): `brew install socat`
-4. **1Password** with SSH agent enabled (for SSH key management)
-5. **Host prerequisites** (automatically mounted):
+3. **Host prerequisites** (automatically mounted):
    - `~/.ssh` - SSH keys for Git and cluster access
    - `~/.gitconfig` - Git author name and email (read-only)
    - `~/.kube/configs/fzymgc-house-admin.yml` - Kubernetes cluster configuration
-   - `~/.1password/agent.sock` - 1Password SSH agent socket
 
 ### Pre-Setup: Store Credentials in Vault (Optional)
 
@@ -104,7 +99,7 @@ If you have the repository cloned locally:
 The container will automatically:
 - Build the Docker image with all tools
 - Clone (or mount) the repository into `/workspaces/selfhosted-cluster`
-- Mount your SSH keys, kubeconfig, git config, and 1Password socket
+- Mount your SSH keys, kubeconfig, and git config
 - Run the `post-create.sh` script to set up Python venv
 - Install all Python and Ansible dependencies
 
@@ -143,7 +138,7 @@ kubectl --context fzymgc-house get nodes
 # Check Vault connectivity
 vault token lookup
 
-# Check SSH agent (1Password keys)
+# Check SSH keys
 ssh-add -L
 ```
 
@@ -214,7 +209,6 @@ The container includes these pre-configured aliases:
 | `~/.ssh` | `/home/vscode/.ssh` | SSH keys (read-only) |
 | `~/.gitconfig` | `/home/vscode/.gitconfig` | Git author config (read-only) |
 | `~/.kube` | `/home/vscode/.kube` | Kubernetes config |
-| `~/.1password` | `/home/vscode/.1password` | 1Password SSH agent socket |
 
 ### Docker Volumes (Persist Across Rebuilds)
 | Volume Name | Container Path | Purpose |
@@ -236,7 +230,6 @@ Pre-configured environment variables:
 
 - `KUBECONFIG=/home/vscode/.kube/configs/fzymgc-house-admin.yml`
 - `VAULT_ADDR=https://vault.fzymgc.house`
-- `SSH_AUTH_SOCK` - Forwarded from host
 
 Additional environment variables can be set in `.envrc` (automatically loaded with direnv).
 
@@ -304,30 +297,6 @@ Dev Containers: Rebuild Container Without Cache
 # Fix ownership of mounted volumes
 sudo chown -R $(id -u):$(id -g) ~/.kube ~/.ssh
 ```
-
-### 1Password SSH Agent
-
-**Working Solution:** The 1Password SSH agent is integrated via a `socat` proxy that works around Docker Desktop's limitation with paths containing spaces.
-
-**What Works:**
-- ✅ SSH keys from 1Password available in the container
-- ✅ Git/GitHub authentication using 1Password SSH keys
-- ✅ Any SSH operations using keys stored in 1Password
-
-**Setup:**
-The `dev.sh` script automatically creates a socket proxy when starting the container:
-```bash
-# Start container (proxy auto-created)
-./dev.sh up
-
-# Test SSH keys
-./dev.sh exec "ssh-add -L"
-
-# Use Git with 1Password keys
-./dev.sh exec "git fetch"
-```
-
-**Note:** Only the 1Password SSH agent socket is available in the container. This provides SSH key access for Git and SSH operations, which is all that's needed for development workflows.
 
 ### Claude Code Authentication
 
@@ -446,7 +415,7 @@ kubectl get nodes
 - Secrets are managed via HashiCorp Vault, never committed to Git
 - The container has access to your cluster - use carefully
 - Docker-in-Docker is enabled - be cautious with untrusted images
-- 1Password SSH agent provides secure SSH key access without exposing private keys
+- SSH keys from `~/.ssh` are mounted read-only
 
 ## CI/CD Validation
 

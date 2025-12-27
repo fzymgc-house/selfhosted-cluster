@@ -1,4 +1,4 @@
-// terraform.tf - Provider and backend configuration
+# terraform.tf - Provider and backend configuration
 
 terraform {
   cloud {

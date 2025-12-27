@@ -1,4 +1,4 @@
-// variables.tf - Input variables for authentik module
+# variables.tf - Input variables for authentik module
 
 variable "vault_addr" {
   description = "Vault server address"

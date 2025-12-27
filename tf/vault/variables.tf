@@ -1,4 +1,4 @@
-// variables.tf - Input variables for vault module
+# variables.tf - Input variables for vault module
 
 variable "vault_addr" {
   description = "Vault server address"

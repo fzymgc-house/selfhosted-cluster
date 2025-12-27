@@ -1,4 +1,4 @@
-// variables.tf - Input variables
+# variables.tf - Input variables
 
 variable "organization" {
   description = "HCP Terraform organization name"

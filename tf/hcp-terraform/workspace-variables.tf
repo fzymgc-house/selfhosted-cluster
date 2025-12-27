@@ -1,9 +1,11 @@
-// workspace-variables.tf - Workspace variables for Vault OIDC auth and Kubernetes access
-//
-// These variables configure each workspace to authenticate to Vault using
-// HCP TF workload identity (OIDC JWT). When a run executes, HCP TF generates
-// a signed JWT and writes it to a file. The Vault provider reads this file
-// to authenticate.
+# workspace-variables.tf - Workspace variables for Vault dynamic credentials
+#
+# These variables configure each workspace to authenticate to Vault using
+# HCP TF dynamic provider credentials. When a run executes, HCP TF:
+# 1. Generates a signed JWT for workload identity
+# 2. Authenticates to Vault using the JWT (handled internally)
+# 3. Writes the resulting Vault token to a file
+# The Vault provider reads this pre-authenticated token via auth_login_token_file.
 
 # Workspaces that use Vault OIDC authentication
 # Excludes cluster-bootstrap (runs locally with VAULT_TOKEN due to circular dependency)

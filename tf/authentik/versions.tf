@@ -5,15 +5,15 @@ terraform {
   required_providers {
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "3.0.1"
+      version = "~> 3.0"
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "3.1.1"
+      version = "~> 3.1"
     }
     vault = {
       source  = "hashicorp/vault"
-      version = "~> 5.0"
+      version = "~> 5.6"
     }
     authentik = {
       source  = "goauthentik/authentik"

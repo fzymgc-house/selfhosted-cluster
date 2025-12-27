@@ -11,11 +11,11 @@ terraform {
     }
     vault = {
       source  = "hashicorp/vault"
-      version = "~> 5.0"
+      version = "~> 5.6"
     }
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.6"
+      version = "~> 3.7"
     }
   }
 }

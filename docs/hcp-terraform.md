@@ -14,8 +14,8 @@ Terraform execution via HCP Terraform self-hosted agents.
 ## Architecture
 
 ```
-GitHub PR -> HCP Terraform -> Agent Pod -> Vault OIDC -> Terraform Apply
-                |
+GitHub PR -> HCP Terraform -> Agent Pod -> Dynamic Credentials -> Terraform Apply
+                |                              (JWT -> Vault Token)
         Cloudflare Worker -> Discord
 ```
 
@@ -59,15 +59,47 @@ All new workspaces inherit `execution_mode = "agent"` and use the `fzymgc-house-
 
 ## Vault Authentication
 
-Workspaces authenticate to Vault via OIDC workload identity:
+Workspaces authenticate to Vault using **Dynamic Provider Credentials**:
 
-- JWT auth backend: `jwt-hcp-terraform`
-- Per-workspace roles: `tfc-vault`, `tfc-authentik`, `tfc-grafana`, `tfc-cloudflare`, `tfc-core-services`, `tfc-hcp-terraform`
-- Policies grant least-privilege access per workspace
+```
+HCP TF Run Start
+    |
+    v
+HCP TF generates signed JWT (workload identity)
+    |
+    v
+HCP TF exchanges JWT for Vault token (internally)
+    |
+    v
+Writes token to file, injects tfc_vault_dynamic_credentials variable
+    |
+    v
+Vault provider reads token via auth_login_token_file
+```
 
-**Note:** `cluster-bootstrap` runs locally with `VAULT_TOKEN` (not via HCP TF agent) because it deploys the operator itself.
+### Configuration
 
-The `hcp-terraform` workspace has read-only access to notification secrets only (`terraform-hcp-terraform-read` policy).
+| Environment Variable | Value | Purpose |
+|---------------------|-------|---------|
+| `TFC_VAULT_PROVIDER_AUTH` | `true` | Enable dynamic credentials |
+| `TFC_VAULT_ADDR` | `https://vault.fzymgc.house` | Vault server address |
+| `TFC_VAULT_AUTH_PATH` | `jwt-hcp-terraform` | JWT auth backend path |
+| `TFC_VAULT_RUN_ROLE` | `tfc-<workspace>` | Per-workspace Vault role |
+
+### Vault Resources
+
+- **JWT auth backend**: `jwt-hcp-terraform`
+- **Per-workspace roles**: `tfc-vault`, `tfc-authentik`, `tfc-grafana`, `tfc-cloudflare`, `tfc-core-services`
+- **Policies**: Grant least-privilege access per workspace
+
+### Excluded Workspaces
+
+| Workspace | Auth Method | Reason |
+|-----------|-------------|--------|
+| `cluster-bootstrap` | `VAULT_TOKEN` (local) | Deploys the HCP TF Operator itself |
+| `hcp-terraform` | `VAULT_TOKEN` (local) | Manages agent pool configuration |
+
+These have circular dependencies—they manage infrastructure the agent depends on.
 
 ## Agent Deployment
 
@@ -152,9 +184,9 @@ When `HMAC_SECRET` is configured, the Worker validates the `X-TFE-Notification-S
 2. Verify Vault OIDC role exists: `vault read auth/jwt-hcp-terraform/role/tfc-WORKSPACE`
 3. Check policy permissions: `vault policy read terraform-WORKSPACE-admin`
 
-### OIDC authentication failures
+### Dynamic credentials / OIDC failures
 
-Common OIDC issues and resolutions:
+Common authentication issues and resolutions:
 
 | Error | Cause | Fix |
 |-------|-------|-----|

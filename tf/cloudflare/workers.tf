@@ -41,11 +41,18 @@ resource "cloudflare_worker_version" "hcp_terraform_discord" {
   compatibility_flags = ["python_workers"]
   main_module         = "worker.py"
 
-  modules = [{
-    name         = "worker.py"
-    content_type = "text/x-python"
-    content_file = "${path.module}/../../cloudflare/workers/hcp-terraform-discord/worker.py"
-  }]
+  modules = [
+    {
+      name         = "worker.py"
+      content_type = "text/x-python"
+      content_file = "${path.module}/../../cloudflare/workers/hcp-terraform-discord/worker.py"
+    },
+    {
+      name         = "requirements.txt"
+      content_type = "text/x-python-requirement"
+      content_file = "${path.module}/../../cloudflare/workers/hcp-terraform-discord/requirements.txt"
+    }
+  ]
 
   bindings = [
     {

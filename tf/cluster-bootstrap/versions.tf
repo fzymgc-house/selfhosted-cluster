@@ -5,7 +5,7 @@ terraform {
   required_providers {
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 3.0"
+      version = "~> 3.1"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -13,7 +13,7 @@ terraform {
     }
     vault = {
       source  = "hashicorp/vault"
-      version = "~> 5.5"
+      version = "~> 5.6"
     }
   }
 }

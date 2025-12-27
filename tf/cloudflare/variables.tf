@@ -17,6 +17,7 @@ variable "cloudflare_account_id" {
   description = "Cloudflare account ID for tunnel creation"
   type        = string
   default     = "40753dbbbbd1540f02bd0707935ddb3f"
+  sensitive   = true
 
   validation {
     condition     = var.cloudflare_account_id != "your-account-id-here"

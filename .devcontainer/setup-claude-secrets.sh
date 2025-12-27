@@ -88,9 +88,16 @@ else
     log_warn "  Notion: not configured (optional)"
 fi
 
+if [[ -n "${TFE_TOKEN:-}" ]]; then
+    ((MCP_COUNT++))
+    log_info "  Terraform (HCP): configured"
+else
+    log_warn "  Terraform (HCP): not configured (optional)"
+fi
+
 echo ""
 if [[ $MCP_COUNT -gt 0 ]]; then
-    log_info "MCP server API keys: ${MCP_COUNT}/3 configured"
+    log_info "MCP server API keys: ${MCP_COUNT}/4 configured"
 else
     log_info "MCP server API keys: none configured"
     echo ""
@@ -110,6 +117,10 @@ else
     echo "  vault kv put secret/users/${ENTITY_NAME:-<username>}/firecrawl api_key=fc-..."
     echo "  vault kv put secret/users/${ENTITY_NAME:-<username>}/exa api_key=..."
     echo "  vault kv put secret/users/${ENTITY_NAME:-<username>}/notion api_key=secret_..."
+    echo "  vault kv put secret/users/${ENTITY_NAME:-<username>}/terraform api_token=..."
+    echo ""
+    echo "Note: TFE_TOKEN also falls back to cluster-level token at:"
+    echo "  secret/fzymgc-house/cluster/hcp-terraform (api_token)"
     echo ""
     echo "Then reload: direnv allow"
 fi

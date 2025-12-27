@@ -6,11 +6,11 @@ terraform {
   required_providers {
     tfe = {
       source  = "hashicorp/tfe"
-      version = "~> 0.62"
+      version = "~> 0.72"
     }
     vault = {
       source  = "hashicorp/vault"
-      version = "~> 5.0"
+      version = "~> 5.6"
     }
   }
 }

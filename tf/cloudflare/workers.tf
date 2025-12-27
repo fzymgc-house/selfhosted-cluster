@@ -43,7 +43,7 @@ resource "cloudflare_worker_version" "hcp_terraform_discord" {
 
   modules = [{
     name         = "worker.py"
-    content_type = "application/x-python"
+    content_type = "text/x-python"
     content_file = "${path.module}/../../cloudflare/workers/hcp-terraform-discord/worker.py"
   }]
 

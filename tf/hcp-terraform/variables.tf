@@ -6,6 +6,16 @@ variable "organization" {
   default     = "fzymgc-house"
 }
 
+variable "organization_email" {
+  description = "HCP Terraform organization admin email. Set via HCP Terraform workspace variable."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", var.organization_email))
+    error_message = "Must be a valid email address."
+  }
+}
+
 variable "github_repo" {
   description = "GitHub repository identifier"
   type        = string

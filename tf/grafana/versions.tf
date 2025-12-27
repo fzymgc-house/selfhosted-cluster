@@ -5,11 +5,11 @@ terraform {
   required_providers {
     grafana = {
       source  = "grafana/grafana"
-      version = ">= 4.3.0"
+      version = "~> 4.20"
     }
     vault = {
       source  = "hashicorp/vault"
-      version = ">= 5.0"
+      version = "~> 5.6"
     }
   }
 }

@@ -67,6 +67,8 @@ provider "registry.terraform.io/hashicorp/vault" {
   hashes = [
     "h1:CPvCMQ33k8k9rA2pb7KJfMnuc5fmrvLE3Mv1qbJlqsA=",
     "h1:X7NkQUw1neyK2wS1HWFrwwwKNmgz9UHRXudeqJuBPi0=",
+    "h1:lfFtKqcPSyJkxUXDGuMZARsdPB/AGH9R+GqLqU+BYUM=",
+    "h1:qRzvy+n5SM0Dz1TSW/DGSK8jfG3Lwj+dv0xM7in2AhM=",
     "zh:062bfab310e25164ea1bd9a2b86eb0e07ebf67d66f1cea32af84432a8a0a3f15",
     "zh:0fbff85de06502af491dc1992a1a9de5b7066d9dd12095350c73cd9e2a80d11e",
     "zh:255dd6c50d9f069486b36ed13612a1fb7fcaed1949861fb6bc1681bd668ab223",

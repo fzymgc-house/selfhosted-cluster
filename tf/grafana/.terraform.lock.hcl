@@ -43,7 +43,8 @@ provider "registry.terraform.io/grafana/grafana" {
 }
 
 provider "registry.terraform.io/hashicorp/vault" {
-  version = "5.6.0"
+  version     = "5.6.0"
+  constraints = ">= 5.0.0"
   hashes = [
     "h1:0iXM7Lcf3ji08ZpTYH96Ex4bIi1BZdGhQUddVHdohRc=",
     "h1:CPvCMQ33k8k9rA2pb7KJfMnuc5fmrvLE3Mv1qbJlqsA=",

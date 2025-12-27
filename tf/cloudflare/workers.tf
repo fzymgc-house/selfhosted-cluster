@@ -23,6 +23,15 @@ data "vault_kv_secret_v2" "hcp_terraform_hmac" {
 }
 
 # =============================================================================
+# Workers.dev Subdomain
+# =============================================================================
+
+# Get the account's workers.dev subdomain (e.g., "myaccount" from myaccount.workers.dev)
+data "cloudflare_workers_subdomain" "this" {
+  account_id = var.cloudflare_account_id
+}
+
+# =============================================================================
 # HCP Terraform Discord Notification Worker
 # =============================================================================
 
@@ -90,7 +99,7 @@ resource "vault_kv_secret_v2" "hcp_terraform_worker" {
   name  = "fzymgc-house/infrastructure/cloudflare/hcp-terraform-worker"
 
   data_json = jsonencode({
-    url = "https://${cloudflare_worker.hcp_terraform_discord.name}.${var.workers_subdomain}.workers.dev"
+    url = "https://${cloudflare_worker.hcp_terraform_discord.name}.${data.cloudflare_workers_subdomain.this.subdomain}.workers.dev"
   })
 
   custom_metadata {

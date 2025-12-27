@@ -24,13 +24,6 @@ variable "cloudflare_account_id" {
   }
 }
 
-variable "workers_subdomain" {
-  description = "Cloudflare Workers subdomain (from Workers & Pages dashboard)"
-  type        = string
-  # This is set as a workspace variable in HCP Terraform
-  # Find it in Cloudflare Dashboard > Workers & Pages > Your subdomain
-}
-
 variable "tunnel_name" {
   description = "Name of the Cloudflare Tunnel"
   type        = string

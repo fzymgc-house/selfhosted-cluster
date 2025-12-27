@@ -22,7 +22,7 @@ spec:
   sources:
     - repoURL: https://helm.releases.hashicorp.com
       chart: hcp-terraform-operator
-      targetRevision: 0.6.0
+      targetRevision: 2.11.0
       helm:
         releaseName: hcp-terraform-operator
         valueFiles:

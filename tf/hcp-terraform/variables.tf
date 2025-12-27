@@ -12,8 +12,15 @@ variable "github_repo" {
   default     = "fzymgc-house/selfhosted-cluster"
 }
 
-variable "discord_webhook_url" {
-  description = "Cloudflare Worker URL for Discord notifications"
+variable "notification_worker_url" {
+  description = "Cloudflare Worker URL for HCP TF notifications (hcp-terraform-discord)"
   type        = string
   sensitive   = true
+}
+
+variable "notification_hmac_token" {
+  description = "HMAC token for notification signature verification"
+  type        = string
+  sensitive   = true
+  default     = ""  # Optional - when empty, notifications sent without HMAC
 }

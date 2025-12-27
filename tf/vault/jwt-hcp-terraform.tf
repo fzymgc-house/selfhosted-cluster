@@ -27,11 +27,11 @@ resource "vault_jwt_auth_backend_role" "tfc_vault" {
     sub = "organization:fzymgc-house:project:*:workspace:vault:run_phase:*"
   }
 
-  user_claim      = "terraform_workspace_name"
-  role_type       = "jwt"
-  token_ttl       = 3600  # 1 hour for long-running applies
-  token_max_ttl   = 7200  # 2 hour max for complex infrastructure changes
-  token_policies  = ["terraform-vault-admin"]
+  user_claim     = "terraform_workspace_name"
+  role_type      = "jwt"
+  token_ttl      = 3600 # 1 hour for long-running applies
+  token_max_ttl  = 7200 # 2 hour max for complex infrastructure changes
+  token_policies = ["terraform-vault-admin"]
 }
 
 resource "vault_jwt_auth_backend_role" "tfc_authentik" {
@@ -43,11 +43,11 @@ resource "vault_jwt_auth_backend_role" "tfc_authentik" {
     sub = "organization:fzymgc-house:project:*:workspace:authentik:run_phase:*"
   }
 
-  user_claim      = "terraform_workspace_name"
-  role_type       = "jwt"
-  token_ttl       = 3600  # 1 hour for long-running applies
-  token_max_ttl   = 7200  # 2 hour max for complex infrastructure changes
-  token_policies  = ["terraform-authentik-admin"]
+  user_claim     = "terraform_workspace_name"
+  role_type      = "jwt"
+  token_ttl      = 3600 # 1 hour for long-running applies
+  token_max_ttl  = 7200 # 2 hour max for complex infrastructure changes
+  token_policies = ["terraform-authentik-admin"]
 }
 
 resource "vault_jwt_auth_backend_role" "tfc_grafana" {
@@ -59,11 +59,11 @@ resource "vault_jwt_auth_backend_role" "tfc_grafana" {
     sub = "organization:fzymgc-house:project:*:workspace:grafana:run_phase:*"
   }
 
-  user_claim      = "terraform_workspace_name"
-  role_type       = "jwt"
-  token_ttl       = 3600  # 1 hour for long-running applies
-  token_max_ttl   = 7200  # 2 hour max for complex infrastructure changes
-  token_policies  = ["terraform-grafana-admin"]
+  user_claim     = "terraform_workspace_name"
+  role_type      = "jwt"
+  token_ttl      = 3600 # 1 hour for long-running applies
+  token_max_ttl  = 7200 # 2 hour max for complex infrastructure changes
+  token_policies = ["terraform-grafana-admin"]
 }
 
 resource "vault_jwt_auth_backend_role" "tfc_cloudflare" {
@@ -75,11 +75,11 @@ resource "vault_jwt_auth_backend_role" "tfc_cloudflare" {
     sub = "organization:fzymgc-house:project:*:workspace:cloudflare:run_phase:*"
   }
 
-  user_claim      = "terraform_workspace_name"
-  role_type       = "jwt"
-  token_ttl       = 3600  # 1 hour for long-running applies
-  token_max_ttl   = 7200  # 2 hour max for complex infrastructure changes
-  token_policies  = ["terraform-cloudflare-admin"]
+  user_claim     = "terraform_workspace_name"
+  role_type      = "jwt"
+  token_ttl      = 3600 # 1 hour for long-running applies
+  token_max_ttl  = 7200 # 2 hour max for complex infrastructure changes
+  token_policies = ["terraform-cloudflare-admin"]
 }
 
 resource "vault_jwt_auth_backend_role" "tfc_core_services" {
@@ -91,11 +91,11 @@ resource "vault_jwt_auth_backend_role" "tfc_core_services" {
     sub = "organization:fzymgc-house:project:*:workspace:core-services:run_phase:*"
   }
 
-  user_claim      = "terraform_workspace_name"
-  role_type       = "jwt"
-  token_ttl       = 3600  # 1 hour for long-running applies
-  token_max_ttl   = 7200  # 2 hour max for complex infrastructure changes
-  token_policies  = ["terraform-core-services-admin"]
+  user_claim     = "terraform_workspace_name"
+  role_type      = "jwt"
+  token_ttl      = 3600 # 1 hour for long-running applies
+  token_max_ttl  = 7200 # 2 hour max for complex infrastructure changes
+  token_policies = ["terraform-core-services-admin"]
 }
 
 # Note: cluster-bootstrap workspace intentionally excluded from OIDC authentication.

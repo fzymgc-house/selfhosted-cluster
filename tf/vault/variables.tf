@@ -23,6 +23,14 @@ variable "tfc_vault_dynamic_credentials" {
     }))
   })
   default = null
+
+  validation {
+    condition = (
+      var.tfc_vault_dynamic_credentials == null ||
+      try(var.tfc_vault_dynamic_credentials.default.token_filename, "") != ""
+    )
+    error_message = "tfc_vault_dynamic_credentials.default.token_filename is required when dynamic credentials are provided."
+  }
 }
 
 variable "kubeconfig_path" {

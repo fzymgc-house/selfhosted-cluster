@@ -47,7 +47,7 @@ terraform {
   cloud {
     organization = "fzymgc-house"
     workspaces {
-      tags = ["main-cluster", "cloudflared"]
+      tags = ["main-cluster", "cloudflare"]
     }
   }
 }

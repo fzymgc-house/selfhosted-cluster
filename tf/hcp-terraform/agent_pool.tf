@@ -1,30 +1,13 @@
-// agent_pool.tf - Agent pool and token configuration
+// agent_pool.tf - HCP Terraform Operator configuration
+//
+// The HCP Terraform Operator manages agent pools and tokens via the AgentPool CRD.
+// This module only provides guidance - agent pool lifecycle is managed by the operator.
+//
+// See: argocd/app-configs/hcp-terraform-operator/
 
-resource "tfe_agent_pool" "main" {
-  name                = "fzymgc-house-k8s"
-  organization        = var.organization
-  organization_scoped = true
-}
-
-resource "tfe_agent_token" "k8s" {
-  agent_pool_id = tfe_agent_pool.main.id
-  description   = "Kubernetes cluster agent"
-}
-
-# Store agent token in Vault for Kubernetes operator to consume
-resource "vault_kv_secret_v2" "hcp_terraform_agent" {
-  mount = "secret"
-  name  = "fzymgc-house/cluster/hcp-terraform"
-
-  data_json = jsonencode({
-    agent_token = tfe_agent_token.k8s.token
-  })
-
-  custom_metadata {
-    max_versions = 3
-    data = {
-      managed_by = "terraform"
-      module     = "tf/hcp-terraform"
-    }
-  }
-}
+# Note: The HCP Terraform API token must be created manually in HCP Terraform UI:
+# User Settings -> Tokens -> Create an API token
+# Then stored in Vault using:
+#   vault kv put secret/fzymgc-house/cluster/hcp-terraform api_token="<token>"
+#
+# The operator uses this token to create/manage agent pools and agent tokens.

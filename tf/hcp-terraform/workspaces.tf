@@ -66,3 +66,16 @@ resource "tfe_workspace_settings" "this" {
   execution_mode = "agent"
   agent_pool_id  = data.tfe_agent_pool.k8s.id
 }
+
+# Settings for the hcp-terraform workspace itself (self-managed)
+resource "tfe_workspace_settings" "self" {
+  workspace_id   = data.tfe_workspace.self.id
+  execution_mode = "agent"
+  agent_pool_id  = data.tfe_agent_pool.k8s.id
+}
+
+# Import existing workspace settings (one-time operation)
+import {
+  to = tfe_workspace_settings.self
+  id = "${var.organization}/hcp-terraform"
+}

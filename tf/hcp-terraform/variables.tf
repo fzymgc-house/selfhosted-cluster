@@ -6,6 +6,11 @@ variable "organization" {
   default     = "fzymgc-house"
 }
 
+variable "organization_email" {
+  description = "HCP Terraform organization admin email"
+  type        = string
+}
+
 variable "github_repo" {
   description = "GitHub repository identifier"
   type        = string

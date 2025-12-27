@@ -2,7 +2,23 @@
 //
 // Notifications are sent to the hcp-terraform-discord Cloudflare Worker,
 // which transforms them into Discord embeds and forwards to the webhook.
-// HMAC signature validation is optional but recommended.
+// HMAC signature validation ensures requests are authentic.
+//
+// Secrets are read from Vault (populated by tf/cloudflare and tf/vault modules):
+// - Worker URL: secret/fzymgc-house/infrastructure/cloudflare/hcp-terraform-worker
+// - HMAC token: secret/fzymgc-house/infrastructure/cloudflare/hcp-terraform-hmac
+
+# Worker URL for HCP Terraform notifications (created by tf/cloudflare)
+data "vault_kv_secret_v2" "hcp_terraform_worker" {
+  mount = "secret"
+  name  = "fzymgc-house/infrastructure/cloudflare/hcp-terraform-worker"
+}
+
+# HMAC token for notification signature verification (created by tf/vault)
+data "vault_kv_secret_v2" "hcp_terraform_hmac" {
+  mount = "secret"
+  name  = "fzymgc-house/infrastructure/cloudflare/hcp-terraform-hmac"
+}
 
 resource "tfe_notification_configuration" "discord" {
   for_each = tfe_workspace.this
@@ -11,11 +27,11 @@ resource "tfe_notification_configuration" "discord" {
   name             = "discord"
   enabled          = true
   destination_type = "generic"
-  url              = var.notification_worker_url
+  url              = data.vault_kv_secret_v2.hcp_terraform_worker.data["url"]
 
   # HMAC token for signature verification (X-TFE-Notification-Signature header)
-  # When set, the Worker validates signatures before processing
-  token = var.notification_hmac_token != "" ? var.notification_hmac_token : null
+  # Worker validates X-TFE-Notification-Signature header using HMAC-SHA512
+  token = data.vault_kv_secret_v2.hcp_terraform_hmac.data["token"]
 
   triggers = [
     "run:planning",

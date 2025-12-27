@@ -17,6 +17,34 @@ locals {
   k8s_workspaces = toset(["vault", "core-services"])
 }
 
+# =============================================================================
+# Self-configuration: OIDC variables for the hcp-terraform workspace itself
+# =============================================================================
+
+# Reference to this workspace (self-managed via terraform cloud block)
+data "tfe_workspace" "self" {
+  name         = "hcp-terraform"
+  organization = var.organization
+}
+
+# Vault address for this workspace
+resource "tfe_variable" "self_vault_addr" {
+  workspace_id = data.tfe_workspace.self.id
+  key          = "vault_addr"
+  value        = "https://vault.fzymgc.house"
+  category     = "terraform"
+  description  = "Vault server address"
+}
+
+# Workload identity token path for this workspace
+resource "tfe_variable" "self_tfc_workload_identity_token_path" {
+  workspace_id = data.tfe_workspace.self.id
+  key          = "tfc_workload_identity_token_path"
+  value        = "/var/run/secrets/tfc/workload-identity-token"
+  category     = "terraform"
+  description  = "Path to HCP TF workload identity JWT"
+}
+
 # Vault address for all OIDC workspaces
 resource "tfe_variable" "vault_addr" {
   for_each = local.oidc_workspaces

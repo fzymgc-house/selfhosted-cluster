@@ -23,15 +23,6 @@ data "vault_kv_secret_v2" "hcp_terraform_hmac" {
 }
 
 # =============================================================================
-# Workers.dev Subdomain
-# =============================================================================
-
-# Get the account's workers.dev subdomain (e.g., "myaccount" from myaccount.workers.dev)
-data "cloudflare_workers_subdomain" "this" {
-  account_id = var.cloudflare_account_id
-}
-
-# =============================================================================
 # HCP Terraform Discord Notification Worker
 # =============================================================================
 
@@ -42,19 +33,18 @@ resource "cloudflare_worker" "hcp_terraform_discord" {
   tags       = ["terraform", "notifications", "discord"]
 }
 
-# The Worker version deploys code + bindings
-# Worker URL: https://hcp-terraform-discord.<workers-subdomain>.workers.dev
-# The workers.dev subdomain is configured in Cloudflare dashboard, not the account ID
+# The Worker version deploys code + bindings (Python Worker)
 resource "cloudflare_worker_version" "hcp_terraform_discord" {
-  account_id         = var.cloudflare_account_id
-  worker_id          = cloudflare_worker.hcp_terraform_discord.id
-  compatibility_date = "2025-12-01"
-  main_module        = "worker.js"
+  account_id          = var.cloudflare_account_id
+  worker_id           = cloudflare_worker.hcp_terraform_discord.id
+  compatibility_date  = "2025-12-01"
+  compatibility_flags = ["python_workers"]
+  main_module         = "worker.py"
 
   modules = [{
-    name         = "worker.js"
-    content_type = "application/javascript+module"
-    content_file = "${path.module}/../../cloudflare/workers/hcp-terraform-discord/worker.js"
+    name         = "worker.py"
+    content_type = "application/x-python"
+    content_file = "${path.module}/../../cloudflare/workers/hcp-terraform-discord/worker.py"
   }]
 
   bindings = [
@@ -89,6 +79,15 @@ resource "cloudflare_workers_deployment" "hcp_terraform_discord" {
   ]
 }
 
+# Custom domain for the Worker (avoids workers.dev subdomain dependency)
+# Using fzymgc.net for external webhooks (avoids split-horizon DNS with fzymgc.house)
+resource "cloudflare_workers_custom_domain" "hcp_terraform_discord" {
+  account_id = var.cloudflare_account_id
+  hostname   = "hcp-tf${var.webhook_suffix}.${var.webhook_domain}"
+  service    = cloudflare_worker.hcp_terraform_discord.name
+  zone_id    = data.cloudflare_zone.fzymgc_net.id
+}
+
 # =============================================================================
 # Store Worker URL in Vault for tf/hcp-terraform to consume
 # =============================================================================
@@ -99,7 +98,7 @@ resource "vault_kv_secret_v2" "hcp_terraform_worker" {
   name  = "fzymgc-house/infrastructure/cloudflare/hcp-terraform-worker"
 
   data_json = jsonencode({
-    url = "https://${cloudflare_worker.hcp_terraform_discord.name}.${data.cloudflare_workers_subdomain.this.subdomain}.workers.dev"
+    url = "https://${cloudflare_workers_custom_domain.hcp_terraform_discord.hostname}"
   })
 
   custom_metadata {

@@ -26,9 +26,10 @@ GitHub PR -> HCP Terraform -> Agent Pod -> Vault OIDC -> Terraform Apply
 | vault | tf/vault | Vault configuration, policies, auth |
 | authentik | tf/authentik | Authentik SSO configuration |
 | grafana | tf/grafana | Grafana dashboards and config |
-| cloudflare | tf/cloudflare | DNS and tunnel configuration |
+| cloudflare | tf/cloudflare | DNS, tunnel, Workers configuration |
 | core-services | tf/core-services | Core K8s service configuration |
 | cluster-bootstrap | tf/cluster-bootstrap | Initial cluster infrastructure |
+| hcp-terraform | tf/hcp-terraform | Self-managed workspace configuration |
 
 ## Workflow
 
@@ -41,10 +42,12 @@ GitHub PR -> HCP Terraform -> Agent Pod -> Vault OIDC -> Terraform Apply
 Workspaces authenticate to Vault via OIDC workload identity:
 
 - JWT auth backend: `jwt-hcp-terraform`
-- Per-workspace roles: `tfc-vault`, `tfc-authentik`, `tfc-grafana`, `tfc-cloudflare`, `tfc-core-services`
+- Per-workspace roles: `tfc-vault`, `tfc-authentik`, `tfc-grafana`, `tfc-cloudflare`, `tfc-core-services`, `tfc-hcp-terraform`
 - Policies grant least-privilege access per workspace
 
 **Note:** `cluster-bootstrap` runs locally with `VAULT_TOKEN` (not via HCP TF agent) because it deploys the operator itself.
+
+The `hcp-terraform` workspace has read-only access to notification secrets only (`terraform-hcp-terraform-read` policy).
 
 ## Agent Deployment
 
@@ -94,28 +97,24 @@ The Worker secret is managed by Terraform - no manual `wrangler secret` commands
 
 ### HMAC Signature Validation
 
-The Worker validates HCP Terraform notification signatures using HMAC-SHA512. The secret is managed by Terraform:
+The Worker validates HCP Terraform notification signatures using HMAC-SHA512. The entire flow is automated via Vault:
 
-1. **Secret is auto-generated** by `tf/vault` using the `random_password` resource
-2. **Secret is stored** at `secret/fzymgc-house/infrastructure/cloudflare/hcp-terraform-hmac`
-3. **Secret is consumed** by `tf/cloudflare` which binds it to the Worker
+| Step | Module | Secret Path |
+|------|--------|-------------|
+| HMAC token created | `tf/vault` | `secret/fzymgc-house/infrastructure/cloudflare/hcp-terraform-hmac` |
+| Worker deployed + HMAC bound | `tf/cloudflare` | Reads from Vault, binds to Worker |
+| Worker URL stored | `tf/cloudflare` | `secret/fzymgc-house/infrastructure/cloudflare/hcp-terraform-worker` |
+| Notifications configured | `tf/hcp-terraform` | Reads both secrets from Vault |
 
-**To enable HMAC validation:**
+**Apply Order:**
 
-1. Apply tf/vault first (creates the HMAC secret in Vault):
-   ```bash
-   terraform -chdir=tf/vault apply
-   ```
+```bash
+terraform -chdir=tf/vault apply       # Creates HMAC token
+terraform -chdir=tf/cloudflare apply  # Deploys Worker, stores URL in Vault
+terraform -chdir=tf/hcp-terraform apply  # Configures notifications from Vault
+```
 
-2. Apply tf/cloudflare (deploys Worker with HMAC binding):
-   ```bash
-   terraform -chdir=tf/cloudflare apply
-   ```
-
-3. Get the HMAC token from Vault and add it to your HCP TF notification configuration:
-   ```bash
-   vault kv get -field=token secret/fzymgc-house/infrastructure/cloudflare/hcp-terraform-hmac
-   ```
+No manual secret handling required - `tf/hcp-terraform` reads both the Worker URL and HMAC token from Vault and configures notifications automatically.
 
 When `HMAC_SECRET` is configured, the Worker validates the `X-TFE-Notification-Signature` header. Invalid signatures are rejected with 401.
 

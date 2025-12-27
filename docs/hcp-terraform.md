@@ -31,6 +31,27 @@ GitHub PR -> HCP Terraform -> Agent Pod -> Vault OIDC -> Terraform Apply
 | cluster-bootstrap | tf/cluster-bootstrap | Initial cluster infrastructure |
 | hcp-terraform | tf/hcp-terraform | Self-managed workspace configuration |
 
+## Organization Configuration
+
+The HCP Terraform organization itself is managed as code in `tf/hcp-terraform/organization.tf`:
+
+| Resource | Purpose |
+|----------|---------|
+| `tfe_organization` | Organization metadata (name, admin email) |
+| `tfe_organization_default_settings` | Default execution mode and agent pool for new workspaces |
+
+**Default Behavior:**
+All new workspaces inherit `execution_mode = "agent"` and use the `fzymgc-house-k8s` agent pool unless explicitly overridden.
+
+**Prerequisites:**
+- Agent pool `fzymgc-house-k8s` must exist (created by HCP TF Operator)
+- `organization_email` variable must be set in HCP Terraform workspace variables
+
+**Why manage organization as code:**
+1. **Consistency**: All new workspaces inherit correct agent execution defaults
+2. **Auditability**: Changes to organization settings go through Git/PR review
+3. **Disaster Recovery**: Organization settings can be restored from Git
+
 ## Workflow
 
 1. **PR Created**: Speculative plan runs, results posted as PR comment

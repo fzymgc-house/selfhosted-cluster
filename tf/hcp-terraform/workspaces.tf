@@ -69,10 +69,11 @@ resource "tfe_workspace_settings" "this" {
 
 # Settings for the hcp-terraform workspace itself (self-managed)
 # Uses data.tfe_workspace.self defined in workspace-variables.tf
+# MUST use local execution - this workspace manages the agent pool itself,
+# so using agents would create a circular dependency (same as cluster-bootstrap)
 resource "tfe_workspace_settings" "self" {
   workspace_id   = data.tfe_workspace.self.id
-  execution_mode = "agent"
-  agent_pool_id  = data.tfe_agent_pool.k8s.id
+  execution_mode = "local"
 }
 
 # Import existing workspace settings (one-time operation)

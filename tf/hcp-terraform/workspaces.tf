@@ -52,10 +52,16 @@ resource "tfe_workspace" "this" {
   }
 }
 
+# Look up the agent pool created by the HCP Terraform Kubernetes Operator
+data "tfe_agent_pool" "k8s" {
+  name         = "fzymgc-house-k8s"
+  organization = var.organization
+}
+
 resource "tfe_workspace_settings" "this" {
   for_each = local.all_workspaces
 
   workspace_id   = tfe_workspace.this[each.key].id
   execution_mode = "agent"
-  agent_pool_id  = tfe_agent_pool.main.id
+  agent_pool_id  = data.tfe_agent_pool.k8s.id
 }

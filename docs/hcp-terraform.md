@@ -104,7 +104,24 @@ For enhanced security, configure HMAC signature validation:
 
 2. Add the token to your HCP TF notification configuration (UI or API)
 
-3. Update `tf/cloudflare/workers.tf` to include the `HMAC_SECRET` binding
+3. Add the HMAC secret binding to `tf/cloudflare/workers.tf`:
+   ```hcl
+   # Read HMAC token from Vault
+   data "vault_kv_secret_v2" "hcp_terraform_hmac" {
+     mount = "secret"
+     name  = "fzymgc-house/infrastructure/cloudflare/hcp-terraform-hmac"
+   }
+
+   # Set the HMAC secret on the Worker
+   resource "cloudflare_workers_secret" "hcp_terraform_hmac" {
+     account_id  = var.cloudflare_account_id
+     script_name = "hcp-terraform-discord"
+     secret_name = "HMAC_SECRET"
+     secret_text = data.vault_kv_secret_v2.hcp_terraform_hmac.data["token"]
+   }
+   ```
+
+4. Apply Terraform: `terraform -chdir=tf/cloudflare apply`
 
 When `HMAC_SECRET` is configured, the Worker validates the `X-TFE-Notification-Signature` header. Without it, requests are accepted without signature verification.
 

@@ -13,8 +13,21 @@ variable "grafana_url" {
   default     = "https://grafana.fzymgc.house"
 }
 
-variable "tfc_workload_identity_token_path" {
-  description = "Path to HCP TF workload identity JWT (empty for local dev)"
-  type        = string
-  default     = ""
+variable "tfc_vault_dynamic_credentials" {
+  description = "HCP TF dynamic credentials for Vault (injected when TFC_VAULT_PROVIDER_AUTH=true)"
+  type = object({
+    default = object({
+      token_filename = string
+      address        = string
+      namespace      = string
+      ca_cert_file   = string
+    })
+    aliases = map(object({
+      token_filename = string
+      address        = string
+      namespace      = string
+      ca_cert_file   = string
+    }))
+  })
+  default = null
 }

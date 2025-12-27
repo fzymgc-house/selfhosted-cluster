@@ -1,0 +1,27 @@
+---
+# ServiceAccount for HCP Terraform agent pods
+# This SA has cluster-admin permissions needed for Terraform to manage
+# ClusterRoleBindings and other cluster-scoped resources
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hcp-terraform-agent
+  namespace: hcp-terraform
+
+---
+# Grant cluster-admin to the agent ServiceAccount
+# Required for Terraform modules that manage:
+# - ClusterRoleBindings (tf/vault manages RBAC for cert-manager, etc.)
+# - Other cluster-scoped resources
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: hcp-terraform-agent-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: hcp-terraform-agent
+    namespace: hcp-terraform

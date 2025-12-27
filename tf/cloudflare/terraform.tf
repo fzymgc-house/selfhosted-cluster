@@ -2,7 +2,7 @@
 # terraform: language=hcl
 
 provider "cloudflare" {
-  api_token = data.vault_kv_secret_v2.cloudflare_token.data["token"]
+  api_token = data.vault_kv_secret_v2.cloudflare_bootstrap_token.data["token"]
 }
 
 provider "vault" {
@@ -19,10 +19,13 @@ provider "vault" {
   }
 }
 
-# Data source for Cloudflare API token
-data "vault_kv_secret_v2" "cloudflare_token" {
+# Data source for Cloudflare bootstrap API token
+# This token has: API Tokens:Edit + all operational permissions
+# It's used by Terraform to authenticate and create the workload token
+# See api-tokens.tf for the two-token pattern documentation
+data "vault_kv_secret_v2" "cloudflare_bootstrap_token" {
   mount = "secret"
-  name  = "fzymgc-house/infrastructure/cloudflare/api-token"
+  name  = "fzymgc-house/infrastructure/cloudflare/bootstrap-token"
 }
 
 # Data source for fzymgc.house zone (internal services)

@@ -4,6 +4,7 @@ metadata:
   name: fzymgc-house-agents
   namespace: hcp-terraform
 spec:
+  name: fzymgc-house-k8s  # Must match agent pool name in HCP Terraform
   organization: fzymgc-house
   token:
     secretKeyRef:

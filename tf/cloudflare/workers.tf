@@ -79,3 +79,25 @@ resource "cloudflare_workers_deployment" "hcp_terraform_discord" {
     }
   ]
 }
+
+# =============================================================================
+# Store Worker URL in Vault for tf/hcp-terraform to consume
+# =============================================================================
+
+# Store the Worker URL so tf/hcp-terraform can configure notifications
+resource "vault_kv_secret_v2" "hcp_terraform_worker" {
+  mount = "secret"
+  name  = "fzymgc-house/infrastructure/cloudflare/hcp-terraform-worker"
+
+  data_json = jsonencode({
+    url = "https://${cloudflare_worker.hcp_terraform_discord.name}.${var.workers_subdomain}.workers.dev"
+  })
+
+  custom_metadata {
+    max_versions = 5
+    data = {
+      managed_by = "terraform"
+      module     = "tf/cloudflare"
+    }
+  }
+}

@@ -8,5 +8,9 @@ terraform {
       source  = "hashicorp/tfe"
       version = "~> 0.62"
     }
+    vault = {
+      source  = "hashicorp/vault"
+      version = "~> 5.0"
+    }
   }
 }

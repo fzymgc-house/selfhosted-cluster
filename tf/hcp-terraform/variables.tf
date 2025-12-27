@@ -7,8 +7,9 @@ variable "organization" {
 }
 
 variable "organization_email" {
-  description = "HCP Terraform organization admin email. Set via HCP Terraform workspace variable."
+  description = "HCP Terraform organization admin email"
   type        = string
+  default     = "terraform-admin@sean.fzymgc.email"
 
   validation {
     condition     = can(regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", var.organization_email))

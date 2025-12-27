@@ -68,6 +68,7 @@ resource "tfe_workspace_settings" "this" {
 }
 
 # Settings for the hcp-terraform workspace itself (self-managed)
+# Uses data.tfe_workspace.self defined in workspace-variables.tf
 resource "tfe_workspace_settings" "self" {
   workspace_id   = data.tfe_workspace.self.id
   execution_mode = "agent"

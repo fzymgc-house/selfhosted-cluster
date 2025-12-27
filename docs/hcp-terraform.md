@@ -45,7 +45,6 @@ All new workspaces inherit `execution_mode = "agent"` and use the `fzymgc-house-
 
 **Prerequisites:**
 - Agent pool `fzymgc-house-k8s` must exist (created by HCP TF Operator)
-- `organization_email` variable must be set in HCP Terraform workspace variables
 
 **Why manage organization as code:**
 1. **Consistency**: All new workspaces inherit correct agent execution defaults

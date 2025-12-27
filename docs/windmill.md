@@ -1,5 +1,7 @@
 # Windmill
 
+> **DEPRECATED**: Terraform execution has migrated to HCP Terraform. See `docs/hcp-terraform.md` for the new setup. Windmill flows are archived but not deleted for rollback capability.
+
 Terraform GitOps automation platform replacing Argo Events/Workflows.
 
 ## Architecture

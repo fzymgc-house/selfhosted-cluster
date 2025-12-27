@@ -181,19 +181,22 @@ vault policy read terraform-WORKSPACE-admin
 
 For `cluster-bootstrap` workspace: OIDC is intentionally excluded (deploys the operator itself). Run locally with `VAULT_TOKEN` environment variable.
 
-### cluster-bootstrap Circular Dependency
+### Local-Only Workspaces (Circular Dependencies)
 
-The `cluster-bootstrap` workspace **cannot** use the HCP TF agent because:
+Two workspaces **cannot** use the HCP TF agent and must run locally:
 
-1. It deploys the HCP Terraform Operator itself
-2. The operator must exist before agent pods can run
-3. Chicken-and-egg: agent needs operator, operator needs workspace to run
+| Workspace | Reason |
+|-----------|--------|
+| `cluster-bootstrap` | Deploys the HCP Terraform Operator itself |
+| `hcp-terraform` | Manages the agent pool configuration |
 
-**Solution:** Run `cluster-bootstrap` locally with `VAULT_TOKEN`:
+Both have the same chicken-and-egg problem: they manage infrastructure that the agent depends on.
+
+**Solution:** Run these workspaces locally with `VAULT_TOKEN`:
 
 ```bash
-export VAULT_TOKEN=$(vault token create -field=token -policy=terraform-cluster-bootstrap-admin)
-terraform -chdir=tf/cluster-bootstrap apply
+export VAULT_TOKEN=$(vault token create -field=token -policy=terraform-WORKSPACE-admin)
+terraform -chdir=tf/WORKSPACE apply
 ```
 
 ## Maintenance

@@ -1,13 +1,12 @@
 provider "vault" {
-  address = var.vault_addr
+  address          = var.tfc_vault_dynamic_credentials != null ? var.tfc_vault_dynamic_credentials.default.address : var.vault_addr
+  skip_child_token = var.tfc_vault_dynamic_credentials != null
 
-  # Use OIDC when running in HCP TF, fallback to token for local dev
-  dynamic "auth_login_jwt" {
-    for_each = var.tfc_workload_identity_token_path != "" ? [1] : []
+  # Dynamic credentials: HCP TF handles JWT auth and writes Vault token to file
+  dynamic "auth_login_token_file" {
+    for_each = var.tfc_vault_dynamic_credentials != null ? [1] : []
     content {
-      mount = "jwt-hcp-terraform"
-      role  = "tfc-authentik"
-      jwt   = file(var.tfc_workload_identity_token_path)
+      filename = var.tfc_vault_dynamic_credentials.default.token_filename
     }
   }
 }

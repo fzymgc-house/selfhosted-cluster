@@ -1,9 +1,11 @@
-// workspace-variables.tf - Workspace variables for Vault OIDC auth and Kubernetes access
-//
-// These variables configure each workspace to authenticate to Vault using
-// HCP TF workload identity (OIDC JWT). When a run executes, HCP TF generates
-// a signed JWT and writes it to a file. The Vault provider reads this file
-// to authenticate.
+# workspace-variables.tf - Workspace variables for Vault dynamic credentials
+#
+# These variables configure each workspace to authenticate to Vault using
+# HCP TF dynamic provider credentials. When a run executes, HCP TF:
+# 1. Generates a signed JWT for workload identity
+# 2. Authenticates to Vault using the JWT (handled internally)
+# 3. Writes the resulting Vault token to a file
+# The Vault provider reads this pre-authenticated token via auth_login_token_file.
 
 # Workspaces that use Vault OIDC authentication
 # Excludes cluster-bootstrap (runs locally with VAULT_TOKEN due to circular dependency)
@@ -27,7 +29,7 @@ data "tfe_workspace" "self" {
   organization = var.organization
 }
 
-# Vault address for this workspace
+# Vault address for this workspace (runs in local mode, uses VAULT_TOKEN)
 resource "tfe_variable" "self_vault_addr" {
   workspace_id = data.tfe_workspace.self.id
   key          = "vault_addr"
@@ -36,38 +38,54 @@ resource "tfe_variable" "self_vault_addr" {
   description  = "Vault server address"
 }
 
-# Workload identity token path for this workspace
-resource "tfe_variable" "self_tfc_workload_identity_token_path" {
-  workspace_id = data.tfe_workspace.self.id
-  key          = "tfc_workload_identity_token_path"
-  value        = "/var/run/secrets/tfc/workload-identity-token"
-  category     = "terraform"
-  description  = "Path to HCP TF workload identity JWT"
+# Note: hcp-terraform workspace runs in local mode (not agent) due to circular
+# dependency - it manages the agent pool configuration itself. Auth via VAULT_TOKEN.
+
+# =============================================================================
+# Vault Dynamic Credentials
+# HCP TF handles JWT auth to Vault and injects tfc_vault_dynamic_credentials var
+# See: https://developer.hashicorp.com/terraform/cloud-docs/workspaces/dynamic-provider-credentials/vault-configuration
+# =============================================================================
+
+resource "tfe_variable" "vault_provider_auth" {
+  for_each = local.oidc_workspaces
+
+  workspace_id = tfe_workspace.this[each.key].id
+  key          = "TFC_VAULT_PROVIDER_AUTH"
+  value        = "true"
+  category     = "env"
+  description  = "Enable dynamic Vault credentials"
 }
 
-# Vault address for all OIDC workspaces
 resource "tfe_variable" "vault_addr" {
   for_each = local.oidc_workspaces
 
   workspace_id = tfe_workspace.this[each.key].id
-  key          = "vault_addr"
+  key          = "TFC_VAULT_ADDR"
   value        = "https://vault.fzymgc.house"
-  category     = "terraform"
-  description  = "Vault server address"
+  category     = "env"
+  description  = "Vault server address for dynamic credentials"
 }
 
-# Workload identity token file path
-# HCP TF Operator mounts the JWT at this path when workload identity is configured.
-# Path is defined by HCP Terraform Operator Helm chart (tested with chart v0.6.0).
-# See: https://developer.hashicorp.com/terraform/cloud-docs/agents/agent-pools
-resource "tfe_variable" "tfc_workload_identity_token_path" {
+resource "tfe_variable" "vault_auth_path" {
   for_each = local.oidc_workspaces
 
   workspace_id = tfe_workspace.this[each.key].id
-  key          = "tfc_workload_identity_token_path"
-  value        = "/var/run/secrets/tfc/workload-identity-token"
-  category     = "terraform"
-  description  = "Path to HCP TF workload identity JWT (chart v0.6.0)"
+  key          = "TFC_VAULT_AUTH_PATH"
+  value        = "jwt-hcp-terraform"
+  category     = "env"
+  description  = "Vault JWT auth backend path"
+}
+
+# Workspace-specific Vault role (tfc-vault, tfc-authentik, etc.)
+resource "tfe_variable" "vault_run_role" {
+  for_each = local.oidc_workspaces
+
+  workspace_id = tfe_workspace.this[each.key].id
+  key          = "TFC_VAULT_RUN_ROLE"
+  value        = "tfc-${each.value.tags[1]}"  # e.g., tfc-vault, tfc-authentik
+  category     = "env"
+  description  = "Vault role for this workspace"
 }
 
 # Empty kubeconfig path for in-cluster auth (agent pod uses ServiceAccount)

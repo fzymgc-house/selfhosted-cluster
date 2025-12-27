@@ -1,0 +1,44 @@
+---
+# ServiceAccount for HCP Terraform agent pods
+# Used by the agent to interact with the Kubernetes API
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hcp-terraform-agent
+  namespace: hcp-terraform
+
+---
+# Custom ClusterRole with minimal permissions for Terraform
+# Only grants what tf/vault module actually needs:
+# - ClusterRoleBindings for Vault cert RBAC (k8s-rbac-vault-certs.tf)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: hcp-terraform-agent
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/component: rbac
+rules:
+  # Manage ClusterRoleBindings - needed by tf/vault for cert RBAC
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["clusterrolebindings"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Read ClusterRoles to reference them in bindings
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["clusterroles"]
+    verbs: ["get", "list", "watch"]
+
+---
+# Bind the custom ClusterRole to the agent ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: hcp-terraform-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: hcp-terraform-agent
+subjects:
+  - kind: ServiceAccount
+    name: hcp-terraform-agent
+    namespace: hcp-terraform

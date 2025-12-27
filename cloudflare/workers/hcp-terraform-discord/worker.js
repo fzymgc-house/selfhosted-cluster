@@ -1,5 +1,28 @@
 // HCP Terraform to Discord webhook transformer
 
+/**
+ * Verify HMAC-SHA512 signature from HCP Terraform.
+ * @param {string} body - Raw request body
+ * @param {string} signature - Signature from X-TFE-Notification-Signature header
+ * @param {string} secret - HMAC secret token
+ * @returns {Promise<boolean>} True if signature is valid
+ */
+async function verifyHmac(body, signature, secret) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-512" },
+    false,
+    ["sign"]
+  );
+  const mac = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+  const computed = Array.from(new Uint8Array(mac))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return computed === signature;
+}
+
 export default {
   async fetch(request, env) {
     // Only accept POST requests
@@ -13,10 +36,28 @@ export default {
       return new Response("Server misconfiguration", { status: 500 });
     }
 
+    // Get raw body for HMAC verification (must be done before .json())
+    const rawBody = await request.text();
+
+    // Optional HMAC signature verification
+    // If HMAC_SECRET is configured, require valid signature
+    if (env.HMAC_SECRET) {
+      const signature = request.headers.get("X-TFE-Notification-Signature");
+      if (!signature) {
+        console.error("Missing X-TFE-Notification-Signature header");
+        return new Response("Missing signature", { status: 401 });
+      }
+      const valid = await verifyHmac(rawBody, signature, env.HMAC_SECRET);
+      if (!valid) {
+        console.error("Invalid HMAC signature");
+        return new Response("Invalid signature", { status: 401 });
+      }
+    }
+
     // Parse request body
     let payload;
     try {
-      payload = await request.json();
+      payload = JSON.parse(rawBody);
     } catch (parseError) {
       console.error("Failed to parse request body:", parseError.message);
       return new Response("Invalid JSON payload", { status: 400 });

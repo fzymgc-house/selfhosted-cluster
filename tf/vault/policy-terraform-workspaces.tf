@@ -162,10 +162,15 @@ EOT
 # Core-services workspace - manages cross-cutting service configurations.
 # This workspace configures shared infrastructure (ingress, cert-manager, etc.)
 # and needs read access to multiple service secrets for configuration.
+#
+# TODO: Narrow scope when specific secret paths are identified. Currently broad
+# because the module is being developed incrementally. Track actual usage and
+# restrict to specific paths (e.g., secret/data/fzymgc-house/cluster/traefik/*).
 resource "vault_policy" "terraform_core_services_admin" {
   name   = "terraform-core-services-admin"
   policy = <<EOT
 # Read cluster secrets (cross-cutting configuration needs)
+# NOTE: Intentionally broad during initial development - narrow when paths known
 path "secret/data/fzymgc-house/cluster/*" {
   capabilities = ["read", "list"]
 }

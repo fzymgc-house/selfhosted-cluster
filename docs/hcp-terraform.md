@@ -92,6 +92,22 @@ npx wrangler deploy
 
 The Worker secret is managed by Terraform - no manual `wrangler secret` commands needed.
 
+### Optional HMAC Validation
+
+For enhanced security, configure HMAC signature validation:
+
+1. Generate a random token:
+   ```bash
+   TOKEN=$(openssl rand -hex 32)
+   vault kv put secret/fzymgc-house/infrastructure/cloudflare/hcp-terraform-hmac token="$TOKEN"
+   ```
+
+2. Add the token to your HCP TF notification configuration (UI or API)
+
+3. Update `tf/cloudflare/workers.tf` to include the `HMAC_SECRET` binding
+
+When `HMAC_SECRET` is configured, the Worker validates the `X-TFE-Notification-Signature` header. Without it, requests are accepted without signature verification.
+
 ## Troubleshooting
 
 ### Agent not connecting
@@ -134,6 +150,50 @@ vault policy read terraform-WORKSPACE-admin
 ```
 
 For `cluster-bootstrap` workspace: OIDC is intentionally excluded (deploys the operator itself). Run locally with `VAULT_TOKEN` environment variable.
+
+### cluster-bootstrap Circular Dependency
+
+The `cluster-bootstrap` workspace **cannot** use the HCP TF agent because:
+
+1. It deploys the HCP Terraform Operator itself
+2. The operator must exist before agent pods can run
+3. Chicken-and-egg: agent needs operator, operator needs workspace to run
+
+**Solution:** Run `cluster-bootstrap` locally with `VAULT_TOKEN`:
+
+```bash
+export VAULT_TOKEN=$(vault token create -field=token -policy=terraform-cluster-bootstrap-admin)
+terraform -chdir=tf/cluster-bootstrap apply
+```
+
+## Maintenance
+
+### Agent Token Rotation
+
+The agent token (`tfe_agent_token`) doesn't auto-rotate. To rotate manually:
+
+```bash
+# 1. Taint the token resource to force recreation
+terraform -chdir=tf/hcp-terraform taint tfe_agent_token.k8s
+
+# 2. Apply to generate new token
+terraform -chdir=tf/hcp-terraform apply
+
+# 3. Update Vault secret with new token
+vault kv put secret/fzymgc-house/cluster/hcp-terraform \
+  agent_token="$(terraform -chdir=tf/hcp-terraform output -raw agent_token)"
+
+# 4. ExternalSecret will sync automatically, restart agent if needed
+kubectl -n hcp-terraform rollout restart deployment/fzymgc-house-agents
+```
+
+### Rollback to Windmill
+
+If HCP Terraform fails post-migration:
+
+1. Scale down operator: `kubectl -n hcp-terraform scale deployment hcp-terraform-operator --replicas=0`
+2. Re-enable Windmill flows in `windmill/f/terraform/`
+3. Remove HCP TF workspace variables in HCP TF UI (restore local execution)
 
 ## Related
 

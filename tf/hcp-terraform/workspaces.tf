@@ -16,7 +16,7 @@ locals {
     }
     cloudflare = {
       dir  = "tf/cloudflare"
-      tags = ["main-cluster", "cloudflared"]
+      tags = ["main-cluster", "cloudflare"]
     }
     core-services = {
       dir  = "tf/core-services"

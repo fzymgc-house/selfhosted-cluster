@@ -10,11 +10,11 @@
 locals {
   oidc_workspaces = {
     for k, v in local.all_workspaces : k => v
-    if k != "cluster-bootstrap"
+    if k != "main-cluster-bootstrap"
   }
 
   # Workspaces that need Kubernetes access (run in-cluster in HCP TF agent)
-  k8s_workspaces = toset(["vault", "core-services"])
+  k8s_workspaces = toset(["main-cluster-vault", "main-cluster-core-services"])
 }
 
 # =============================================================================

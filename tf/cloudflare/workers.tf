@@ -1,7 +1,11 @@
-# workers.tf - Cloudflare Workers secret management
+# workers.tf - Cloudflare Workers managed via Terraform
 #
-# Workers are deployed via wrangler (see cloudflare/workers/), but secrets
-# are managed here for GitOps consistency and Vault integration.
+# This deploys Workers with their code and secrets in a single apply.
+# Worker code lives in cloudflare/workers/<name>/.
+
+# =============================================================================
+# Vault Data Sources for Worker Secrets
+# =============================================================================
 
 # Discord webhook URL for HCP Terraform notifications
 data "vault_kv_secret_v2" "discord_webhook" {
@@ -9,10 +13,52 @@ data "vault_kv_secret_v2" "discord_webhook" {
   name  = "fzymgc-house/infrastructure/cloudflare/discord-webhook"
 }
 
-# Set the Discord webhook secret on the HCP Terraform notification Worker
-resource "cloudflare_workers_secret" "hcp_terraform_discord_webhook" {
-  account_id  = var.cloudflare_account_id
-  script_name = "hcp-terraform-discord"
-  secret_name = "DISCORD_WEBHOOK_URL"
-  secret_text = data.vault_kv_secret_v2.discord_webhook.data["url"]
+# =============================================================================
+# HCP Terraform Discord Notification Worker
+# =============================================================================
+
+# The Worker resource defines persistent settings (name, tags)
+resource "cloudflare_worker" "hcp_terraform_discord" {
+  account_id = var.cloudflare_account_id
+  name       = "hcp-terraform-discord"
+  tags       = ["terraform", "notifications", "discord"]
 }
+
+# The Worker version deploys code + bindings
+resource "cloudflare_worker_version" "hcp_terraform_discord" {
+  account_id         = var.cloudflare_account_id
+  worker_id          = cloudflare_worker.hcp_terraform_discord.id
+  compatibility_date = "2024-09-23"
+  main_module        = "worker.js"
+
+  modules = [{
+    name         = "worker.js"
+    content_type = "application/javascript+module"
+    content_file = "${path.module}/../../cloudflare/workers/hcp-terraform-discord/worker.js"
+  }]
+
+  bindings = [
+    {
+      type = "secret_text"
+      name = "DISCORD_WEBHOOK_URL"
+      text = data.vault_kv_secret_v2.discord_webhook.data["url"]
+    }
+  ]
+}
+
+# Deploy the version to production
+resource "cloudflare_workers_deployment" "hcp_terraform_discord" {
+  account_id  = var.cloudflare_account_id
+  script_name = cloudflare_worker.hcp_terraform_discord.name
+  strategy    = "percentage"
+
+  versions = [
+    {
+      version_id = cloudflare_worker_version.hcp_terraform_discord.id
+      percentage = 100
+    }
+  ]
+}
+
+# Route to access the Worker via workers.dev subdomain
+# HCP Terraform will use: hcp-terraform-discord.<account>.workers.dev

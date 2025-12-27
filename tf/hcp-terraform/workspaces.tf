@@ -39,7 +39,7 @@ resource "tfe_workspace" "this" {
   project_id        = tfe_project.main_cluster.id
   working_directory = each.value.dir
   tag_names         = each.value.tags
-  terraform_version = "1.14.0"
+  terraform_version = "~> 1.14.0"
 
   # VCS-driven workflow
   auto_apply            = true

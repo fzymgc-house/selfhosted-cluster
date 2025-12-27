@@ -15,6 +15,14 @@ data "vault_kv_secret_v2" "discord_webhook" {
   name  = "fzymgc-house/infrastructure/cloudflare/discord-webhook"
 }
 
+# HMAC secret for HCP Terraform notification signature verification
+# Generate with: openssl rand -hex 32
+# Store with: vault kv put secret/fzymgc-house/infrastructure/cloudflare/hcp-terraform-hmac token="<token>"
+data "vault_kv_secret_v2" "hcp_terraform_hmac" {
+  mount = "secret"
+  name  = "fzymgc-house/infrastructure/cloudflare/hcp-terraform-hmac"
+}
+
 # =============================================================================
 # HCP Terraform Discord Notification Worker
 # =============================================================================
@@ -27,10 +35,12 @@ resource "cloudflare_worker" "hcp_terraform_discord" {
 }
 
 # The Worker version deploys code + bindings
+# Worker URL: https://hcp-terraform-discord.<workers-subdomain>.workers.dev
+# The workers.dev subdomain is configured in Cloudflare dashboard, not the account ID
 resource "cloudflare_worker_version" "hcp_terraform_discord" {
   account_id         = var.cloudflare_account_id
   worker_id          = cloudflare_worker.hcp_terraform_discord.id
-  compatibility_date = "2024-09-23"
+  compatibility_date = "2025-12-01"
   main_module        = "worker.js"
 
   modules = [{
@@ -44,8 +54,17 @@ resource "cloudflare_worker_version" "hcp_terraform_discord" {
       type = "secret_text"
       name = "DISCORD_WEBHOOK_URL"
       text = data.vault_kv_secret_v2.discord_webhook.data["url"]
+    },
+    {
+      type = "secret_text"
+      name = "HMAC_SECRET"
+      text = data.vault_kv_secret_v2.hcp_terraform_hmac.data["token"]
     }
   ]
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Deploy the version to production

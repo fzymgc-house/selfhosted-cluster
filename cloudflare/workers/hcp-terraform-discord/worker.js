@@ -1,6 +1,33 @@
 // HCP Terraform to Discord webhook transformer
 
 /**
+ * Sanitize text for Discord markdown to prevent injection.
+ * Escapes special Discord markdown characters.
+ * @param {string} text - Text to sanitize
+ * @returns {string} Sanitized text safe for Discord embed
+ */
+function sanitizeForDiscord(text) {
+  if (typeof text !== "string") return "";
+  // Escape Discord markdown: * _ ` ~ | [ ] ( ) > #
+  return text.replace(/([*_`~|[\]()>#])/g, "\\$1");
+}
+
+/**
+ * Validate URL is from trusted HCP Terraform domain.
+ * @param {string} url - URL to validate
+ * @returns {boolean} True if URL is from app.terraform.io
+ */
+function isValidTerraformUrl(url) {
+  if (typeof url !== "string") return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname === "app.terraform.io";
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Verify HMAC-SHA512 signature from HCP Terraform.
  * @param {string} body - Raw request body
  * @param {string} signature - Signature from X-TFE-Notification-Signature header
@@ -108,17 +135,30 @@ export default {
       });
     }
 
+    // Sanitize inputs for Discord embed (defense-in-depth against markdown injection)
+    const safeStatus = sanitizeForDiscord(status);
+    const safeWorkspace = sanitizeForDiscord(payload.workspace_name) || "unknown";
+    const safeRunId = sanitizeForDiscord(notification.run_id);
+    const safeMessage = notification.run_message
+      ? sanitizeForDiscord(notification.run_message)
+      : null;
+
+    // Validate run URL is from trusted HCP Terraform domain
+    const runUrl = isValidTerraformUrl(notification.run_url)
+      ? notification.run_url
+      : null;
+
     // Build Discord embed
     const embed = {
       embeds: [
         {
-          title: `${emoji || "❓"} Terraform ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+          title: `${emoji || "❓"} Terraform ${safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1)}`,
           description: [
-            `**Workspace:** ${payload.workspace_name || "unknown"}`,
-            `**Run:** [${notification.run_id}](${notification.run_url})`,
-            notification.run_message
-              ? `**Message:** ${notification.run_message}`
-              : null,
+            `**Workspace:** ${safeWorkspace}`,
+            runUrl
+              ? `**Run:** [${safeRunId}](${runUrl})`
+              : `**Run:** ${safeRunId}`,
+            safeMessage ? `**Message:** ${safeMessage}` : null,
           ]
             .filter(Boolean)
             .join("\n"),

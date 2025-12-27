@@ -80,6 +80,15 @@ resource "cloudflare_workers_deployment" "hcp_terraform_discord" {
   ]
 }
 
+# Custom domain for the Worker (avoids workers.dev subdomain dependency)
+# Using fzymgc.net for external webhooks (avoids split-horizon DNS with fzymgc.house)
+resource "cloudflare_workers_custom_domain" "hcp_terraform_discord" {
+  account_id = var.cloudflare_account_id
+  hostname   = "hcp-tf${var.webhook_suffix}.${var.webhook_domain}"
+  service    = cloudflare_worker.hcp_terraform_discord.name
+  zone_id    = data.cloudflare_zone.fzymgc_net.id
+}
+
 # =============================================================================
 # Store Worker URL in Vault for tf/hcp-terraform to consume
 # =============================================================================
@@ -90,7 +99,7 @@ resource "vault_kv_secret_v2" "hcp_terraform_worker" {
   name  = "fzymgc-house/infrastructure/cloudflare/hcp-terraform-worker"
 
   data_json = jsonencode({
-    url = "https://${cloudflare_worker.hcp_terraform_discord.name}.${var.workers_subdomain}.workers.dev"
+    url = "https://${cloudflare_workers_custom_domain.hcp_terraform_discord.hostname}"
   })
 
   custom_metadata {

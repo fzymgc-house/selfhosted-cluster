@@ -15,6 +15,7 @@ spec:
   agentDeployment:
     replicas: 1  # Sequential execution - prevents concurrent Terraform state conflicts
     spec:
+      serviceAccountName: hcp-terraform-agent  # SA with cluster-admin for managing ClusterRoleBindings
       containers:
         - name: tfc-agent
           image: hashicorp/tfc-agent:latest

@@ -33,24 +33,18 @@ resource "cloudflare_worker" "hcp_terraform_discord" {
   tags       = ["terraform", "notifications", "discord"]
 }
 
-# The Worker version deploys code + bindings (Python Worker)
+# The Worker version deploys code + bindings
 resource "cloudflare_worker_version" "hcp_terraform_discord" {
-  account_id          = var.cloudflare_account_id
-  worker_id           = cloudflare_worker.hcp_terraform_discord.id
-  compatibility_date  = "2025-12-01"
-  compatibility_flags = ["python_workers"]
-  main_module         = "worker.py"
+  account_id         = var.cloudflare_account_id
+  worker_id          = cloudflare_worker.hcp_terraform_discord.id
+  compatibility_date = "2025-12-01"
+  main_module        = "worker.js"
 
   modules = [
     {
-      name         = "worker.py"
-      content_type = "text/x-python"
-      content_file = "${path.module}/../../cloudflare/workers/hcp-terraform-discord/worker.py"
-    },
-    {
-      name         = "requirements.txt"
-      content_type = "text/x-python-requirement"
-      content_file = "${path.module}/../../cloudflare/workers/hcp-terraform-discord/requirements.txt"
+      name         = "worker.js"
+      content_type = "application/javascript+module"
+      content_file = "${path.module}/../../cloudflare/workers/hcp-terraform-discord/worker.js"
     }
   ]
 

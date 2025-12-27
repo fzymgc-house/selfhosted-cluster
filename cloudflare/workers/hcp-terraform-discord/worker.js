@@ -117,7 +117,12 @@ export default {
       });
 
       if (discordResponse.status === 429) {
-        return new Response("Discord rate limited", { status: 503 });
+        // Pass through Discord's Retry-After header so HCP TF can retry appropriately
+        const retryAfter = discordResponse.headers.get("Retry-After") || "60";
+        return new Response("Discord rate limited", {
+          status: 503,
+          headers: { "Retry-After": retryAfter },
+        });
       }
       return new Response(`Discord webhook failed: ${discordResponse.status}`, {
         status: 502,

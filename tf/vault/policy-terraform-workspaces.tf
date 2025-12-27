@@ -43,7 +43,10 @@ path "sys/auth" {
   capabilities = ["read", "list"]
 }
 
-# Manage policies
+# Manage policies (but prevent self-modification for privilege escalation protection)
+path "sys/policies/acl/terraform-vault-admin" {
+  capabilities = ["read"]  # Read-only for own policy
+}
 path "sys/policies/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }

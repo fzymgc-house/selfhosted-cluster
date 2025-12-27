@@ -29,7 +29,9 @@ resource "tfe_variable" "vault_addr" {
 }
 
 # Workload identity token file path
-# HCP TF writes the JWT to this path when workload identity is configured
+# HCP TF Operator mounts the JWT at this path when workload identity is configured.
+# Path is defined by HCP Terraform Operator (tested with v2.7.0).
+# See: https://developer.hashicorp.com/terraform/cloud-docs/agents/agent-pools
 resource "tfe_variable" "tfc_workload_identity_token_path" {
   for_each = local.oidc_workspaces
 
@@ -37,7 +39,7 @@ resource "tfe_variable" "tfc_workload_identity_token_path" {
   key          = "tfc_workload_identity_token_path"
   value        = "/var/run/secrets/tfc/workload-identity-token"
   category     = "terraform"
-  description  = "Path to HCP TF workload identity JWT"
+  description  = "Path to HCP TF workload identity JWT (operator v2.7.0)"
 }
 
 # Empty kubeconfig path for in-cluster auth (agent pod uses ServiceAccount)

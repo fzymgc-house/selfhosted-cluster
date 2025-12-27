@@ -17,6 +17,7 @@ spec:
     spec:
       containers:
         - name: tfc-agent
+          image: hashicorp/tfc-agent:latest
           resources:
             requests:
               memory: "256Mi"

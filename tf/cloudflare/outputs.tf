@@ -23,9 +23,3 @@ output "vault_path" {
   description = "Vault path where tunnel credentials are stored"
   value       = vault_kv_secret_v2.tunnel_credentials.path
 }
-
-# Worker URLs for HCP Terraform integration
-output "hcp_terraform_discord_worker_url" {
-  description = "URL for HCP Terraform Discord notification Worker"
-  value       = "https://${cloudflare_worker.hcp_terraform_discord.name}.${var.cloudflare_account_id}.workers.dev"
-}

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+# terraform: language=hcl
 # workers.tf - Cloudflare Workers managed via Terraform
 #
 # This deploys Workers with their code and secrets in a single apply.
@@ -59,6 +61,3 @@ resource "cloudflare_workers_deployment" "hcp_terraform_discord" {
     }
   ]
 }
-
-# Route to access the Worker via workers.dev subdomain
-# HCP Terraform will use: hcp-terraform-discord.<account>.workers.dev

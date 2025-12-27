@@ -1,28 +1,30 @@
 // workspaces.tf - Workspace configuration
 
 locals {
+  # Workspace names match existing HCP Terraform workspaces
+  # These already exist with state - we're adding them to a project
   all_workspaces = {
-    vault = {
+    main-cluster-vault = {
       dir  = "tf/vault"
       tags = ["main-cluster", "vault"]
     }
-    authentik = {
+    main-cluster-authentik = {
       dir  = "tf/authentik"
       tags = ["main-cluster", "authentik"]
     }
-    grafana = {
+    main-cluster-grafana = {
       dir  = "tf/grafana"
       tags = ["main-cluster", "grafana"]
     }
-    cloudflare = {
+    main-cluster-cloudflare = {
       dir  = "tf/cloudflare"
       tags = ["main-cluster", "cloudflare"]
     }
-    core-services = {
+    main-cluster-core-services = {
       dir  = "tf/core-services"
       tags = ["main-cluster", "core-services"]
     }
-    cluster-bootstrap = {
+    main-cluster-bootstrap = {
       dir  = "tf/cluster-bootstrap"
       tags = ["main-cluster", "bootstrap"]
     }
@@ -34,6 +36,7 @@ resource "tfe_workspace" "this" {
 
   name              = each.key
   organization      = var.organization
+  project_id        = tfe_project.main_cluster.id
   working_directory = each.value.dir
   tag_names         = each.value.tags
 

@@ -92,38 +92,32 @@ npx wrangler deploy
 
 The Worker secret is managed by Terraform - no manual `wrangler secret` commands needed.
 
-### Optional HMAC Validation
+### HMAC Signature Validation
 
-For enhanced security, configure HMAC signature validation:
+The Worker validates HCP Terraform notification signatures using HMAC-SHA512. The secret is managed by Terraform:
 
-1. Generate a random token:
+1. **Secret is auto-generated** by `tf/vault` using the `random_password` resource
+2. **Secret is stored** at `secret/fzymgc-house/infrastructure/cloudflare/hcp-terraform-hmac`
+3. **Secret is consumed** by `tf/cloudflare` which binds it to the Worker
+
+**To enable HMAC validation:**
+
+1. Apply tf/vault first (creates the HMAC secret in Vault):
    ```bash
-   TOKEN=$(openssl rand -hex 32)
-   vault kv put secret/fzymgc-house/infrastructure/cloudflare/hcp-terraform-hmac token="$TOKEN"
+   terraform -chdir=tf/vault apply
    ```
 
-2. Add the token to your HCP TF notification configuration (UI or API)
-
-3. Add the HMAC secret binding to `tf/cloudflare/workers.tf`:
-   ```hcl
-   # Read HMAC token from Vault
-   data "vault_kv_secret_v2" "hcp_terraform_hmac" {
-     mount = "secret"
-     name  = "fzymgc-house/infrastructure/cloudflare/hcp-terraform-hmac"
-   }
-
-   # Set the HMAC secret on the Worker
-   resource "cloudflare_workers_secret" "hcp_terraform_hmac" {
-     account_id  = var.cloudflare_account_id
-     script_name = "hcp-terraform-discord"
-     secret_name = "HMAC_SECRET"
-     secret_text = data.vault_kv_secret_v2.hcp_terraform_hmac.data["token"]
-   }
+2. Apply tf/cloudflare (deploys Worker with HMAC binding):
+   ```bash
+   terraform -chdir=tf/cloudflare apply
    ```
 
-4. Apply Terraform: `terraform -chdir=tf/cloudflare apply`
+3. Get the HMAC token from Vault and add it to your HCP TF notification configuration:
+   ```bash
+   vault kv get -field=token secret/fzymgc-house/infrastructure/cloudflare/hcp-terraform-hmac
+   ```
 
-When `HMAC_SECRET` is configured, the Worker validates the `X-TFE-Notification-Signature` header. Without it, requests are accepted without signature verification.
+When `HMAC_SECRET` is configured, the Worker validates the `X-TFE-Notification-Signature` header. Invalid signatures are rejected with 401.
 
 ## Troubleshooting
 

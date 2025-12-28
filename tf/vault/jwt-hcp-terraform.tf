@@ -26,6 +26,7 @@ resource "vault_jwt_auth_backend_role" "tfc_vault" {
   bound_claims = {
     sub = "organization:fzymgc-house:project:main-cluster:workspace:main-cluster-vault:run_phase:*"
   }
+  bound_claims_type = "glob" # Enable wildcard matching for run_phase:*
 
   user_claim     = "terraform_workspace_name"
   role_type      = "jwt"
@@ -42,6 +43,7 @@ resource "vault_jwt_auth_backend_role" "tfc_authentik" {
   bound_claims = {
     sub = "organization:fzymgc-house:project:main-cluster:workspace:main-cluster-authentik:run_phase:*"
   }
+  bound_claims_type = "glob" # Enable wildcard matching for run_phase:*
 
   user_claim     = "terraform_workspace_name"
   role_type      = "jwt"
@@ -58,6 +60,7 @@ resource "vault_jwt_auth_backend_role" "tfc_grafana" {
   bound_claims = {
     sub = "organization:fzymgc-house:project:main-cluster:workspace:main-cluster-grafana:run_phase:*"
   }
+  bound_claims_type = "glob" # Enable wildcard matching for run_phase:*
 
   user_claim     = "terraform_workspace_name"
   role_type      = "jwt"
@@ -74,6 +77,7 @@ resource "vault_jwt_auth_backend_role" "tfc_cloudflare" {
   bound_claims = {
     sub = "organization:fzymgc-house:project:main-cluster:workspace:main-cluster-cloudflare:run_phase:*"
   }
+  bound_claims_type = "glob" # Enable wildcard matching for run_phase:*
 
   user_claim     = "terraform_workspace_name"
   role_type      = "jwt"
@@ -90,6 +94,7 @@ resource "vault_jwt_auth_backend_role" "tfc_core_services" {
   bound_claims = {
     sub = "organization:fzymgc-house:project:main-cluster:workspace:main-cluster-core-services:run_phase:*"
   }
+  bound_claims_type = "glob" # Enable wildcard matching for run_phase:*
 
   user_claim     = "terraform_workspace_name"
   role_type      = "jwt"
@@ -106,6 +111,7 @@ resource "vault_jwt_auth_backend_role" "tfc_hcp_terraform" {
   bound_claims = {
     sub = "organization:fzymgc-house:project:main-cluster:workspace:hcp-terraform:run_phase:*"
   }
+  bound_claims_type = "glob" # Enable wildcard matching for run_phase:*
 
   user_claim     = "terraform_workspace_name"
   role_type      = "jwt"

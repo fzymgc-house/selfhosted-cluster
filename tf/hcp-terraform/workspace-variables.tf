@@ -83,9 +83,22 @@ resource "tfe_variable" "vault_run_role" {
 
   workspace_id = tfe_workspace.this[each.key].id
   key          = "TFC_VAULT_RUN_ROLE"
-  value        = "tfc-${each.value.tags[1]}"  # e.g., tfc-vault, tfc-authentik
+  value        = "tfc-${each.value.tags[1]}" # e.g., tfc-vault, tfc-authentik
   category     = "env"
   description  = "Vault role for this workspace"
+}
+
+# CA certificate for HCP TF to verify Vault's TLS certificate
+# Vault uses a private CA, so HCP TF needs the CA chain to establish trust
+resource "tfe_variable" "vault_encoded_cacert" {
+  for_each = local.oidc_workspaces
+
+  workspace_id = tfe_workspace.this[each.key].id
+  key          = "TFC_VAULT_ENCODED_CACERT"
+  value        = base64encode(data.vault_kv_secret_v2.ca_certificate.data["fullchain"])
+  category     = "env"
+  sensitive    = true
+  description  = "Base64-encoded CA certificate chain for Vault TLS verification"
 }
 
 # Empty kubeconfig path for in-cluster auth (agent pod uses ServiceAccount)

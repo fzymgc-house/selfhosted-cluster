@@ -85,6 +85,9 @@ Vault provider reads token via auth_login_token_file
 | `TFC_VAULT_ADDR` | `https://vault.fzymgc.house` | Vault server address |
 | `TFC_VAULT_AUTH_PATH` | `jwt-hcp-terraform` | JWT auth backend path |
 | `TFC_VAULT_RUN_ROLE` | `tfc-<workspace>` | Per-workspace Vault role |
+| `TFC_VAULT_ENCODED_CACERT` | Base64-encoded CA chain | Verify Vault's TLS certificate |
+
+**Note:** The CA certificate is required because Vault uses a private PKI. HCP Terraform's servers need the full certificate chain (intermediate + root) to verify Vault's TLS certificate.
 
 ### Vault Resources
 

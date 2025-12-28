@@ -43,6 +43,11 @@ path "sys/auth" {
   capabilities = ["read", "list"]
 }
 
+# Read auth backend mount metadata (required for Vault provider state refresh)
+path "sys/mounts/auth/*" {
+  capabilities = ["read"]
+}
+
 # Manage policies (but prevent self-modification for privilege escalation protection)
 path "sys/policies/acl/terraform-vault-admin" {
   capabilities = ["read"]  # Read-only for own policy
@@ -54,6 +59,14 @@ path "sys/policies/*" {
 # Manage identity entities and groups
 path "identity/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+# Manage PKI roles (for cert-manager, k8s, router-hosts roles)
+path "fzymgc-house/v1/ica1/v1/roles/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+path "fzymgc-house/v1/ica1/v1/roles" {
+  capabilities = ["list"]
 }
 EOT
 }

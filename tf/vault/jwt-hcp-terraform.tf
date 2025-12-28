@@ -24,7 +24,7 @@ resource "vault_jwt_auth_backend_role" "tfc_vault" {
 
   bound_audiences = ["vault.workload.identity"]
   bound_claims = {
-    sub = "organization:fzymgc-house:project:*:workspace:vault:run_phase:*"
+    sub = "organization:fzymgc-house:project:*:workspace:main-cluster-vault:run_phase:*"
   }
 
   user_claim     = "terraform_workspace_name"
@@ -40,7 +40,7 @@ resource "vault_jwt_auth_backend_role" "tfc_authentik" {
 
   bound_audiences = ["vault.workload.identity"]
   bound_claims = {
-    sub = "organization:fzymgc-house:project:*:workspace:authentik:run_phase:*"
+    sub = "organization:fzymgc-house:project:*:workspace:main-cluster-authentik:run_phase:*"
   }
 
   user_claim     = "terraform_workspace_name"
@@ -56,7 +56,7 @@ resource "vault_jwt_auth_backend_role" "tfc_grafana" {
 
   bound_audiences = ["vault.workload.identity"]
   bound_claims = {
-    sub = "organization:fzymgc-house:project:*:workspace:grafana:run_phase:*"
+    sub = "organization:fzymgc-house:project:*:workspace:main-cluster-grafana:run_phase:*"
   }
 
   user_claim     = "terraform_workspace_name"
@@ -72,7 +72,7 @@ resource "vault_jwt_auth_backend_role" "tfc_cloudflare" {
 
   bound_audiences = ["vault.workload.identity"]
   bound_claims = {
-    sub = "organization:fzymgc-house:project:*:workspace:cloudflare:run_phase:*"
+    sub = "organization:fzymgc-house:project:*:workspace:main-cluster-cloudflare:run_phase:*"
   }
 
   user_claim     = "terraform_workspace_name"
@@ -88,7 +88,7 @@ resource "vault_jwt_auth_backend_role" "tfc_core_services" {
 
   bound_audiences = ["vault.workload.identity"]
   bound_claims = {
-    sub = "organization:fzymgc-house:project:*:workspace:core-services:run_phase:*"
+    sub = "organization:fzymgc-house:project:*:workspace:main-cluster-core-services:run_phase:*"
   }
 
   user_claim     = "terraform_workspace_name"
